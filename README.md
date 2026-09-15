@@ -1,1 +1,0 @@
-# QanoonPK-Pakistan-Legal-Directory

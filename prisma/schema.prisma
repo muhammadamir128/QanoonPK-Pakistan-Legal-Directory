@@ -1,0 +1,222 @@
+// QanoonPK — Pakistan Legal Directory
+// Prisma schema for SQLite (MVP)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id               String    @id @default(cuid())
+  name             String
+  nameUrdu         String
+  slug             String    @unique
+  icon             String?
+  description      String?
+  descriptionUrdu  String?
+  color            String?
+  parentId         String?
+  parent           Category? @relation("CategoryChildren", fields: [parentId], references: [id])
+  children         Category[] @relation("CategoryChildren")
+  laws             Law[]
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([parentId])
+}
+
+model Law {
+  id                   String       @id @default(cuid())
+  title                String
+  titleUrdu            String?
+  slug                 String       @unique
+  categoryId           String
+  category             Category     @relation(fields: [categoryId], references: [id])
+  yearEnacted          Int
+  jurisdiction         String       // federal, punjab, sindh, kpk, balochistan, gilgit_baltistan, ajk
+  status              String       // active, repealed, amended
+  summary              String?
+  summaryUrdu          String?
+  fullTextUrl          String?
+  gazetteReference     String?
+  promulgatingAuthority String?
+  applicabilityTags    String?      // JSON array of strings
+  viewCount            Int          @default(0)
+  sections              Section[]
+  amendments           Amendment[]
+  tags                 LawTag[]
+  bookmarks            Bookmark[]
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+
+  @@index([categoryId])
+  @@index([jurisdiction])
+  @@index([status])
+  @@index([yearEnacted])
+}
+
+model Section {
+  id          String   @id @default(cuid())
+  lawId      String
+  law        Law     @relation(fields: [lawId], references: [id], onDelete: Cascade)
+  sectionNumber String
+  title      String?
+  content    String
+  contentUrdu String?
+  orderIndex Int      @default(0)
+
+  @@index([lawId])
+}
+
+model Amendment {
+  id                String   @id @default(cuid())
+  lawId            String
+  law              Law     @relation(fields: [lawId], references: [id], onDelete: Cascade)
+  amendmentYear    Int
+  amendmentTitle   String
+  description      String?
+  gazetteReference String?
+  effectiveDate     DateTime?
+
+  @@index([lawId])
+}
+
+model Tag {
+  id    String   @id @default(cuid())
+  name  String   @unique
+  laws  LawTag[]
+}
+
+model LawTag {
+  lawId String
+  law   Law   @relation(fields: [lawId], references: [id], onDelete: Cascade)
+  tagId String
+  tag   Tag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([lawId, tagId])
+}
+
+model User {
+  id        String     @id @default(cuid())
+  name      String?
+  email     String     @unique
+  role      String     @default("user") // user, editor, reviewer, admin
+  bookmarks Bookmark[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lawId     String
+  law       Law     @relation(fields: [lawId], references: [id], onDelete: Cascade)
+  notes     String?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, lawId])
+  @@index([lawId])
+}
+
+model SearchLog {
+  id            String   @id @default(cuid())
+  query         String
+  resultsCount  Int      @default(0)
+  userId        String?
+  createdAt     DateTime @default(now())
+
+  @@index([query])
+}
+
+model FinderQuestion {
+  id          String   @id @default(cuid())
+  question    String
+  questionUrdu String?
+  optionsJson String   // JSON array of { id, label, labelUrdu, nextQuestionId?, categoryIds? }
+  orderIndex  Int      @default(0)
+}
+
+model Lawyer {
+  id              String   @id @default(cuid())
+  name            String
+  nameUrdu        String?
+  slug            String   @unique
+  bio             String?
+  bioUrdu         String?
+  specialization  String   // JSON array of category slugs
+  city            String
+  cityUrdu        String?
+  province        String
+  licenseNumber   String?
+  experienceYears Int?
+  education       String?
+  educationUrdu   String?
+  email           String?
+  phone           String?
+  website         String?
+  address         String?
+  addressUrdu     String?
+  languages       String?  // JSON array
+  rating          Float    @default(0)
+  reviewCount     Int      @default(0)
+  verified        Boolean  @default(false)
+  featured        Boolean  @default(false)
+  acceptingCases  Boolean  @default(true)
+  imageColor      String?
+  viewCount       Int      @default(0)
+  reviews         LawyerReview[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([city])
+  @@index([province])
+  @@index([verified])
+  @@index([featured])
+}
+
+model LawyerReview {
+  id          String   @id @default(cuid())
+  lawyerId    String
+  lawyer      Lawyer   @relation(fields: [lawyerId], references: [id], onDelete: Cascade)
+  authorName  String
+  rating      Int
+  comment     String?
+  createdAt   DateTime @default(now())
+
+  @@index([lawyerId])
+}
+
+model DocTemplate {
+  id            String   @id @default(cuid())
+  title         String
+  titleUrdu     String?
+  slug          String   @unique
+  description   String?
+  descriptionUrdu String?
+  category      String
+  categoryUrdu String?
+  fieldsJson    String   // JSON schema of fields
+  templateText  String   // The template body with {{field}} placeholders
+  templateTextUrdu String?
+  previewText   String?
+  downloads     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([category])
+}
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  preferences String? // JSON array of category slugs
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

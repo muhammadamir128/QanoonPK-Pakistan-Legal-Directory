@@ -1,0 +1,43 @@
+{
+  "name": "QanoonPK — Pakistan Legal Directory",
+  "short_name": "QanoonPK",
+  "description": "Pakistan's bilingual (Urdu/English) digital directory of federal & provincial laws — searchable, categorized, and free.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0d9488",
+  "orientation": "portrait-primary",
+  "categories": ["legal", "education", "reference"],
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Browse Laws",
+      "url": "/laws",
+      "description": "View all laws"
+    },
+    {
+      "name": "Find a Lawyer",
+      "url": "/lawyers",
+      "description": "Search verified lawyers"
+    },
+    {
+      "name": "AI Assistant",
+      "url": "/chat",
+      "description": "Ask legal questions"
+    },
+    {
+      "name": "Document Templates",
+      "url": "/templates",
+      "description": "Download legal documents"
+    }
+  ]
+}
