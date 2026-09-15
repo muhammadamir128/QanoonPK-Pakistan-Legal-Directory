@@ -72,6 +72,9 @@ export function SiteHeader() {
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname.startsWith(href)
 
+  const isAuthPage = pathname === '/login' || pathname === '/register' || pathname?.startsWith('/auth')
+  if (isAuthPage) return null
+
   return (
     <>
     <header className="sticky top-0 z-50 w-full border-b border-border/70 bg-background/85 backdrop-blur-md supports-[backdrop-filter]:bg-background/70">

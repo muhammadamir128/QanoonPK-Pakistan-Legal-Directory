@@ -7,7 +7,7 @@ import { signIn, useSession } from 'next-auth/react'
 import { Suspense } from 'react'
 import {
   Scale, User, Mail, Lock, Eye, EyeOff, Loader2, ArrowRight,
-  ShieldCheck, CheckCircle2, AlertCircle
+  ShieldCheck, CheckCircle2, AlertCircle, ArrowLeft, Languages
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,7 +23,7 @@ function RegisterForm() {
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') || '/'
   const { data: session, status } = useSession()
-  const { t } = useLanguage()
+  const { t, lang, setLang } = useLanguage()
 
   const [name, setName] = React.useState('')
   const [email, setEmail] = React.useState('')
@@ -114,8 +114,28 @@ function RegisterForm() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-14rem)] flex items-center justify-center px-4 py-12 bg-gradient-to-b from-muted/20 via-background to-muted/30">
-      <div className="w-full max-w-md space-y-6">
+    <div className="min-h-screen flex flex-col justify-between px-4 py-8 bg-gradient-to-b from-muted/20 via-background to-muted/40 relative">
+      {/* Top Utility Nav */}
+      <div className="w-full max-w-5xl mx-auto flex items-center justify-between pb-4">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors group"
+        >
+          <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+          <span>{t('Back to Home', 'واپس ہوم پیج')}</span>
+        </Link>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setLang(lang === 'en' ? 'ur' : 'en')}
+          className="text-xs h-8 px-2.5 gap-1.5 text-muted-foreground hover:text-foreground"
+        >
+          <Languages className="h-3.5 w-3.5 text-primary" />
+          <span>{lang === 'en' ? 'اردو' : 'English'}</span>
+        </Button>
+      </div>
+
+      <div className="w-full max-w-md mx-auto space-y-6 my-auto">
         {/* Top Branding */}
         <div className="text-center space-y-2">
           <Link href="/" className="inline-flex items-center gap-2.5 group">
@@ -293,6 +313,11 @@ function RegisterForm() {
           <ShieldCheck className="h-4 w-4 text-primary" />
           <span>{t('Your personal data is encrypted and strictly protected', 'آپ کی معلومات مکمل محفوظ اور خفیہ ہیں')}</span>
         </div>
+      </div>
+
+      {/* Bottom Minimal Copyright */}
+      <div className="w-full text-center text-xs text-muted-foreground pt-8">
+        © {new Date().getFullYear()} {t('QanoonPK — Pakistan Legal Directory. All rights reserved.', 'قانون پی کے — جملہ حقوق محفوظ ہیں۔')}
       </div>
     </div>
   )

@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import {
   Scale, Mail, Github, ShieldCheck, BookText, Compass,
   Briefcase, FileText, GitCompare, Bot, Landmark,
@@ -13,6 +14,10 @@ import { Badge } from '@/components/ui/badge'
 
 export function SiteFooter() {
   const { t, lang } = useLanguage()
+  const pathname = usePathname()
+
+  const isAuthPage = pathname === '/login' || pathname === '/register' || pathname?.startsWith('/auth')
+  if (isAuthPage) return null
 
   return (
     <footer className="mt-auto border-t border-border/70 bg-gradient-to-b from-background via-muted/20 to-muted/50 text-foreground">
