@@ -1,16 +1,19 @@
 import { db } from '@/lib/db'
 
-export const dynamic = 'force-static'
-export const revalidate = 3600 // Revalidate every hour
+export const dynamic = 'force-dynamic'
 
 export async function GET() {
-  const laws = await db.law.findMany({
-    orderBy: { createdAt: 'desc' },
-    take: 20,
-    include: { category: true },
-  })
+  let items = ''
 
-  const items = laws.map((law) => `
+  if (process.env.DATABASE_URL) {
+    try {
+      const laws = await db.law.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+        include: { category: true },
+      })
+
+      items = laws.map((law) => `
     <item>
       <title>${escapeXml(law.title)}</title>
       <link>https://qanoonpk.example/laws/${law.slug}</link>
@@ -20,6 +23,10 @@ export async function GET() {
       <pubDate>${new Date(law.createdAt).toUTCString()}</pubDate>
     </item>
   `).join('')
+    } catch (error) {
+      console.error('Error fetching laws for RSS:', error)
+    }
+  }
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">

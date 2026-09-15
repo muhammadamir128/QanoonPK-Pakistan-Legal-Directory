@@ -1,7 +1,6 @@
 import { db } from '@/lib/db'
 
-export const dynamic = 'force-static'
-export const revalidate = 3600
+export const dynamic = 'force-dynamic'
 
 export async function GET() {
   const baseUrl = 'https://qanoonpk.example'
@@ -23,41 +22,51 @@ export async function GET() {
     { url: '/admin', priority: '0.3', changefreq: 'monthly' },
   ]
 
-  // Fetch all laws and categories
-  const [laws, categories, lawyers, templates] = await Promise.all([
-    db.law.findMany({ select: { slug: true, updatedAt: true } }),
-    db.category.findMany({ select: { slug: true, updatedAt: true } }),
-    db.lawyer.findMany({ select: { slug: true, updatedAt: true } }),
-    db.docTemplate.findMany({ select: { slug: true, updatedAt: true } }),
-  ])
+  let lawUrls: { url: string; priority: string; changefreq: string; lastmod: string }[] = []
+  let categoryUrls: { url: string; priority: string; changefreq: string; lastmod: string }[] = []
+  let lawyerUrls: { url: string; priority: string; changefreq: string; lastmod: string }[] = []
+  let templateUrls: { url: string; priority: string; changefreq: string; lastmod: string }[] = []
 
-  const lawUrls = laws.map((l) => ({
-    url: `/laws/${l.slug}`,
-    priority: '0.8',
-    changefreq: 'weekly',
-    lastmod: l.updatedAt.toISOString(),
-  }))
+  if (process.env.DATABASE_URL) {
+    try {
+      const [laws, categories, lawyers, templates] = await Promise.all([
+        db.law.findMany({ select: { slug: true, updatedAt: true } }),
+        db.category.findMany({ select: { slug: true, updatedAt: true } }),
+        db.lawyer.findMany({ select: { slug: true, updatedAt: true } }),
+        db.docTemplate.findMany({ select: { slug: true, updatedAt: true } }),
+      ])
 
-  const categoryUrls = categories.map((c) => ({
-    url: `/categories/${c.slug}`,
-    priority: '0.7',
-    changefreq: 'weekly',
-    lastmod: c.updatedAt.toISOString(),
-  }))
+      lawUrls = laws.map((l) => ({
+        url: `/laws/${l.slug}`,
+        priority: '0.8',
+        changefreq: 'weekly',
+        lastmod: l.updatedAt.toISOString(),
+      }))
 
-  const lawyerUrls = lawyers.map((l) => ({
-    url: `/lawyers/${l.slug}`,
-    priority: '0.6',
-    changefreq: 'monthly',
-    lastmod: l.updatedAt.toISOString(),
-  }))
+      categoryUrls = categories.map((c) => ({
+        url: `/categories/${c.slug}`,
+        priority: '0.7',
+        changefreq: 'weekly',
+        lastmod: c.updatedAt.toISOString(),
+      }))
 
-  const templateUrls = templates.map((t) => ({
-    url: `/templates/${t.slug}`,
-    priority: '0.6',
-    changefreq: 'monthly',
-    lastmod: t.updatedAt.toISOString(),
-  }))
+      lawyerUrls = lawyers.map((l) => ({
+        url: `/lawyers/${l.slug}`,
+        priority: '0.6',
+        changefreq: 'monthly',
+        lastmod: l.updatedAt.toISOString(),
+      }))
+
+      templateUrls = templates.map((t) => ({
+        url: `/templates/${t.slug}`,
+        priority: '0.6',
+        changefreq: 'monthly',
+        lastmod: t.updatedAt.toISOString(),
+      }))
+    } catch (error) {
+      console.error('Error loading sitemap items from DB:', error)
+    }
+  }
 
   const allUrls = [
     ...staticPages.map((p) => ({ ...p, lastmod: new Date().toISOString() })),
