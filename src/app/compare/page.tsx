@@ -348,9 +348,8 @@ function LawCompareCard({
             {lang === 'ur' && law.titleUrdu ? law.titleUrdu : law.title}
           </Link>
         </CardTitle>
-        {lang === 'en' && law.titleUrdu && (
-          <CardDescription className="font-urdu" dir="rtl">{law.titleUrdu}</CardDescription>
-        )}
+
+
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Meta */}

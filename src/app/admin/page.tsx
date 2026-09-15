@@ -741,7 +741,7 @@ export default function AdminPage() {
                           <span className="text-xs font-bold text-muted-foreground tabular-nums w-5">{i + 1}.</span>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium truncate">{lang === 'ur' && law.titleUrdu ? law.titleUrdu : law.title}</p>
-                            <p className="text-[10px] text-muted-foreground">{law.category.name}</p>
+                            <p className="text-[10px] text-muted-foreground">{lang === 'ur' && law.category.nameUrdu ? law.category.nameUrdu : law.category.name}</p>
                           </div>
                           <Badge variant="secondary" className="text-xs tabular-nums">{law.viewCount}</Badge>
                         </Link>

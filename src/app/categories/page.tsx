@@ -137,9 +137,8 @@ export default function CategoriesPage() {
                         <CardTitle className="text-lg leading-tight">
                           {lang === 'ur' && cat.nameUrdu ? cat.nameUrdu : cat.name}
                         </CardTitle>
-                        {lang === 'en' && cat.nameUrdu && (
-                          <CardDescription className="text-xs mt-1 font-urdu" dir="rtl">{cat.nameUrdu}</CardDescription>
-                        )}
+
+
                       </div>
                       <Badge variant="secondary" className="shrink-0">{count} {t('laws', 'قوانین')}</Badge>
                     </CardHeader>

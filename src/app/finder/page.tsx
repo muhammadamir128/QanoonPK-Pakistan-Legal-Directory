@@ -261,9 +261,8 @@ export default function FinderPage() {
           <CardTitle className="text-xl md:text-2xl leading-tight">
             {lang === 'ur' && currentQuestion.questionUrdu ? currentQuestion.questionUrdu : currentQuestion.question}
           </CardTitle>
-          {lang === 'en' && currentQuestion.questionUrdu && (
-            <CardDescription className="font-urdu text-sm mt-1" dir="rtl">{currentQuestion.questionUrdu}</CardDescription>
-          )}
+
+
         </CardHeader>
         <CardContent className="space-y-2.5">
           {currentQuestion.options.map((opt) => {

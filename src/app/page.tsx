@@ -56,7 +56,7 @@ type Stats = {
     yearEnacted: number
     status: string
     viewCount: number
-    category: { name: string; slug: string; color?: string | null }
+    category: { name: string; nameUrdu?: string | null; slug: string; color?: string | null }
   }>
   topSearches: Array<{ query: string; count: number }>
   featuredLawyers?: Array<{
@@ -78,7 +78,7 @@ type Stats = {
     yearEnacted: number
     status: string
     createdAt: string
-    category: { name: string; slug: string; color?: string | null }
+    category: { name: string; nameUrdu?: string | null; slug: string; color?: string | null }
   }>
   recentlyUpdated?: Array<{
     slug: string
@@ -87,7 +87,7 @@ type Stats = {
     yearEnacted: number
     status: string
     updatedAt: string
-    category: { name: string; slug: string; color?: string | null }
+    category: { name: string; nameUrdu?: string | null; slug: string; color?: string | null }
   }>
   popularThisWeek?: Array<{
     slug: string
@@ -95,7 +95,7 @@ type Stats = {
     titleUrdu: string | null
     yearEnacted: number
     viewCount: number
-    category: { name: string; slug: string; color?: string | null }
+    category: { name: string; nameUrdu?: string | null; slug: string; color?: string | null }
   }>
   lawOfDay?: {
     slug: string
@@ -246,9 +246,7 @@ export default function HomePage() {
                     <h2 className="text-xl md:text-2xl font-bold tracking-tight group-hover:text-primary transition-colors">
                       {lang === 'ur' && stats.lawOfDay.titleUrdu ? stats.lawOfDay.titleUrdu : stats.lawOfDay.title}
                     </h2>
-                    {lang === 'en' && stats.lawOfDay.titleUrdu && (
-                      <p className="text-sm text-muted-foreground font-urdu mt-0.5" dir="rtl">{stats.lawOfDay.titleUrdu}</p>
-                    )}
+
                     <p className="text-sm text-muted-foreground mt-2 line-clamp-2 leading-relaxed">
                       {lang === 'ur' && stats.lawOfDay.summaryUrdu ? stats.lawOfDay.summaryUrdu : stats.lawOfDay.summary ?? ''}
                     </p>
@@ -406,7 +404,7 @@ export default function HomePage() {
                           style={{ backgroundColor: law.category.color }}
                         />
                       )}
-                      <span className="text-muted-foreground">{lang === 'ur' ? '' : law.category?.name}</span>
+                      <span className="text-muted-foreground">{lang === 'ur' && law.category?.nameUrdu ? law.category.nameUrdu : law.category?.name}</span>
                       <span className="text-muted-foreground">•</span>
                       <span className="text-muted-foreground inline-flex items-center gap-1">
                         <TrendingUp className="h-3 w-3" /> {law.viewCount}
@@ -499,7 +497,7 @@ export default function HomePage() {
                           {lang === 'ur' && law.titleUrdu ? law.titleUrdu : law.title}
                         </p>
                         <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
-                          <span style={{ color: law.category.color ?? undefined }}>{lang === 'ur' ? '' : law.category.name}</span>
+                          <span style={{ color: law.category.color ?? undefined }}>{lang === 'ur' && law.category.nameUrdu ? law.category.nameUrdu : law.category.name}</span>
                           <span>•</span>
                           <span>{law.yearEnacted}</span>
                           {law.createdAt && (
@@ -542,7 +540,7 @@ export default function HomePage() {
                           {lang === 'ur' && law.titleUrdu ? law.titleUrdu : law.title}
                         </p>
                         <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
-                          <span style={{ color: law.category.color ?? undefined }}>{lang === 'ur' ? '' : law.category.name}</span>
+                          <span style={{ color: law.category.color ?? undefined }}>{lang === 'ur' && law.category.nameUrdu ? law.category.nameUrdu : law.category.name}</span>
                           <span>•</span>
                           <span>{law.yearEnacted}</span>
                           {law.updatedAt && (
@@ -599,7 +597,7 @@ export default function HomePage() {
                         className="inline-flex h-1.5 w-1.5 rounded-full"
                         style={{ backgroundColor: law.category.color ?? 'var(--primary)' }}
                       />
-                      <span className="truncate">{law.category.name}</span>
+                      <span className="truncate">{lang === 'ur' && law.category.nameUrdu ? law.category.nameUrdu : law.category.name}</span>
                     </div>
                     <div className="mt-1 flex items-center gap-1 text-[10px] text-muted-foreground">
                       <Eye className="h-2.5 w-2.5" />
@@ -823,9 +821,7 @@ function CategoryCard({ cat, delay }: { cat: Category, delay: number }) {
             <CardTitle className="text-base leading-tight">
               {lang === 'ur' && cat.nameUrdu ? cat.nameUrdu : cat.name}
             </CardTitle>
-            <CardDescription className="text-xs mt-1 font-urdu" dir={lang === 'ur' ? 'rtl' : 'ltr'}>
-              {lang === 'en' && cat.nameUrdu ? cat.nameUrdu : ''}
-            </CardDescription>
+
           </div>
         </CardHeader>
         <CardContent className="pt-0">

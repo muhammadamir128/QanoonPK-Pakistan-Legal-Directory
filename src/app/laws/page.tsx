@@ -350,9 +350,8 @@ function LawCard({ law, delay }: { law: Law, delay: number }) {
             {lang === 'ur' && law.titleUrdu ? law.titleUrdu : law.title}
           </h3>
 
-          {lang === 'en' && law.titleUrdu && (
-            <p className="text-xs text-muted-foreground font-urdu mt-1 line-clamp-1" dir="rtl">{law.titleUrdu}</p>
-          )}
+
+
 
           <p className="text-sm text-muted-foreground mt-3 line-clamp-3 leading-relaxed flex-1">
             {lang === 'ur' && law.summaryUrdu ? law.summaryUrdu : law.summary ?? ''}

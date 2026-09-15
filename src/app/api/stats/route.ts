@@ -82,7 +82,7 @@ export async function GET(_req: NextRequest) {
       yearEnacted: l.yearEnacted,
       status: l.status,
       viewCount: l.viewCount,
-      category: { name: l.category.name, slug: l.category.slug, color: l.category.color },
+      category: { name: l.category.name, nameUrdu: l.category.nameUrdu, slug: l.category.slug, color: l.category.color },
     })),
     topSearches: topSearches.map((s) => ({ query: s.query, count: s._count.query })),
     zeroResultSearches: zeroResultSearches.map((s) => s.query),
@@ -105,7 +105,7 @@ export async function GET(_req: NextRequest) {
       yearEnacted: l.yearEnacted,
       status: l.status,
       createdAt: l.createdAt,
-      category: { name: l.category.name, slug: l.category.slug, color: l.category.color },
+      category: { name: l.category.name, nameUrdu: l.category.nameUrdu, slug: l.category.slug, color: l.category.color },
     })),
     recentlyUpdated: recentlyUpdated.map((l) => ({
       slug: l.slug,
@@ -114,7 +114,7 @@ export async function GET(_req: NextRequest) {
       yearEnacted: l.yearEnacted,
       status: l.status,
       updatedAt: l.updatedAt,
-      category: { name: l.category.name, slug: l.category.slug, color: l.category.color },
+      category: { name: l.category.name, nameUrdu: l.category.nameUrdu, slug: l.category.slug, color: l.category.color },
     })),
     popularThisWeek: popularThisWeek.map((l) => ({
       slug: l.slug,
@@ -122,7 +122,7 @@ export async function GET(_req: NextRequest) {
       titleUrdu: l.titleUrdu,
       yearEnacted: l.yearEnacted,
       viewCount: l.viewCount,
-      category: { name: l.category.name, slug: l.category.slug, color: l.category.color },
+      category: { name: l.category.name, nameUrdu: l.category.nameUrdu, slug: l.category.slug, color: l.category.color },
     })),
     lawOfDay: lawOfDay ? {
       slug: lawOfDay.slug,

@@ -217,9 +217,8 @@ export default function TemplatesPage() {
                   <h3 className="font-semibold text-base leading-tight group-hover:text-primary transition-colors line-clamp-2">
                     {lang === 'ur' && tpl.titleUrdu ? tpl.titleUrdu : tpl.title}
                   </h3>
-                  {lang === 'en' && tpl.titleUrdu && (
-                    <p className="text-xs text-muted-foreground font-urdu mt-0.5 line-clamp-1" dir="rtl">{tpl.titleUrdu}</p>
-                  )}
+
+
                   <p className="text-sm text-muted-foreground mt-2 line-clamp-2 leading-relaxed">
                     {lang === 'ur' && tpl.descriptionUrdu ? tpl.descriptionUrdu : tpl.description}
                   </p>
