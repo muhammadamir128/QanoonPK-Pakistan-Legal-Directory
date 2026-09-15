@@ -104,6 +104,7 @@ model User {
   id        String     @id @default(cuid())
   name      String?
   email     String     @unique
+  password  String?
   role      String     @default("user") // user, editor, reviewer, admin
   bookmarks Bookmark[]
   createdAt DateTime   @default(now())

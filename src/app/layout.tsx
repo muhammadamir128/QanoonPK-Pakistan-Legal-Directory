@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { LanguageProvider } from "@/components/language-provider";
+import { AuthProvider } from "@/components/auth-provider";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 
@@ -108,11 +109,13 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <LanguageProvider>
-            <SiteHeader />
-            <main className="flex-1 flex flex-col">{children}</main>
-            <SiteFooter />
-            <Toaster />
-            <SonnerToaster position="top-center" richColors />
+            <AuthProvider>
+              <SiteHeader />
+              <main className="flex-1 flex flex-col">{children}</main>
+              <SiteFooter />
+              <Toaster />
+              <SonnerToaster position="top-center" richColors />
+            </AuthProvider>
           </LanguageProvider>
         </ThemeProvider>
       </body>
