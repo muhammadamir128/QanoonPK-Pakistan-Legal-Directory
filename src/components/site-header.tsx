@@ -72,8 +72,8 @@ export function SiteHeader() {
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname.startsWith(href)
 
-  const isAuthPage = pathname === '/login' || pathname === '/register' || pathname?.startsWith('/auth')
-  if (isAuthPage) return null
+  const isExcludedPage = pathname === '/login' || pathname === '/register' || pathname?.startsWith('/auth') || pathname?.startsWith('/admin')
+  if (isExcludedPage) return null
 
   return (
     <>

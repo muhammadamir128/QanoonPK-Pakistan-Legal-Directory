@@ -33,3 +33,27 @@ export async function GET(
     })),
   })
 }
+
+// DELETE /api/categories/[slug]
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ slug: string }> }
+) {
+  const { slug } = await params
+  const category = await db.category.findUnique({
+    where: { slug },
+    include: { _count: { select: { laws: true } } },
+  })
+  if (!category) return NextResponse.json({ ok: false, error: 'Category not found' }, { status: 404 })
+
+  if (category._count.laws > 0) {
+    return NextResponse.json({
+      ok: false,
+      error: `Cannot delete category because it has ${category._count.laws} associated laws. Reassign or delete the laws first.`
+    }, { status: 400 })
+  }
+
+  await db.category.delete({ where: { slug } })
+  return NextResponse.json({ ok: true, message: 'Category deleted' })
+}
+

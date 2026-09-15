@@ -16,8 +16,8 @@ export function SiteFooter() {
   const { t, lang } = useLanguage()
   const pathname = usePathname()
 
-  const isAuthPage = pathname === '/login' || pathname === '/register' || pathname?.startsWith('/auth')
-  if (isAuthPage) return null
+  const isExcludedPage = pathname === '/login' || pathname === '/register' || pathname?.startsWith('/auth') || pathname?.startsWith('/admin')
+  if (isExcludedPage) return null
 
   return (
     <footer className="mt-auto border-t border-border/70 bg-gradient-to-b from-background via-muted/20 to-muted/50 text-foreground">
