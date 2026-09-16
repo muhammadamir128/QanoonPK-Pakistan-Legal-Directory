@@ -9,7 +9,9 @@ import {
   Briefcase, FilePlus, Star, ShieldCheck, BarChart3, TrendingUp,
   AlertCircle, Eye, Download, Users, ShieldAlert, LogOut, Sun, Moon,
   Languages, Menu, X, ArrowLeft, ArrowUpRight, CheckCircle2,
-  UserCheck, Settings, Lock, Sparkles, Filter, Check,
+  UserCheck, Settings, Lock, Sparkles, Filter, Check, Mail, Compass,
+  Layers, MessageSquare, Copy, FileSpreadsheet, Server, HardDrive, Shield, Sliders,
+  HelpCircle, CheckCircle, Clock,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -30,6 +32,7 @@ import {
 } from '@/components/ui/table'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { useSession, signOut } from 'next-auth/react'
 import { useTheme } from 'next-themes'
 import { useLanguage } from '@/components/language-provider'
@@ -117,8 +120,71 @@ type AnalyticsData = {
   days: number
 }
 
-type AdminTab = 'overview' | 'laws' | 'categories' | 'lawyers' | 'templates' | 'analytics' | 'users'
-const VALID_TABS: AdminTab[] = ['overview', 'laws', 'categories', 'lawyers', 'templates', 'analytics', 'users']
+type Subscriber = {
+  id: string
+  email: string
+  name: string | null
+  active: boolean
+  preferences?: string | null
+  createdAt: string
+}
+
+type Review = {
+  id: string
+  lawyerId: string
+  authorName: string
+  rating: number
+  comment: string | null
+  createdAt: string
+  lawyer: {
+    id: string
+    name: string
+    nameUrdu: string | null
+    slug: string
+    city: string
+    rating: number
+    reviewCount: number
+  }
+}
+
+type FinderQuestionOption = {
+  id: string
+  label: string
+  labelUrdu?: string
+  nextQuestionId?: string
+  categoryIds?: string[]
+}
+
+type FinderQuestionItem = {
+  id: string
+  question: string
+  questionUrdu: string | null
+  orderIndex: number
+  options: FinderQuestionOption[]
+}
+
+type LawSection = {
+  id: string
+  lawId: string
+  sectionNumber: string
+  title: string | null
+  content: string
+  contentUrdu: string | null
+  orderIndex: number
+}
+
+type LawAmendment = {
+  id: string
+  lawId: string
+  amendmentYear: number
+  amendmentTitle: string
+  gazetteReference: string | null
+  description: string | null
+  effectiveDate: string | null
+}
+
+type AdminTab = 'overview' | 'laws' | 'categories' | 'lawyers' | 'templates' | 'analytics' | 'users' | 'subscribers' | 'reviews' | 'finder' | 'settings'
+const VALID_TABS: AdminTab[] = ['overview', 'laws', 'categories', 'lawyers', 'templates', 'analytics', 'users', 'subscribers', 'reviews', 'finder', 'settings']
 
 export default function AdminPage() {
   const { data: session, status } = useSession()
@@ -196,6 +262,9 @@ export default function AdminPage() {
   const [lawyers, setLawyers] = React.useState<Lawyer[]>([])
   const [templates, setTemplates] = React.useState<Template[]>([])
   const [users, setUsers] = React.useState<ManagedUser[]>([])
+  const [subscribers, setSubscribers] = React.useState<Subscriber[]>([])
+  const [reviews, setReviews] = React.useState<Review[]>([])
+  const [finderQuestions, setFinderQuestions] = React.useState<FinderQuestionItem[]>([])
   const [analytics, setAnalytics] = React.useState<AnalyticsData | null>(null)
   const [loading, setLoading] = React.useState(true)
   const [stats, setStats] = React.useState<{
@@ -205,12 +274,19 @@ export default function AdminPage() {
     amendmentCount: number
     lawyerCount?: number
     templateCount?: number
+    subscriberCount?: number
+    reviewCount?: number
+    questionCount?: number
   } | null>(null)
 
   // Filters & Search
   const [search, setSearch] = React.useState('')
   const [selectedJurisdiction, setSelectedJurisdiction] = React.useState<string>('all')
   const [selectedCategory, setSelectedCategory] = React.useState<string>('all')
+  const [subscriberFilter, setSubscriberFilter] = React.useState<'all' | 'active' | 'inactive'>('all')
+  const [subscriberSearch, setSubscriberSearch] = React.useState('')
+  const [reviewSearch, setReviewSearch] = React.useState('')
+  const [reviewRatingFilter, setReviewRatingFilter] = React.useState<string>('all')
 
   // Modals
   const [editingLaw, setEditingLaw] = React.useState<Law | null>(null)
@@ -218,6 +294,10 @@ export default function AdminPage() {
   const [creatingLawyer, setCreatingLawyer] = React.useState(false)
   const [creatingCategory, setCreatingCategory] = React.useState(false)
   const [creatingTemplate, setCreatingTemplate] = React.useState(false)
+  const [creatingSubscriber, setCreatingSubscriber] = React.useState(false)
+  const [creatingFinderQuestion, setCreatingFinderQuestion] = React.useState(false)
+  const [editingFinderQuestion, setEditingFinderQuestion] = React.useState<FinderQuestionItem | null>(null)
+  const [managingLawSections, setManagingLawSections] = React.useState<Law | null>(null)
 
   // Pagination states (20 items per page)
   const LAWS_PER_PAGE = 20
@@ -229,6 +309,12 @@ export default function AdminPage() {
   const LAWYERS_PER_PAGE = 20
   const [lawyersPage, setLawyersPage] = React.useState(1)
 
+  const SUBSCRIBERS_PER_PAGE = 20
+  const [subscribersPage, setSubscribersPage] = React.useState(1)
+
+  const REVIEWS_PER_PAGE = 20
+  const [reviewsPage, setReviewsPage] = React.useState(1)
+
   // Reset page when filters change
   React.useEffect(() => {
     setLawsPage(1)
@@ -237,6 +323,14 @@ export default function AdminPage() {
   React.useEffect(() => {
     setLawyersPage(1)
   }, [search])
+
+  React.useEffect(() => {
+    setSubscribersPage(1)
+  }, [subscriberSearch, subscriberFilter])
+
+  React.useEffect(() => {
+    setReviewsPage(1)
+  }, [reviewSearch, reviewRatingFilter])
 
   const loadAll = React.useCallback(() => {
     setLoading(true)
@@ -248,8 +342,11 @@ export default function AdminPage() {
       fetch('/api/templates?limit=500').then((r) => r.json()),
       fetch('/api/analytics').then((r) => r.json()),
       fetch('/api/admin/users').then((r) => (r.ok ? r.json() : { ok: false, users: [] })),
+      fetch('/api/admin/subscribers').then((r) => (r.ok ? r.json() : { subscribers: [] })),
+      fetch('/api/admin/reviews').then((r) => (r.ok ? r.json() : { reviews: [] })),
+      fetch('/api/admin/finder').then((r) => (r.ok ? r.json() : { questions: [] })),
     ])
-      .then(([lawsData, catsData, s, lawyersData, templatesData, a, usersData]) => {
+      .then(([lawsData, catsData, s, lawyersData, templatesData, a, usersData, subsData, revsData, finderData]) => {
         setLaws(lawsData.items ?? [])
         setCategories(catsData.items ?? [])
         setLawyers(lawyersData.items ?? [])
@@ -258,6 +355,15 @@ export default function AdminPage() {
         if (usersData.ok && usersData.users) {
           setUsers(usersData.users)
         }
+        if (subsData?.subscribers) {
+          setSubscribers(subsData.subscribers)
+        }
+        if (revsData?.reviews) {
+          setReviews(revsData.reviews)
+        }
+        if (finderData?.questions) {
+          setFinderQuestions(finderData.questions)
+        }
         setStats({
           lawCount: s.lawCount ?? 0,
           categoryCount: s.categoryCount ?? 0,
@@ -265,6 +371,9 @@ export default function AdminPage() {
           amendmentCount: s.amendmentCount ?? 0,
           lawyerCount: s.lawyerCount ?? 0,
           templateCount: s.templateCount ?? 0,
+          subscriberCount: subsData?.subscribers?.length ?? 0,
+          reviewCount: revsData?.reviews?.length ?? 0,
+          questionCount: finderData?.questions?.length ?? 0,
         })
         setLoading(false)
       })
@@ -386,6 +495,86 @@ export default function AdminPage() {
       }
     } catch {
       toast.error('Failed to update role')
+    }
+  }
+
+  // --- Subscriber Handlers ---
+  const toggleSubscriber = async (sub: Subscriber) => {
+    try {
+      const res = await fetch('/api/admin/subscribers', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: sub.id, active: !sub.active }),
+      })
+      const d = await res.json()
+      if (d.ok) {
+        toast.success(t(sub.active ? 'Subscriber deactivated' : 'Subscriber activated', 'سبسکرائبر کی حیثیت تبدیل ہو گئی'))
+        setSubscribers((prev) => prev.map((s) => (s.id === sub.id ? { ...s, active: !s.active } : s)))
+      } else {
+        toast.error(d.error || 'Failed to update')
+      }
+    } catch {
+      toast.error('Failed to update subscriber')
+    }
+  }
+
+  const deleteSubscriber = async (sub: Subscriber) => {
+    if (!confirm(`${t('Delete subscriber', 'حذف کریں')} "${sub.email}"?`)) return
+    try {
+      const res = await fetch(`/api/admin/subscribers?id=${sub.id}`, { method: 'DELETE' })
+      const d = await res.json()
+      if (d.ok) {
+        toast.success(t('Subscriber deleted', 'سبسکرائبر حذف ہو گیا'))
+        setSubscribers((prev) => prev.filter((s) => s.id !== sub.id))
+      } else {
+        toast.error(d.error || 'Failed to delete')
+      }
+    } catch {
+      toast.error('Failed to delete subscriber')
+    }
+  }
+
+  const copySubscribersEmails = () => {
+    const activeEmails = subscribers.filter((s) => s.active).map((s) => s.email).join(', ')
+    if (!activeEmails) {
+      toast.info(t('No active subscribers to copy', 'کوئی فعال ای میل موجود نہیں'))
+      return
+    }
+    navigator.clipboard.writeText(activeEmails)
+    toast.success(t('Copied all active emails to clipboard!', 'تمام فعال ای میلز کاپی کر لی گئیں!'))
+  }
+
+  // --- Review Handlers ---
+  const deleteReview = async (review: Review) => {
+    if (!confirm(t('Delete this lawyer review?', 'کیا آپ یہ جائزہ حذف کرنا چاہتے ہیں؟'))) return
+    try {
+      const res = await fetch(`/api/admin/reviews?id=${review.id}`, { method: 'DELETE' })
+      const d = await res.json()
+      if (d.ok) {
+        toast.success(t('Review deleted', 'جائزہ حذف ہو گیا'))
+        setReviews((prev) => prev.filter((r) => r.id !== review.id))
+      } else {
+        toast.error(d.error || 'Failed to delete review')
+      }
+    } catch {
+      toast.error('Failed to delete review')
+    }
+  }
+
+  // --- Finder Question Handlers ---
+  const deleteFinderQuestion = async (q: FinderQuestionItem) => {
+    if (!confirm(`${t('Delete question', 'سوال حذف کریں')} "${q.question}"?`)) return
+    try {
+      const res = await fetch(`/api/admin/finder?id=${q.id}`, { method: 'DELETE' })
+      const d = await res.json()
+      if (d.ok) {
+        toast.success(t('Question deleted', 'سوال حذف ہو گیا'))
+        setFinderQuestions((prev) => prev.filter((item) => item.id !== q.id))
+      } else {
+        toast.error(d.error || 'Failed to delete')
+      }
+    } catch {
+      toast.error('Failed to delete question')
     }
   }
 
@@ -549,6 +738,31 @@ export default function AdminPage() {
   const totalLawyersPages = Math.max(1, Math.ceil(filteredLawyers.length / LAWYERS_PER_PAGE))
   const paginatedLawyers = filteredLawyers.slice((lawyersPage - 1) * LAWYERS_PER_PAGE, lawyersPage * LAWYERS_PER_PAGE)
 
+  // --- FILTERED SUBSCRIBERS ---
+  const filteredSubscribers = subscribers.filter((sub) => {
+    if (subscriberFilter === 'active' && !sub.active) return false
+    if (subscriberFilter === 'inactive' && sub.active) return false
+    if (!subscriberSearch) return true
+    const q = subscriberSearch.toLowerCase()
+    return sub.email.toLowerCase().includes(q) || (sub.name ?? '').toLowerCase().includes(q)
+  })
+  const totalSubscribersPages = Math.max(1, Math.ceil(filteredSubscribers.length / SUBSCRIBERS_PER_PAGE))
+  const paginatedSubscribers = filteredSubscribers.slice((subscribersPage - 1) * SUBSCRIBERS_PER_PAGE, subscribersPage * SUBSCRIBERS_PER_PAGE)
+
+  // --- FILTERED REVIEWS ---
+  const filteredReviews = reviews.filter((rev) => {
+    if (reviewRatingFilter !== 'all' && rev.rating !== parseInt(reviewRatingFilter)) return false
+    if (!reviewSearch) return true
+    const q = reviewSearch.toLowerCase()
+    return (
+      rev.authorName.toLowerCase().includes(q) ||
+      (rev.comment ?? '').toLowerCase().includes(q) ||
+      (rev.lawyer?.name ?? '').toLowerCase().includes(q)
+    )
+  })
+  const totalReviewsPages = Math.max(1, Math.ceil(filteredReviews.length / REVIEWS_PER_PAGE))
+  const paginatedReviews = filteredReviews.slice((reviewsPage - 1) * REVIEWS_PER_PAGE, reviewsPage * REVIEWS_PER_PAGE)
+
   // --- SIDEBAR NAVIGATION DEFINITION ---
   const navItems = [
     {
@@ -599,6 +813,34 @@ export default function AdminPage() {
       labelUr: 'صارفین کا انتظام',
       icon: Users,
       badge: users.length || null,
+    },
+    {
+      id: 'subscribers',
+      labelEn: 'Subscribers',
+      labelUr: 'سبسکرائبرز',
+      icon: Mail,
+      badge: subscribers.length || null,
+    },
+    {
+      id: 'reviews',
+      labelEn: 'Lawyer Reviews',
+      labelUr: 'وکلاء کے جائزے',
+      icon: Star,
+      badge: reviews.length || null,
+    },
+    {
+      id: 'finder',
+      labelEn: 'Legal Finder',
+      labelUr: 'رہنمائی سوالات',
+      icon: Compass,
+      badge: finderQuestions.length || null,
+    },
+    {
+      id: 'settings',
+      labelEn: 'Settings & Tools',
+      labelUr: 'ترتیبات و اوزار',
+      icon: Settings,
+      badge: null,
     },
   ]
 
@@ -830,6 +1072,20 @@ export default function AdminPage() {
               <Button size="sm" onClick={() => setCreatingTemplate(true)} className="h-8 text-xs gap-1.5 shadow-sm">
                 <Plus className="h-3.5 w-3.5" />
                 <span>{t('Add Template', 'ٹیمپلیٹ شامل کریں')}</span>
+              </Button>
+            )}
+
+            {activeTab === 'subscribers' && (
+              <Button size="sm" onClick={() => setCreatingSubscriber(true)} className="h-8 text-xs gap-1.5 shadow-sm">
+                <Plus className="h-3.5 w-3.5" />
+                <span>{t('Add Subscriber', 'سبسکرائبر شامل کریں')}</span>
+              </Button>
+            )}
+
+            {activeTab === 'finder' && (
+              <Button size="sm" onClick={() => setCreatingFinderQuestion(true)} className="h-8 text-xs gap-1.5 shadow-sm">
+                <Plus className="h-3.5 w-3.5" />
+                <span>{t('Add Question', 'سوال شامل کریں')}</span>
               </Button>
             )}
 
@@ -1109,6 +1365,13 @@ export default function AdminPage() {
                         </SelectContent>
                       </Select>
 
+                      <Button variant="outline" size="sm" asChild className="h-9 text-xs gap-1.5">
+                        <a href="/api/admin/export?type=laws" download>
+                          <Download className="h-3.5 w-3.5" />
+                          <span>{t('Export CSV', 'ایکسپورٹ CSV')}</span>
+                        </a>
+                      </Button>
+
                       <Button size="sm" onClick={() => setCreatingLaw(true)} className="h-9 text-xs gap-1.5 shadow-sm">
                         <Plus className="h-4 w-4" />
                         <span>{t('Add New Law', 'نیا قانون شامل کریں')}</span>
@@ -1183,6 +1446,15 @@ export default function AdminPage() {
                                   {law.viewCount}
                                 </TableCell>
                                 <TableCell className="text-right pr-4 space-x-1">
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-8 w-8 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/30"
+                                    onClick={() => setManagingLawSections(law)}
+                                    title={t('Manage Sections & Amendments', 'دفعات اور ترامیم کا انتظام')}
+                                  >
+                                    <Layers className="h-3.5 w-3.5" />
+                                  </Button>
                                   <Button
                                     size="icon"
                                     variant="ghost"
@@ -1438,6 +1710,12 @@ export default function AdminPage() {
                           className="h-9 pl-8 text-xs"
                         />
                       </div>
+                      <Button variant="outline" size="sm" asChild className="h-9 text-xs gap-1.5">
+                        <a href="/api/admin/export?type=lawyers" download>
+                          <Download className="h-3.5 w-3.5" />
+                          <span>{t('Export CSV', 'ایکسپورٹ CSV')}</span>
+                        </a>
+                      </Button>
                       <Button size="sm" onClick={() => setCreatingLawyer(true)} className="h-9 text-xs gap-1.5 shadow-sm">
                         <Plus className="h-4 w-4" />
                         <span>{t('Add Lawyer', 'وکیل شامل کریں')}</span>
@@ -1806,10 +2084,18 @@ export default function AdminPage() {
                         {users.length} {t('registered members with assigned roles', 'رجسٹرڈ صارفین')}
                       </CardDescription>
                     </div>
-                    <Button variant="outline" size="sm" onClick={loadAll} className="h-9 text-xs gap-1.5">
-                      <RefreshCw className="h-3.5 w-3.5" />
-                      <span>{t('Refresh Users', 'صارفین ریفریش')}</span>
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" asChild className="h-9 text-xs gap-1.5">
+                        <a href="/api/admin/export?type=users" download>
+                          <Download className="h-3.5 w-3.5" />
+                          <span>{t('Export CSV', 'ایکسپورٹ CSV')}</span>
+                        </a>
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={loadAll} className="h-9 text-xs gap-1.5">
+                        <RefreshCw className="h-3.5 w-3.5" />
+                        <span>{t('Refresh Users', 'صارفین ریفریش')}</span>
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -1881,6 +2167,760 @@ export default function AdminPage() {
               </Card>
             </div>
           )}
+
+          {/* TAB 8: SUBSCRIBERS MANAGEMENT */}
+          {activeTab === 'subscribers' && (
+            <div className="space-y-4 animate-in fade-in-50 duration-200">
+              {/* Metrics */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <Card className="p-4 border-border/80">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                      <Mail className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground font-medium">{t('Total Subscribers', 'کل سبسکرائبرز')}</p>
+                      <p className="text-xl font-bold">{subscribers.length}</p>
+                    </div>
+                  </div>
+                </Card>
+                <Card className="p-4 border-border/80">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                      <CheckCircle className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground font-medium">{t('Active Subscribers', 'فعال سبسکرائبرز')}</p>
+                      <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                        {subscribers.filter((s) => s.active).length}
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+                <Card className="p-4 border-border/80">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                      <Clock className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground font-medium">{t('Inactive / Unsubscribed', 'غیر فعال')}</p>
+                      <p className="text-xl font-bold text-amber-600 dark:text-amber-400">
+                        {subscribers.filter((s) => !s.active).length}
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+
+              {/* Table Card */}
+              <Card>
+                <CardHeader className="pb-4">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Mail className="h-5 w-5 text-purple-600" />
+                        {t('Newsletter Subscribers', 'نیوز لیٹر سبسکرائبرز')}
+                      </CardTitle>
+                      <CardDescription className="text-xs mt-0.5">
+                        {filteredSubscribers.length} {t('registered email recipients', 'ای میل صارفین درج ہیں')}
+                        {filteredSubscribers.length > SUBSCRIBERS_PER_PAGE && ` • ${t('Page', 'صفحہ')} ${subscribersPage} / ${totalSubscribersPages}`}
+                      </CardDescription>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="relative w-full sm:w-60">
+                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                        <Input
+                          placeholder={t('Search by email or name...', 'ای میل یا نام سے تلاش کریں...')}
+                          value={subscriberSearch}
+                          onChange={(e) => setSubscriberSearch(e.target.value)}
+                          className="h-9 pl-8 text-xs"
+                        />
+                      </div>
+
+                      <Select value={subscriberFilter} onValueChange={(val: any) => setSubscriberFilter(val)}>
+                        <SelectTrigger className="h-9 text-xs w-36">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">{t('All Status', 'تمام اسٹیٹس')}</SelectItem>
+                          <SelectItem value="active">{t('Active Only', 'صرف فعال')}</SelectItem>
+                          <SelectItem value="inactive">{t('Inactive Only', 'صرف غیر فعال')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+
+                      <Button variant="outline" size="sm" onClick={copySubscribersEmails} className="h-9 text-xs gap-1.5">
+                        <Copy className="h-3.5 w-3.5" />
+                        <span>{t('Copy Emails', 'ای میلز کاپی')}</span>
+                      </Button>
+
+                      <Button variant="outline" size="sm" asChild className="h-9 text-xs gap-1.5">
+                        <a href="/api/admin/export?type=subscribers" download>
+                          <Download className="h-3.5 w-3.5" />
+                          <span>{t('Export CSV', 'ایکسپورٹ CSV')}</span>
+                        </a>
+                      </Button>
+
+                      <Button size="sm" onClick={() => setCreatingSubscriber(true)} className="h-9 text-xs gap-1.5 shadow-sm">
+                        <Plus className="h-4 w-4" />
+                        <span>{t('Add Subscriber', 'سبسکرائبر شامل کریں')}</span>
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  {filteredSubscribers.length === 0 ? (
+                    <div className="p-10 text-center text-sm text-muted-foreground">
+                      {t('No subscribers found', 'کوئی سبسکرائبر نہیں ملا')}
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/40">
+                            <TableHead className="w-12 text-center text-xs">#</TableHead>
+                            <TableHead className="text-xs">{t('Email Address', 'ای میل ایڈریس')}</TableHead>
+                            <TableHead className="text-xs">{t('Subscriber Name', 'نام')}</TableHead>
+                            <TableHead className="text-xs">{t('Joined Date', 'شمولیت تاریخ')}</TableHead>
+                            <TableHead className="text-xs">{t('Status', 'حیثیت')}</TableHead>
+                            <TableHead className="text-xs text-right pr-4">{t('Actions', 'اقدامات')}</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {paginatedSubscribers.map((sub, idx) => {
+                            const serialNumber = (subscribersPage - 1) * SUBSCRIBERS_PER_PAGE + idx + 1
+                            return (
+                              <TableRow key={sub.id} className="hover:bg-muted/30">
+                                <TableCell className="text-center text-xs text-muted-foreground">{serialNumber}</TableCell>
+                                <TableCell className="text-xs font-mono font-medium text-foreground">{sub.email}</TableCell>
+                                <TableCell className="text-xs text-muted-foreground">{sub.name || '—'}</TableCell>
+                                <TableCell className="text-xs text-muted-foreground">
+                                  {new Date(sub.createdAt).toLocaleDateString()}
+                                </TableCell>
+                                <TableCell>
+                                  <button
+                                    onClick={() => toggleSubscriber(sub)}
+                                    title={t('Click to toggle status', 'اسٹیٹس تبدیل کرنے کے لیے کلک کریں')}
+                                    className="cursor-pointer"
+                                  >
+                                    <Badge
+                                      className={cn(
+                                        'text-[10px] uppercase font-bold cursor-pointer transition-transform hover:scale-105',
+                                        sub.active
+                                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                                          : 'bg-muted text-muted-foreground border border-border'
+                                      )}
+                                    >
+                                      {sub.active ? t('Active', 'فعال') : t('Inactive', 'غیر فعال')}
+                                    </Badge>
+                                  </button>
+                                </TableCell>
+                                <TableCell className="text-right pr-4 space-x-1">
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                                    onClick={() => deleteSubscriber(sub)}
+                                    title={t('Delete subscriber', 'حذف کریں')}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            )
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+
+                  {/* Pagination */}
+                  {filteredSubscribers.length > SUBSCRIBERS_PER_PAGE && (
+                    <div className="p-4 border-t border-border/60 flex items-center justify-between gap-4 bg-muted/10">
+                      <div className="text-xs text-muted-foreground">
+                        {t(
+                          `Showing ${(subscribersPage - 1) * SUBSCRIBERS_PER_PAGE + 1} to ${Math.min(subscribersPage * SUBSCRIBERS_PER_PAGE, filteredSubscribers.length)} of ${filteredSubscribers.length}`,
+                          `${filteredSubscribers.length} میں سے ${(subscribersPage - 1) * SUBSCRIBERS_PER_PAGE + 1} تا ${Math.min(subscribersPage * SUBSCRIBERS_PER_PAGE, filteredSubscribers.length)}`
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSubscribersPage((p) => Math.max(1, p - 1))}
+                          disabled={subscribersPage === 1}
+                          className="h-8 px-2.5 text-xs gap-1"
+                        >
+                          <ChevronLeft className={cn('h-3.5 w-3.5', lang === 'ur' && 'rotate-180')} />
+                          <span>{t('Previous', 'پچھلا')}</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSubscribersPage((p) => Math.min(totalSubscribersPages, p + 1))}
+                          disabled={subscribersPage === totalSubscribersPages}
+                          className="h-8 px-2.5 text-xs gap-1"
+                        >
+                          <span>{t('Next', 'اگلا')}</span>
+                          <ChevronRight className={cn('h-3.5 w-3.5', lang === 'ur' && 'rotate-180')} />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* TAB 9: LAWYER REVIEWS MODERATION */}
+          {activeTab === 'reviews' && (
+            <div className="space-y-4 animate-in fade-in-50 duration-200">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <Card className="p-4 border-border/80">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                      <Star className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground font-medium">{t('Total Reviews', 'کل جائزے')}</p>
+                      <p className="text-xl font-bold">{reviews.length}</p>
+                    </div>
+                  </div>
+                </Card>
+                <Card className="p-4 border-border/80">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                      <ShieldCheck className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground font-medium">{t('5-Star Feedback', '۵ ستارہ ریٹنگ')}</p>
+                      <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                        {reviews.filter((r) => r.rating === 5).length}
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+                <Card className="p-4 border-border/80">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                      <MessageSquare className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground font-medium">{t('Average Directory Rating', 'اوسط ریٹنگ')}</p>
+                      <p className="text-xl font-bold">
+                        {reviews.length > 0
+                          ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
+                          : '0.0'}{' '}
+                        ⭐
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+
+              <Card>
+                <CardHeader className="pb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Star className="h-5 w-5 text-amber-500" />
+                        {t('Lawyer Reviews Moderation', 'وکلاء کے جائزوں کی نگرانی')}
+                      </CardTitle>
+                      <CardDescription className="text-xs mt-0.5">
+                        {filteredReviews.length} {t('client ratings and testimonials', 'کلائنٹس کی آراء و تاثرات')}
+                      </CardDescription>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="relative w-full sm:w-60">
+                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                        <Input
+                          placeholder={t('Search lawyer, author, or comment...', 'وکیل یا تبصرہ تلاش کریں...')}
+                          value={reviewSearch}
+                          onChange={(e) => setReviewSearch(e.target.value)}
+                          className="h-9 pl-8 text-xs"
+                        />
+                      </div>
+
+                      <Select value={reviewRatingFilter} onValueChange={setReviewRatingFilter}>
+                        <SelectTrigger className="h-9 text-xs w-36">
+                          <SelectValue placeholder={t('Filter Rating', 'ریٹنگ فلٹر')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">{t('All Ratings', 'تمام ریٹنگز')}</SelectItem>
+                          <SelectItem value="5">⭐⭐⭐⭐⭐ (5)</SelectItem>
+                          <SelectItem value="4">⭐⭐⭐⭐ (4)</SelectItem>
+                          <SelectItem value="3">⭐⭐⭐ (3)</SelectItem>
+                          <SelectItem value="2">⭐⭐ (2)</SelectItem>
+                          <SelectItem value="1">⭐ (1)</SelectItem>
+                        </SelectContent>
+                      </Select>
+
+                      <Button variant="outline" size="sm" onClick={loadAll} className="h-9 text-xs gap-1.5">
+                        <RefreshCw className="h-3.5 w-3.5" />
+                        <span>{t('Refresh', 'ریفریش')}</span>
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  {filteredReviews.length === 0 ? (
+                    <div className="p-10 text-center text-sm text-muted-foreground">
+                      {t('No reviews found matching criteria', 'کوئی جائزہ نہیں ملا')}
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/40">
+                            <TableHead className="w-12 text-center text-xs">#</TableHead>
+                            <TableHead className="text-xs">{t('Lawyer', 'وکیل')}</TableHead>
+                            <TableHead className="text-xs">{t('Reviewer', 'تبصرہ نگار')}</TableHead>
+                            <TableHead className="text-xs">{t('Rating', 'ریٹنگ')}</TableHead>
+                            <TableHead className="text-xs max-w-sm">{t('Comment', 'تبصرہ')}</TableHead>
+                            <TableHead className="text-xs">{t('Date', 'تاریخ')}</TableHead>
+                            <TableHead className="text-xs text-right pr-4">{t('Actions', 'اقدامات')}</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {paginatedReviews.map((rev, idx) => {
+                            const serialNumber = (reviewsPage - 1) * REVIEWS_PER_PAGE + idx + 1
+                            return (
+                              <TableRow key={rev.id} className="hover:bg-muted/30">
+                                <TableCell className="text-center text-xs text-muted-foreground">{serialNumber}</TableCell>
+                                <TableCell>
+                                  {rev.lawyer ? (
+                                    <Link
+                                      href={`/lawyers/${rev.lawyer.slug}`}
+                                      target="_blank"
+                                      className="font-semibold text-xs text-primary hover:underline flex items-center gap-1"
+                                    >
+                                      <span>{lang === 'ur' && rev.lawyer.nameUrdu ? rev.lawyer.nameUrdu : rev.lawyer.name}</span>
+                                      <ExternalLink className="h-2.5 w-2.5 opacity-60" />
+                                    </Link>
+                                  ) : (
+                                    <span className="text-xs text-muted-foreground">Unknown Lawyer</span>
+                                  )}
+                                  <div className="text-[10px] text-muted-foreground">{rev.lawyer?.city}</div>
+                                </TableCell>
+                                <TableCell className="text-xs font-medium text-foreground">{rev.authorName}</TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-1 text-amber-500">
+                                    {Array.from({ length: rev.rating }).map((_, i) => (
+                                      <Star key={i} className="h-3 w-3 fill-amber-500 text-amber-500" />
+                                    ))}
+                                    <span className="text-xs font-bold ml-1 text-foreground font-mono">{rev.rating}/5</span>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="max-w-md text-xs text-foreground/90">
+                                  {rev.comment ? (
+                                    <p className="line-clamp-2 italic">"{rev.comment}"</p>
+                                  ) : (
+                                    <span className="text-muted-foreground italic">— No comment provided —</span>
+                                  )}
+                                </TableCell>
+                                <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                                  {new Date(rev.createdAt).toLocaleDateString()}
+                                </TableCell>
+                                <TableCell className="text-right pr-4">
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                                    onClick={() => deleteReview(rev)}
+                                    title={t('Delete review', 'جائزہ حذف کریں')}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            )
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+
+                  {filteredReviews.length > REVIEWS_PER_PAGE && (
+                    <div className="p-4 border-t border-border/60 flex items-center justify-between gap-4 bg-muted/10">
+                      <div className="text-xs text-muted-foreground">
+                        {t(
+                          `Showing ${(reviewsPage - 1) * REVIEWS_PER_PAGE + 1} to ${Math.min(reviewsPage * REVIEWS_PER_PAGE, filteredReviews.length)} of ${filteredReviews.length}`,
+                          `${filteredReviews.length} میں سے ${(reviewsPage - 1) * REVIEWS_PER_PAGE + 1} تا ${Math.min(reviewsPage * REVIEWS_PER_PAGE, filteredReviews.length)}`
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setReviewsPage((p) => Math.max(1, p - 1))}
+                          disabled={reviewsPage === 1}
+                          className="h-8 px-2.5 text-xs gap-1"
+                        >
+                          <ChevronLeft className={cn('h-3.5 w-3.5', lang === 'ur' && 'rotate-180')} />
+                          <span>{t('Previous', 'پچھلا')}</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setReviewsPage((p) => Math.min(totalReviewsPages, p + 1))}
+                          disabled={reviewsPage === totalReviewsPages}
+                          className="h-8 px-2.5 text-xs gap-1"
+                        >
+                          <span>{t('Next', 'اگلا')}</span>
+                          <ChevronRight className={cn('h-3.5 w-3.5', lang === 'ur' && 'rotate-180')} />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* TAB 10: LEGAL FINDER ("WHICH LAW APPLIES?") QUESTION EDITOR */}
+          {activeTab === 'finder' && (
+            <div className="space-y-4 animate-in fade-in-50 duration-200">
+              <Card>
+                <CardHeader className="pb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Compass className="h-5 w-5 text-indigo-600" />
+                        {t('Legal Finder Decision Tree', 'قانونی رہنمائی سوالنامہ (Which Law Applies?)')}
+                      </CardTitle>
+                      <CardDescription className="text-xs mt-0.5">
+                        {finderQuestions.length} {t('interactive questions guiding citizens to relevant statutes', 'رہنمائی سوالات درج ہیں')}
+                      </CardDescription>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" asChild className="h-9 text-xs gap-1.5">
+                        <Link href="/finder" target="_blank">
+                          <ExternalLink className="h-3.5 w-3.5" />
+                          <span>{t('Test Live Finder', 'لائیو ٹیسٹ کریں')}</span>
+                        </Link>
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => setCreatingFinderQuestion(true)}
+                        className="h-9 text-xs gap-1.5 shadow-sm"
+                      >
+                        <Plus className="h-4 w-4" />
+                        <span>{t('Add Question', 'نیا سوال شامل کریں')}</span>
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {finderQuestions.length === 0 ? (
+                    <div className="p-12 text-center border rounded-xl border-dashed border-border/80">
+                      <Compass className="h-10 w-10 text-muted-foreground mx-auto mb-2 opacity-50" />
+                      <p className="text-sm font-semibold">{t('No finder questions found', 'کوئی سوال موجود نہیں')}</p>
+                      <p className="text-xs text-muted-foreground mt-1 mb-4">
+                        {t('Seed database or create your first question to guide users.', 'ڈیٹابیس سید کریں یا نیا سوال بنائیں۔')}
+                      </p>
+                      <Button size="sm" onClick={() => setCreatingFinderQuestion(true)} className="text-xs gap-1">
+                        <Plus className="h-3.5 w-3.5" />
+                        <span>{t('Create Question', 'سوال بنائیں')}</span>
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {finderQuestions.map((q, idx) => (
+                        <Card key={q.id} className="p-4 border-border/80 flex flex-col justify-between hover:border-primary/40 transition-colors">
+                          <div className="space-y-3">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="text-[10px] font-mono">
+                                  #{q.orderIndex ?? idx + 1}
+                                </Badge>
+                                <span className="text-[10px] text-muted-foreground font-mono">ID: {q.id}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-7 w-7 text-primary hover:bg-primary/10"
+                                  onClick={() => setEditingFinderQuestion(q)}
+                                  title={t('Edit Question', 'ترمیم کریں')}
+                                >
+                                  <Edit2 className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                                  onClick={() => deleteFinderQuestion(q)}
+                                  title={t('Delete Question', 'حذف کریں')}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+
+                            <div>
+                              <h4 className="font-semibold text-sm text-foreground">{q.question}</h4>
+                              {q.questionUrdu && (
+                                <p className="text-xs text-muted-foreground font-urdu mt-0.5" dir="rtl">
+                                  {q.questionUrdu}
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="space-y-1.5 pt-2 border-t border-border/60">
+                              <p className="text-[10px] uppercase font-bold text-muted-foreground">
+                                {t('Answer Choices & Paths', 'جوابی اختیارات')}: ({q.options?.length || 0})
+                              </p>
+                              <div className="space-y-1">
+                                {(q.options || []).map((opt, oIdx) => (
+                                  <div
+                                    key={opt.id || oIdx}
+                                    className="p-2 rounded-lg bg-muted/50 border border-border/60 text-xs flex flex-col gap-1"
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <span className="font-medium text-foreground">{opt.label}</span>
+                                      {opt.labelUrdu && (
+                                        <span className="text-[10px] text-muted-foreground font-urdu" dir="rtl">
+                                          {opt.labelUrdu}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                                      {opt.nextQuestionId ? (
+                                        <span className="text-indigo-600 dark:text-indigo-400 font-mono">
+                                          ➔ Next: {opt.nextQuestionId}
+                                        </span>
+                                      ) : (
+                                        <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                                          ➔ Result Endpoint
+                                        </span>
+                                      )}
+                                      {opt.categoryIds && opt.categoryIds.length > 0 && (
+                                        <span className="bg-primary/10 text-primary px-1.5 py-0.2 rounded text-[9px]">
+                                          Categories: {opt.categoryIds.join(', ')}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* TAB 11: SETTINGS, BACKUP & MAINTENANCE */}
+          {activeTab === 'settings' && (
+            <div className="space-y-6 animate-in fade-in-50 duration-200">
+              {/* Diagnostics & Health Check */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Server className="h-5 w-5 text-primary" />
+                    {t('System Diagnostics & Service Status', 'سسٹم معلومات و سروسز کی حالت')}
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    {t('Live infrastructure and integration health monitoring', 'لائیو انفراسٹرکچر و کنٹرول جائزہ')}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="p-3.5 rounded-xl border border-border/70 bg-card space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground font-medium">{t('Database', 'ڈیٹابیس')}</span>
+                        <span className="flex h-2 w-2 rounded-full bg-emerald-500" />
+                      </div>
+                      <p className="text-sm font-bold text-foreground">SQLite (Prisma)</p>
+                      <p className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-medium">
+                        <CheckCircle2 className="h-3 w-3" /> {t('Connected & Healthy', 'منسلک و فعال')}
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 rounded-xl border border-border/70 bg-card space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground font-medium">{t('Auth Engine', 'لاگ ان نظام')}</span>
+                        <span className="flex h-2 w-2 rounded-full bg-emerald-500" />
+                      </div>
+                      <p className="text-sm font-bold text-foreground">NextAuth.js</p>
+                      <p className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-medium">
+                        <CheckCircle2 className="h-3 w-3" /> {t('JWT Sessions Active', 'سیشن فعال')}
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 rounded-xl border border-border/70 bg-card space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground font-medium">{t('AI RAG Assistant', 'اے آئی اسسٹنٹ')}</span>
+                        <span className="flex h-2 w-2 rounded-full bg-emerald-500" />
+                      </div>
+                      <p className="text-sm font-bold text-foreground">Qanoon RAG Engine</p>
+                      <p className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-medium">
+                        <CheckCircle2 className="h-3 w-3" /> {t('Statute Retrieval Ready', 'تیار ہے')}
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 rounded-xl border border-border/70 bg-card space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground font-medium">{t('Search Engine', 'سرچ انجن')}</span>
+                        <span className="flex h-2 w-2 rounded-full bg-emerald-500" />
+                      </div>
+                      <p className="text-sm font-bold text-foreground">Bilingual Search</p>
+                      <p className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-medium">
+                        <CheckCircle2 className="h-3 w-3" /> {t('Urdu & English Indexed', 'انڈیکس فعال')}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Data Backup & Export Hub */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Download className="h-5 w-5 text-indigo-600" />
+                    {t('Data Export & Backup Center', 'ڈیٹا ایکسپورٹ و بیک اپ سینٹر')}
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    {t('Download one-click CSV spreadsheets and complete JSON database dumps', 'تمام ڈیٹا کی ڈاؤنلوڈ فائلز اور بیک اپ')}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="p-4 rounded-xl border border-border/80 bg-muted/30 flex flex-col justify-between gap-3">
+                      <div>
+                        <h4 className="font-bold text-sm text-foreground flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-primary" />
+                          {t('Laws Dataset (CSV)', 'قوانین کا ڈیٹا (CSV)')}
+                        </h4>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {t('All laws with titles, category, enactment years, and view counts.', 'تمام قوانین کی مکمل فہرست')}
+                        </p>
+                      </div>
+                      <Button variant="outline" size="sm" asChild className="w-full text-xs gap-1.5">
+                        <a href="/api/admin/export?type=laws" download>
+                          <Download className="h-3.5 w-3.5" />
+                          <span>{t('Download Laws CSV', 'ڈاؤنلوڈ CSV')}</span>
+                        </a>
+                      </Button>
+                    </div>
+
+                    <div className="p-4 rounded-xl border border-border/80 bg-muted/30 flex flex-col justify-between gap-3">
+                      <div>
+                        <h4 className="font-bold text-sm text-foreground flex items-center gap-2">
+                          <Briefcase className="h-4 w-4 text-teal-600" />
+                          {t('Lawyers Directory (CSV)', 'وکلاء کی ڈائریکٹری (CSV)')}
+                        </h4>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {t('Verified advocates, contact details, cities, and ratings.', 'وکلاء کے رابطے اور شہر کی تفصیلات')}
+                        </p>
+                      </div>
+                      <Button variant="outline" size="sm" asChild className="w-full text-xs gap-1.5">
+                        <a href="/api/admin/export?type=lawyers" download>
+                          <Download className="h-3.5 w-3.5" />
+                          <span>{t('Download Lawyers CSV', 'ڈاؤنلوڈ CSV')}</span>
+                        </a>
+                      </Button>
+                    </div>
+
+                    <div className="p-4 rounded-xl border border-border/80 bg-muted/30 flex flex-col justify-between gap-3">
+                      <div>
+                        <h4 className="font-bold text-sm text-foreground flex items-center gap-2">
+                          <Mail className="h-4 w-4 text-purple-600" />
+                          {t('Subscribers List (CSV)', 'سبسکرائبرز لسٹ (CSV)')}
+                        </h4>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {t('Email addresses, subscription status, and join timestamps.', 'تمام نیوزلیٹر صارفین کی ای میلز')}
+                        </p>
+                      </div>
+                      <Button variant="outline" size="sm" asChild className="w-full text-xs gap-1.5">
+                        <a href="/api/admin/export?type=subscribers" download>
+                          <Download className="h-3.5 w-3.5" />
+                          <span>{t('Download Subscribers CSV', 'ڈاؤنلوڈ CSV')}</span>
+                        </a>
+                      </Button>
+                    </div>
+
+                    <div className="p-4 rounded-xl border border-border/80 bg-muted/30 flex flex-col justify-between gap-3">
+                      <div>
+                        <h4 className="font-bold text-sm text-foreground flex items-center gap-2">
+                          <Users className="h-4 w-4 text-blue-600" />
+                          {t('Users & Roles (CSV)', 'صارفین کی فہرست (CSV)')}
+                        </h4>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {t('Platform accounts, assigned roles, and registration dates.', 'رجسٹرڈ ممبرز اور کردار')}
+                        </p>
+                      </div>
+                      <Button variant="outline" size="sm" asChild className="w-full text-xs gap-1.5">
+                        <a href="/api/admin/export?type=users" download>
+                          <Download className="h-3.5 w-3.5" />
+                          <span>{t('Download Users CSV', 'ڈاؤنلوڈ CSV')}</span>
+                        </a>
+                      </Button>
+                    </div>
+
+                    <div className="p-4 rounded-xl border border-primary/30 bg-primary/5 sm:col-span-2 flex flex-col justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-primary text-primary-foreground text-[10px]">FULL BACKUP</Badge>
+                          <h4 className="font-bold text-sm text-foreground">{t('Complete Database Dump (JSON)', 'مکمل ڈیٹابیس بیک اپ (JSON)')}</h4>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {t(
+                            'Snapshot containing all categories, laws, sections, amendments, lawyers, templates, subscribers, and questionnaire trees.',
+                            'پوری ویب سائٹ کا جامع ڈیٹابیس بیک اپ'
+                          )}
+                        </p>
+                      </div>
+                      <Button size="sm" asChild className="w-full sm:w-auto text-xs gap-1.5 shadow-sm">
+                        <a href="/api/admin/export?type=backup" download>
+                          <HardDrive className="h-3.5 w-3.5" />
+                          <span>{t('Export Full Database Dump (.json)', 'مکمل بیک اپ ڈاؤنلوڈ کریں')}</span>
+                        </a>
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Database Maintenance & Seed */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Sliders className="h-5 w-5 text-amber-500" />
+                    {t('Database Maintenance & Seeds', 'ڈیٹابیس مینٹیننس و ری سیٹ')}
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    {t('Administrative actions for resetting seed records and refreshing directory cache', 'ڈیٹابیس کی تجدید و بحالی کے اقدامات')}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-500/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                      <h4 className="font-bold text-sm text-foreground flex items-center gap-2">
+                        <AlertTriangle className="h-4 w-4 text-amber-600" />
+                        {t('Reseed Seed Statutes & Categories', 'ڈیٹابیس ری سیڈ (Reseed DB)')}
+                      </h4>
+                      <p className="text-xs text-muted-foreground mt-1 max-w-xl">
+                        {t(
+                          'Reloads core Pakistan statutes, constitutional sections, default lawyers, templates, and finder questions from seed definition.',
+                          'بنیادی قوانین، وکلاء اور ٹیمپلیٹس کا ابتدائی ڈیٹا دوبارہ ری لوڈ کرتا ہے۔'
+                        )}
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={reseed} className="h-9 text-xs gap-1.5 border-amber-500/40 text-amber-600 hover:bg-amber-500/10">
+                      <RefreshCw className="h-3.5 w-3.5" />
+                      <span>{t('Execute Reseed', 'ری سیڈ چلائیں')}</span>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </main>
       </div>
 
@@ -1941,6 +2981,46 @@ export default function AdminPage() {
           onClose={() => setCreatingTemplate(false)}
           onSaved={() => {
             setCreatingTemplate(false)
+            loadAll()
+          }}
+        />
+      )}
+
+      {/* Law Sections and Amendments Manager Dialog */}
+      {managingLawSections && (
+        <LawSectionsAndAmendmentsDialog
+          law={managingLawSections}
+          onClose={() => setManagingLawSections(null)}
+          onSaved={() => {
+            loadAll()
+          }}
+        />
+      )}
+
+      {/* Create Subscriber Dialog */}
+      {creatingSubscriber && (
+        <SubscriberCreateDialog
+          onClose={() => setCreatingSubscriber(false)}
+          onSaved={() => {
+            setCreatingSubscriber(false)
+            loadAll()
+          }}
+        />
+      )}
+
+      {/* Create/Edit Finder Question Dialog */}
+      {(creatingFinderQuestion || editingFinderQuestion) && (
+        <FinderQuestionDialog
+          question={editingFinderQuestion}
+          categories={categories}
+          allQuestions={finderQuestions}
+          onClose={() => {
+            setCreatingFinderQuestion(false)
+            setEditingFinderQuestion(null)
+          }}
+          onSaved={() => {
+            setCreatingFinderQuestion(false)
+            setEditingFinderQuestion(null)
             loadAll()
           }}
         />
@@ -2695,6 +3775,944 @@ function TemplateCreateDialog({
             {saving ? t('Creating...', 'شامل ہو رہا ہے...') : t('Save Template', 'ٹیمپلیٹ محفوظ کریں')}
           </Button>
         </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// -------------------------------------------------------------
+// LAW SECTIONS & AMENDMENTS DIALOG
+// -------------------------------------------------------------
+function LawSectionsAndAmendmentsDialog({
+  law,
+  onClose,
+  onSaved,
+}: {
+  law: Law
+  onClose: () => void
+  onSaved: () => void
+}) {
+  const { t, lang } = useLanguage()
+  const [activeTab, setActiveTab] = React.useState<'sections' | 'amendments'>('sections')
+  const [sections, setSections] = React.useState<LawSection[]>([])
+  const [amendments, setAmendments] = React.useState<LawAmendment[]>([])
+  const [loading, setLoading] = React.useState(true)
+
+  // Section Form state
+  const [editingSectionId, setEditingSectionId] = React.useState<string | null>(null)
+  const [sectionForm, setSectionForm] = React.useState({
+    sectionNumber: '',
+    title: '',
+    content: '',
+    contentUrdu: '',
+    orderIndex: 0,
+  })
+  const [savingSection, setSavingSection] = React.useState(false)
+
+  // Amendment Form state
+  const [editingAmendmentId, setEditingAmendmentId] = React.useState<string | null>(null)
+  const [amendmentForm, setAmendmentForm] = React.useState({
+    amendmentYear: new Date().getFullYear(),
+    amendmentTitle: '',
+    gazetteReference: '',
+    description: '',
+  })
+  const [savingAmendment, setSavingAmendment] = React.useState(false)
+
+  const loadDetails = React.useCallback(() => {
+    setLoading(true)
+    Promise.all([
+      fetch(`/api/admin/sections?lawId=${law.id}`).then((r) => r.json()),
+      fetch(`/api/admin/amendments?lawId=${law.id}`).then((r) => r.json()),
+    ])
+      .then(([secData, amdData]) => {
+        if (secData.ok) setSections(secData.sections || [])
+        if (amdData.ok) setAmendments(amdData.amendments || [])
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
+  }, [law.id])
+
+  React.useEffect(() => {
+    loadDetails()
+  }, [loadDetails])
+
+  // Save Section
+  const handleSaveSection = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!sectionForm.sectionNumber.trim() || !sectionForm.content.trim()) {
+      toast.error(t('Section number and English content are required', 'دفعہ کا نمبر اور متن ضروری ہیں'))
+      return
+    }
+    setSavingSection(true)
+    try {
+      const isEdit = !!editingSectionId
+      const url = '/api/admin/sections'
+      const method = isEdit ? 'PATCH' : 'POST'
+      const body = isEdit
+        ? { id: editingSectionId, ...sectionForm }
+        : { lawId: law.id, ...sectionForm }
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const d = await res.json()
+      if (d.ok) {
+        toast.success(isEdit ? t('Section updated', 'دفعہ اپڈیٹ ہو گئی') : t('Section added', 'دفعہ شامل ہو گئی'))
+        setEditingSectionId(null)
+        setSectionForm({ sectionNumber: '', title: '', content: '', contentUrdu: '', orderIndex: sections.length + 1 })
+        loadDetails()
+        onSaved()
+      } else {
+        toast.error(d.error || 'Failed to save section')
+      }
+    } catch {
+      toast.error('Failed to save section')
+    } finally {
+      setSavingSection(false)
+    }
+  }
+
+  // Delete Section
+  const handleDeleteSection = async (id: string) => {
+    if (!confirm(t('Delete this section?', 'کیا آپ یہ دفعہ حذف کرنا چاہتے ہیں؟'))) return
+    try {
+      const res = await fetch(`/api/admin/sections?id=${id}`, { method: 'DELETE' })
+      const d = await res.json()
+      if (d.ok) {
+        toast.success(t('Section deleted', 'دفعہ حذف ہو گئی'))
+        loadDetails()
+        onSaved()
+      }
+    } catch {
+      toast.error('Failed to delete section')
+    }
+  }
+
+  // Save Amendment
+  const handleSaveAmendment = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!amendmentForm.amendmentTitle.trim() || !amendmentForm.amendmentYear) {
+      toast.error(t('Amendment title and year are required', 'ترمیم کا عنوان اور سال ضروری ہیں'))
+      return
+    }
+    setSavingAmendment(true)
+    try {
+      const isEdit = !!editingAmendmentId
+      const url = '/api/admin/amendments'
+      const method = isEdit ? 'PATCH' : 'POST'
+      const body = isEdit
+        ? { id: editingAmendmentId, ...amendmentForm }
+        : { lawId: law.id, ...amendmentForm }
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const d = await res.json()
+      if (d.ok) {
+        toast.success(isEdit ? t('Amendment updated', 'ترمیم اپڈیٹ ہو گئی') : t('Amendment added', 'ترمیم شامل ہو گئی'))
+        setEditingAmendmentId(null)
+        setAmendmentForm({
+          amendmentYear: new Date().getFullYear(),
+          amendmentTitle: '',
+          gazetteReference: '',
+          description: '',
+        })
+        loadDetails()
+        onSaved()
+      } else {
+        toast.error(d.error || 'Failed to save amendment')
+      }
+    } catch {
+      toast.error('Failed to save amendment')
+    } finally {
+      setSavingAmendment(false)
+    }
+  }
+
+  // Delete Amendment
+  const handleDeleteAmendment = async (id: string) => {
+    if (!confirm(t('Delete this amendment?', 'کیا آپ یہ ترمیم حذف کرنا چاہتے ہیں؟'))) return
+    try {
+      const res = await fetch(`/api/admin/amendments?id=${id}`, { method: 'DELETE' })
+      const d = await res.json()
+      if (d.ok) {
+        toast.success(t('Amendment deleted', 'ترمیم حذف ہو گئی'))
+        loadDetails()
+        onSaved()
+      }
+    } catch {
+      toast.error('Failed to delete amendment')
+    }
+  }
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-6 overflow-hidden">
+        <DialogHeader className="pb-2 border-b border-border/70">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-xs uppercase">
+              {law.jurisdiction}
+            </Badge>
+            <DialogTitle className="text-base font-bold truncate">
+              {lang === 'ur' && law.titleUrdu ? law.titleUrdu : law.title}
+            </DialogTitle>
+          </div>
+          <DialogDescription className="text-xs text-muted-foreground">
+            {t(
+              'Manage statutory sections, subsections, and historical legislative amendments for this act.',
+              'اس قانون کی دفعات، ذیلی دفعات اور تاریخی ترامیم کا مکمل انتظام کریں۔'
+            )}
+          </DialogDescription>
+        </DialogHeader>
+
+        {/* Tab switcher */}
+        <div className="flex items-center gap-2 pt-2 border-b border-border/60">
+          <button
+            onClick={() => setActiveTab('sections')}
+            className={cn(
+              'px-4 py-2 text-xs font-semibold border-b-2 transition-colors cursor-pointer',
+              activeTab === 'sections'
+                ? 'border-primary text-primary font-bold'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            )}
+          >
+            {t('Sections & Articles', 'دفعات و شقیں')} ({sections.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('amendments')}
+            className={cn(
+              'px-4 py-2 text-xs font-semibold border-b-2 transition-colors cursor-pointer',
+              activeTab === 'amendments'
+                ? 'border-primary text-primary font-bold'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            )}
+          >
+            {t('Legislative Amendments', 'قانونی ترامیم')} ({amendments.length})
+          </button>
+        </div>
+
+        {/* Tab Content Area */}
+        <div className="flex-1 overflow-y-auto py-4 space-y-4">
+          {activeTab === 'sections' && (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Sections List */}
+              <div className="lg:col-span-7 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold uppercase text-muted-foreground tracking-wider">
+                    {t('Current Sections', 'موجودہ دفعات')} ({sections.length})
+                  </h4>
+                  {editingSectionId && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEditingSectionId(null)
+                        setSectionForm({ sectionNumber: '', title: '', content: '', contentUrdu: '', orderIndex: sections.length + 1 })
+                      }}
+                      className="text-xs h-7 text-primary"
+                    >
+                      {t('+ New Section', '+ نئی دفعہ')}
+                    </Button>
+                  )}
+                </div>
+
+                {loading ? (
+                  <div className="space-y-2">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <Skeleton key={i} className="h-16 w-full" />
+                    ))}
+                  </div>
+                ) : sections.length === 0 ? (
+                  <div className="p-8 text-center border border-dashed rounded-lg text-xs text-muted-foreground">
+                    {t('No sections recorded for this law yet. Use the form to add Section 1.', 'اس قانون کی کوئی دفعہ درج نہیں ہے۔ نیا فارم استعمال کریں۔')}
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+                    {sections.map((s) => (
+                      <div
+                        key={s.id}
+                        className={cn(
+                          'p-3 rounded-lg border text-xs transition-all flex items-start justify-between gap-3',
+                          editingSectionId === s.id
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border/70 bg-muted/20 hover:bg-muted/40'
+                        )}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <Badge className="bg-primary text-primary-foreground text-[10px] font-mono px-1.5 py-0.2">
+                              Sec. {s.sectionNumber}
+                            </Badge>
+                            {s.title && <span className="font-semibold text-foreground truncate">{s.title}</span>}
+                          </div>
+                          <p className="text-muted-foreground line-clamp-2 mt-1 font-sans">{s.content}</p>
+                          {s.contentUrdu && (
+                            <p className="text-muted-foreground line-clamp-1 mt-0.5 font-urdu text-[11px]" dir="rtl">
+                              {s.contentUrdu}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-primary hover:bg-primary/10"
+                            onClick={() => {
+                              setEditingSectionId(s.id)
+                              setSectionForm({
+                                sectionNumber: s.sectionNumber,
+                                title: s.title || '',
+                                content: s.content,
+                                contentUrdu: s.contentUrdu || '',
+                                orderIndex: s.orderIndex,
+                              })
+                            }}
+                            title="Edit"
+                          >
+                            <Edit2 className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                            onClick={() => handleDeleteSection(s.id)}
+                            title="Delete"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Add / Edit Section Form */}
+              <div className="lg:col-span-5 p-4 rounded-xl border border-border/80 bg-card space-y-3">
+                <h4 className="text-xs font-bold text-foreground flex items-center gap-2">
+                  <Plus className="h-3.5 w-3.5 text-primary" />
+                  {editingSectionId ? t('Edit Section', 'دفعہ میں ترمیم') : t('Add New Section', 'نئی دفعہ شامل کریں')}
+                </h4>
+                <form onSubmit={handleSaveSection} className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-[11px] font-medium">{t('Section #', 'دفعہ نمبر')} *</Label>
+                      <Input
+                        value={sectionForm.sectionNumber}
+                        onChange={(e) => setSectionForm({ ...sectionForm, sectionNumber: e.target.value })}
+                        placeholder="e.g. 302, 4-A"
+                        className="h-8 text-xs font-mono"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[11px] font-medium">{t('Order Index', 'ترتیب')}</Label>
+                      <Input
+                        type="number"
+                        value={sectionForm.orderIndex}
+                        onChange={(e) => setSectionForm({ ...sectionForm, orderIndex: parseInt(e.target.value) || 0 })}
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-medium">{t('Section Title (Optional)', 'عنوان')}</Label>
+                    <Input
+                      value={sectionForm.title}
+                      onChange={(e) => setSectionForm({ ...sectionForm, title: e.target.value })}
+                      placeholder="e.g. Punishment of qatl-i-amd"
+                      className="h-8 text-xs"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-medium">{t('English Text', 'انگریزی متن')} *</Label>
+                    <Textarea
+                      value={sectionForm.content}
+                      onChange={(e) => setSectionForm({ ...sectionForm, content: e.target.value })}
+                      rows={4}
+                      placeholder="Statutory text of section..."
+                      className="text-xs font-sans"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-medium">{t('Urdu Text (Optional)', 'اردو متن')}</Label>
+                    <Textarea
+                      value={sectionForm.contentUrdu}
+                      onChange={(e) => setSectionForm({ ...sectionForm, contentUrdu: e.target.value })}
+                      rows={3}
+                      dir="rtl"
+                      placeholder="دفعہ کا اردو متن..."
+                      className="text-xs font-urdu"
+                    />
+                  </div>
+
+                  <div className="pt-2 flex items-center justify-end gap-2">
+                    {editingSectionId && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setEditingSectionId(null)
+                          setSectionForm({ sectionNumber: '', title: '', content: '', contentUrdu: '', orderIndex: sections.length + 1 })
+                        }}
+                        className="h-8 text-xs"
+                      >
+                        {t('Cancel', 'منسوخ')}
+                      </Button>
+                    )}
+                    <Button type="submit" size="sm" disabled={savingSection} className="h-8 text-xs gap-1">
+                      {savingSection ? t('Saving...', 'محفوظ ہو رہا ہے...') : editingSectionId ? t('Update Section', 'اپڈیٹ کریں') : t('Add Section', 'دفعہ شامل کریں')}
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'amendments' && (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Amendments List */}
+              <div className="lg:col-span-7 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold uppercase text-muted-foreground tracking-wider">
+                    {t('Historical Amendments', 'تاریخی ترامیم')} ({amendments.length})
+                  </h4>
+                  {editingAmendmentId && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEditingAmendmentId(null)
+                        setAmendmentForm({
+                          amendmentYear: new Date().getFullYear(),
+                          amendmentTitle: '',
+                          gazetteReference: '',
+                          description: '',
+                        })
+                      }}
+                      className="text-xs h-7 text-primary"
+                    >
+                      {t('+ New Amendment', '+ نئی ترمیم')}
+                    </Button>
+                  )}
+                </div>
+
+                {loading ? (
+                  <div className="space-y-2">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <Skeleton key={i} className="h-16 w-full" />
+                    ))}
+                  </div>
+                ) : amendments.length === 0 ? (
+                  <div className="p-8 text-center border border-dashed rounded-lg text-xs text-muted-foreground">
+                    {t('No amendments recorded for this act.', 'کوئی ترمیم درج نہیں ہے۔')}
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+                    {amendments.map((a) => (
+                      <div
+                        key={a.id}
+                        className={cn(
+                          'p-3 rounded-lg border text-xs transition-all flex items-start justify-between gap-3',
+                          editingAmendmentId === a.id
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border/70 bg-muted/20 hover:bg-muted/40'
+                        )}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-[10px] font-bold">
+                              {a.amendmentYear}
+                            </Badge>
+                            <span className="font-semibold text-foreground truncate">{a.amendmentTitle}</span>
+                          </div>
+                          {a.gazetteReference && (
+                            <p className="text-[11px] text-muted-foreground font-mono mt-0.5">
+                              Gazette: {a.gazetteReference}
+                            </p>
+                          )}
+                          {a.description && <p className="text-muted-foreground line-clamp-2 mt-1">{a.description}</p>}
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-primary hover:bg-primary/10"
+                            onClick={() => {
+                              setEditingAmendmentId(a.id)
+                              setAmendmentForm({
+                                amendmentYear: a.amendmentYear,
+                                amendmentTitle: a.amendmentTitle,
+                                gazetteReference: a.gazetteReference || '',
+                                description: a.description || '',
+                              })
+                            }}
+                            title="Edit"
+                          >
+                            <Edit2 className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                            onClick={() => handleDeleteAmendment(a.id)}
+                            title="Delete"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Add / Edit Amendment Form */}
+              <div className="lg:col-span-5 p-4 rounded-xl border border-border/80 bg-card space-y-3">
+                <h4 className="text-xs font-bold text-foreground flex items-center gap-2">
+                  <Plus className="h-3.5 w-3.5 text-primary" />
+                  {editingAmendmentId ? t('Edit Amendment', 'ترمیم میں تبدیلی') : t('Add New Amendment', 'نئی ترمیم شامل کریں')}
+                </h4>
+                <form onSubmit={handleSaveAmendment} className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-[11px] font-medium">{t('Amendment Year', 'سال')} *</Label>
+                      <Input
+                        type="number"
+                        value={amendmentForm.amendmentYear}
+                        onChange={(e) => setAmendmentForm({ ...amendmentForm, amendmentYear: parseInt(e.target.value) || new Date().getFullYear() })}
+                        className="h-8 text-xs"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[11px] font-medium">{t('Gazette Ref', 'گزٹ حوالہ')}</Label>
+                      <Input
+                        value={amendmentForm.gazetteReference}
+                        onChange={(e) => setAmendmentForm({ ...amendmentForm, gazetteReference: e.target.value })}
+                        placeholder="e.g. PLD 2021 Fed. 45"
+                        className="h-8 text-xs font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-medium">{t('Amendment Title', 'ترمیم کا عنوان')} *</Label>
+                    <Input
+                      value={amendmentForm.amendmentTitle}
+                      onChange={(e) => setAmendmentForm({ ...amendmentForm, amendmentTitle: e.target.value })}
+                      placeholder="e.g. Criminal Law (Amendment) Act, 2021"
+                      className="h-8 text-xs"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-medium">{t('Description / Impact', 'وضاحت / اثرات')}</Label>
+                    <Textarea
+                      value={amendmentForm.description}
+                      onChange={(e) => setAmendmentForm({ ...amendmentForm, description: e.target.value })}
+                      rows={4}
+                      placeholder="Brief note on what this amendment modified..."
+                      className="text-xs font-sans"
+                    />
+                  </div>
+
+                  <div className="pt-2 flex items-center justify-end gap-2">
+                    {editingAmendmentId && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setEditingAmendmentId(null)
+                          setAmendmentForm({
+                            amendmentYear: new Date().getFullYear(),
+                            amendmentTitle: '',
+                            gazetteReference: '',
+                            description: '',
+                          })
+                        }}
+                        className="h-8 text-xs"
+                      >
+                        {t('Cancel', 'منسوخ')}
+                      </Button>
+                    )}
+                    <Button type="submit" size="sm" disabled={savingAmendment} className="h-8 text-xs gap-1">
+                      {savingAmendment ? t('Saving...', 'محفوظ ہو رہا ہے...') : editingAmendmentId ? t('Update Amendment', 'اپڈیٹ کریں') : t('Add Amendment', 'ترمیم شامل کریں')}
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter className="pt-3 border-t border-border/70">
+          <Button variant="outline" size="sm" onClick={onClose} className="h-8 text-xs">
+            {t('Done & Close', 'مکمل و بند کریں')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// -------------------------------------------------------------
+// SUBSCRIBER CREATE DIALOG
+// -------------------------------------------------------------
+function SubscriberCreateDialog({
+  onClose,
+  onSaved,
+}: {
+  onClose: () => void
+  onSaved: () => void
+}) {
+  const { t } = useLanguage()
+  const [email, setEmail] = React.useState('')
+  const [name, setName] = React.useState('')
+  const [active, setActive] = React.useState(true)
+  const [saving, setSaving] = React.useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email.trim() || !email.includes('@')) {
+      toast.error(t('Valid email is required', 'درست ای میل ضروری ہے'))
+      return
+    }
+    setSaving(true)
+    try {
+      const res = await fetch('/api/admin/subscribers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), name: name.trim() || null, active }),
+      })
+      const d = await res.json()
+      if (d.ok) {
+        toast.success(t('Subscriber registered successfully', 'سبسکرائبر کامیابی سے رجسٹر ہو گیا'))
+        onSaved()
+      } else {
+        toast.error(d.error || 'Failed to create subscriber')
+      }
+    } catch {
+      toast.error('Failed to create subscriber')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-md p-6">
+        <DialogHeader>
+          <DialogTitle className="text-base font-bold flex items-center gap-2">
+            <Mail className="h-4 w-4 text-purple-600" />
+            {t('Add Newsletter Subscriber', 'نیا سبسکرائبر شامل کریں')}
+          </DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground">
+            {t('Manually register an email address to receive periodic legal updates.', 'قانونی اطلاعات وصول کرنے کے لیے ای میل شامل کریں۔')}
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4 py-2">
+          <div className="space-y-1.5">
+            <Label className="text-xs">{t('Email Address', 'ای میل ایڈریس')} *</Label>
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="lawyer@example.com"
+              className="text-xs"
+              required
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs">{t('Subscriber Name (Optional)', 'نام')}</Label>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Advocate Tariq"
+              className="text-xs"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 pt-1">
+            <input
+              type="checkbox"
+              id="subActiveCheck"
+              checked={active}
+              onChange={(e) => setActive(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+            />
+            <Label htmlFor="subActiveCheck" className="text-xs cursor-pointer">
+              {t('Set subscriber status as Active', 'سبسکرائبر کی حیثیت فعال رکھیں')}
+            </Label>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0 pt-4">
+            <Button type="button" variant="outline" size="sm" onClick={onClose} disabled={saving}>
+              {t('Cancel', 'منسوخ')}
+            </Button>
+            <Button type="submit" size="sm" disabled={saving}>
+              {saving ? t('Adding...', 'شامل ہو رہا ہے...') : t('Add Subscriber', 'شامل کریں')}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// -------------------------------------------------------------
+// FINDER QUESTION DIALOG
+// -------------------------------------------------------------
+function FinderQuestionDialog({
+  question,
+  categories,
+  allQuestions,
+  onClose,
+  onSaved,
+}: {
+  question: FinderQuestionItem | null
+  categories: Category[]
+  allQuestions: FinderQuestionItem[]
+  onClose: () => void
+  onSaved: () => void
+}) {
+  const { t, lang } = useLanguage()
+  const isEdit = !!question
+  const [questionText, setQuestionText] = React.useState(question?.question || '')
+  const [questionUrdu, setQuestionUrdu] = React.useState(question?.questionUrdu || '')
+  const [orderIndex, setOrderIndex] = React.useState(question?.orderIndex || 0)
+  const [options, setOptions] = React.useState<FinderQuestionOption[]>(
+    question?.options && question.options.length > 0
+      ? question.options
+      : [
+          { id: 'opt_1', label: 'Criminal Matter', labelUrdu: 'فوجداری معاملہ', categoryIds: ['criminal-law'] },
+          { id: 'opt_2', label: 'Civil / Family Matter', labelUrdu: 'دیوانی یا خاندانی معاملہ', categoryIds: ['family-law'] },
+        ]
+  )
+  const [saving, setSaving] = React.useState(false)
+
+  const addOption = () => {
+    setOptions((prev) => [
+      ...prev,
+      {
+        id: `opt_${Date.now()}`,
+        label: 'New Option',
+        labelUrdu: '',
+        categoryIds: [],
+      },
+    ])
+  }
+
+  const removeOption = (idx: number) => {
+    setOptions((prev) => prev.filter((_, i) => i !== idx))
+  }
+
+  const updateOption = (idx: number, patch: Partial<FinderQuestionOption>) => {
+    setOptions((prev) => prev.map((opt, i) => (i === idx ? { ...opt, ...patch } : opt)))
+  }
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!questionText.trim()) {
+      toast.error(t('Question text is required', 'سوال کا متن ضروری ہے'))
+      return
+    }
+    setSaving(true)
+    try {
+      const url = '/api/admin/finder'
+      const method = isEdit ? 'PATCH' : 'POST'
+      const body = isEdit
+        ? { id: question.id, question: questionText, questionUrdu, orderIndex, options }
+        : { question: questionText, questionUrdu, orderIndex, options }
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const d = await res.json()
+      if (d.ok) {
+        toast.success(isEdit ? t('Question updated', 'سوال اپڈیٹ ہو گیا') : t('Question created', 'سوال شامل ہو گیا'))
+        onSaved()
+      } else {
+        toast.error(d.error || 'Failed to save question')
+      }
+    } catch {
+      toast.error('Failed to save question')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-6 overflow-hidden">
+        <DialogHeader>
+          <DialogTitle className="text-base font-bold flex items-center gap-2">
+            <Compass className="h-4 w-4 text-indigo-600" />
+            {isEdit ? t('Edit Finder Question', 'سوال میں ترمیم') : t('Create Finder Question', 'نیا رہنمائی سوال')}
+          </DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground">
+            {t('Define the question prompt and multiple branching options for the citizen guide.', 'شہریوں کی رہنمائی کے لیے سوال اور جوابی اختیارات مرتب کریں۔')}
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSave} className="flex-1 overflow-y-auto space-y-4 py-2 pr-1">
+          <div className="grid grid-cols-3 gap-3">
+            <div className="col-span-2 space-y-1.5">
+              <Label className="text-xs">{t('Question Prompt (English)', 'سوال (انگریزی)')} *</Label>
+              <Input
+                value={questionText}
+                onChange={(e) => setQuestionText(e.target.value)}
+                placeholder="e.g. What is the nature of your legal dispute?"
+                className="text-xs"
+                required
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">{t('Order Index', 'ترتیب')}</Label>
+              <Input
+                type="number"
+                value={orderIndex}
+                onChange={(e) => setOrderIndex(parseInt(e.target.value) || 0)}
+                className="text-xs"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs">{t('Question Prompt (Urdu)', 'سوال (اردو)')}</Label>
+            <Input
+              value={questionUrdu}
+              onChange={(e) => setQuestionUrdu(e.target.value)}
+              dir="rtl"
+              placeholder="مثلاً: آپ کا قانونی معاملہ کس نوعیت کا ہے؟"
+              className="text-xs font-urdu"
+            />
+          </div>
+
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                {t('Branching Choices & Paths', 'جوابی اختیارات')} ({options.length})
+              </Label>
+              <Button type="button" variant="outline" size="sm" onClick={addOption} className="h-7 text-xs gap-1">
+                <Plus className="h-3 w-3" />
+                <span>{t('Add Option', 'آپشن شامل کریں')}</span>
+              </Button>
+            </div>
+
+            <div className="space-y-2.5">
+              {options.map((opt, i) => (
+                <div key={opt.id || i} className="p-3 rounded-lg border border-border/80 bg-muted/20 space-y-2 text-xs">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-bold text-[10px] text-muted-foreground uppercase">Option #{i + 1}</span>
+                    {options.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-destructive hover:bg-destructive/10"
+                        onClick={() => removeOption(i)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Input
+                        value={opt.label}
+                        onChange={(e) => updateOption(i, { label: e.target.value })}
+                        placeholder="Option label (English)"
+                        className="h-8 text-xs"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        value={opt.labelUrdu || ''}
+                        onChange={(e) => updateOption(i, { labelUrdu: e.target.value })}
+                        dir="rtl"
+                        placeholder="آپشن لیبل (اردو)"
+                        className="h-8 text-xs font-urdu"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-[10px] text-muted-foreground">
+                        {t('Next Question ID (Leave empty if final)', 'اگلا سوال ID')}
+                      </Label>
+                      <Select
+                        value={opt.nextQuestionId || 'final'}
+                        onValueChange={(val) => updateOption(i, { nextQuestionId: val === 'final' ? undefined : val })}
+                      >
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue placeholder="Next Step" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="final">➔ Final Step (Show Laws)</SelectItem>
+                          {allQuestions
+                            .filter((q) => q.id !== question?.id)
+                            .map((q) => (
+                              <SelectItem key={q.id} value={q.id} className="text-xs">
+                                #{q.orderIndex}: {q.question.slice(0, 30)}...
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label className="text-[10px] text-muted-foreground">
+                        {t('Target Category Slug (comma separated)', 'متعلقہ کیٹیگری')}
+                      </Label>
+                      <Input
+                        value={(opt.categoryIds || []).join(', ')}
+                        onChange={(e) =>
+                          updateOption(i, {
+                            categoryIds: e.target.value
+                              .split(',')
+                              .map((s) => s.trim())
+                              .filter(Boolean),
+                          })
+                        }
+                        placeholder="e.g. criminal-law, family-law"
+                        className="h-8 text-xs font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0 pt-4 border-t border-border/60">
+            <Button type="button" variant="outline" size="sm" onClick={onClose} disabled={saving}>
+              {t('Cancel', 'منسوخ')}
+            </Button>
+            <Button type="submit" size="sm" disabled={saving}>
+              {saving ? t('Saving...', 'محفوظ ہو رہا ہے...') : isEdit ? t('Update Question', 'اپڈیٹ کریں') : t('Create Question', 'سوال شامل کریں')}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )

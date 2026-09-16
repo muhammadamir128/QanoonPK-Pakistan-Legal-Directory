@@ -8,6 +8,8 @@ import { LanguageProvider } from "@/components/language-provider";
 import { AuthProvider } from "@/components/auth-provider";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { AiAssistantWidget } from "@/components/ai-assistant-widget";
+import { ScrollToTop } from "@/components/scroll-to-top";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -113,6 +115,8 @@ export default function RootLayout({
               <SiteHeader />
               <main className="flex-1 flex flex-col">{children}</main>
               <SiteFooter />
+              <AiAssistantWidget />
+              <ScrollToTop />
               <Toaster />
               <SonnerToaster position="top-center" richColors />
             </AuthProvider>

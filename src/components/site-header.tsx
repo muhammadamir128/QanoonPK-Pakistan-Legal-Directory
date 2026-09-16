@@ -34,7 +34,6 @@ const navItems = [
 ]
 
 const toolsItems = [
-  { href: '/chat', labelEn: 'AI Assistant', labelUr: 'اے آئی اسسٹنٹ', icon: 'Bot' },
   { href: '/faq', labelEn: 'FAQ / Help', labelUr: 'سوالات و مدد', icon: 'HelpCircle' },
   { href: '/courts', labelEn: 'Court Hierarchy', labelUr: 'عدالتی درجہ بندی', icon: 'Landmark' },
   { href: '/glossary', labelEn: 'Glossary', labelUr: 'فرہنگ', icon: 'BookOpen' },
@@ -115,7 +114,7 @@ export function SiteHeader() {
                 <button
                   className={cn(
                     'rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground inline-flex items-center gap-1',
-                    ['/chat', '/courts', '/glossary'].some((p) => isActive(p)) ? 'bg-accent text-accent-foreground' : 'text-foreground/80'
+                    toolsItems.some((item) => isActive(item.href)) ? 'bg-accent text-accent-foreground' : 'text-foreground/80'
                   )}
                 >
                   {t('Tools', 'اوزار')}
@@ -136,8 +135,7 @@ export function SiteHeader() {
                         <div className="flex flex-col">
                           <span className="text-sm font-medium">{t(item.labelEn, item.labelUr)}</span>
                           <span className="text-[10px] text-muted-foreground">{
-                            item.labelEn === 'AI Assistant' ? (lang === 'ur' ? 'قانونی سوالات پوچھیں' : 'Ask legal questions')
-                            : item.labelEn === 'FAQ / Help' ? (lang === 'ur' ? 'عام سوالات' : 'Common questions')
+                            item.labelEn === 'FAQ / Help' ? (lang === 'ur' ? 'عام سوالات' : 'Common questions')
                             : item.labelEn === 'Court Hierarchy' ? (lang === 'ur' ? 'عدالتی نظام' : 'Court system')
                             : item.labelEn === 'API Docs' ? (lang === 'ur' ? 'ڈویلپرز کے لیے' : 'For developers')
                             : (lang === 'ur' ? 'قانونی اصطلاحات' : 'Legal terms')
