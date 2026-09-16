@@ -6,13 +6,14 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { signIn, useSession } from 'next-auth/react'
 import { Suspense } from 'react'
 import {
-  Scale, User, Mail, Lock, Eye, EyeOff, Loader2, ArrowRight,
-  ShieldCheck, CheckCircle2, AlertCircle, ArrowLeft, Languages
+  User, Mail, Lock, Eye, EyeOff, Loader2, ArrowRight,
+  ShieldCheck, AlertCircle, CheckCircle2
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import { AuthLayout } from '@/components/auth/auth-layout'
 import { useLanguage } from '@/components/language-provider'
 import { toast } from 'sonner'
 
@@ -23,13 +24,14 @@ function RegisterForm() {
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') || '/'
   const { data: session, status } = useSession()
-  const { t, lang, setLang } = useLanguage()
+  const { t } = useLanguage()
 
   const [name, setName] = React.useState('')
   const [email, setEmail] = React.useState('')
   const [password, setPassword] = React.useState('')
   const [confirmPassword, setConfirmPassword] = React.useState('')
   const [showPassword, setShowPassword] = React.useState(false)
+  const [agreeTerms, setAgreeTerms] = React.useState(true)
   const [loading, setLoading] = React.useState(false)
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
 
@@ -64,6 +66,13 @@ function RegisterForm() {
     if (password !== confirmPassword) {
       setErrorMessage(
         t('Passwords do not match. Please verify.', 'پاس ورڈز مماثل نہیں ہیں۔ براہ کرم چیک کریں۔')
+      )
+      return
+    }
+
+    if (!agreeTerms) {
+      setErrorMessage(
+        t('Please accept the Terms of Service to continue.', 'براہ کرم جاری رکھنے کے لیے شرائط و ضوابط قبول کریں۔')
       )
       return
     }
@@ -114,212 +123,150 @@ function RegisterForm() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col justify-between px-4 py-8 bg-gradient-to-b from-muted/20 via-background to-muted/40 relative">
-      {/* Top Utility Nav */}
-      <div className="w-full max-w-5xl mx-auto flex items-center justify-between pb-4">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors group"
-        >
-          <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-          <span>{t('Back to Home', 'واپس ہوم پیج')}</span>
-        </Link>
+    <AuthLayout
+      mode="register"
+      title={t('Create your account', 'نیا اکاؤنٹ بنائیں')}
+      subtitle={t('Enter your details to create your legal directory profile', 'اپنا قانونی پروفائل بنانے کے لیے معلومات درج کریں')}
+      icon={<User className="h-7 w-7 text-primary" />}
+    >
+      <form onSubmit={handleSubmit} className="space-y-3.5">
+        {errorMessage && (
+          <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-medium flex items-start gap-2 animate-in fade-in">
+            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
+
+        {/* Full Name Field */}
+        <div className="space-y-1">
+          <Label htmlFor="name" className="text-xs font-semibold text-foreground/85">
+            {t('Full Name', 'پورا نام')}
+          </Label>
+          <div className="relative">
+            <User className="absolute left-3.5 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              id="name"
+              type="text"
+              autoComplete="name"
+              placeholder={t('e.g. Barrister Ali Khan', 'مثلاً: بیرسٹر علی خان')}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="pl-10 h-11 rounded-xl bg-muted/30 border-border/80 focus-visible:ring-primary text-sm shadow-sm transition-colors"
+              required
+            />
+          </div>
+        </div>
+
+        {/* Email Field */}
+        <div className="space-y-1">
+          <Label htmlFor="email" className="text-xs font-semibold text-foreground/85">
+            {t('Email Address', 'ای میل ایڈریس')}
+          </Label>
+          <div className="relative">
+            <Mail className="absolute left-3.5 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              id="email"
+              type="email"
+              autoComplete="email"
+              placeholder="lawyer@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="pl-10 h-11 rounded-xl bg-muted/30 border-border/80 focus-visible:ring-primary text-sm shadow-sm transition-colors"
+              required
+            />
+          </div>
+        </div>
+
+        {/* Password Field */}
+        <div className="space-y-1">
+          <Label htmlFor="password" className="text-xs font-semibold text-foreground/85">
+            {t('Password', 'پاس ورڈ')}
+          </Label>
+          <div className="relative">
+            <Lock className="absolute left-3.5 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="new-password"
+              placeholder={t('At least 6 characters', 'کم از کم 6 حروف')}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="pl-10 pr-10 h-11 rounded-xl bg-muted/30 border-border/80 focus-visible:ring-primary text-sm shadow-sm transition-colors"
+              required
+              minLength={6}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3.5 top-3 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Confirm Password Field */}
+        <div className="space-y-1">
+          <Label htmlFor="confirmPassword" className="text-xs font-semibold text-foreground/85">
+            {t('Confirm Password', 'پاس ورڈ کی تصدیق کریں')}
+          </Label>
+          <div className="relative">
+            <Lock className="absolute left-3.5 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              id="confirmPassword"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="new-password"
+              placeholder={t('Re-enter your password', 'اپنا پاس ورڈ دوبارہ درج کریں')}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="pl-10 h-11 rounded-xl bg-muted/30 border-border/80 focus-visible:ring-primary text-sm shadow-sm transition-colors"
+              required
+              minLength={6}
+            />
+          </div>
+        </div>
+
+        {/* Terms agreement checkbox */}
+        <div className="flex items-start space-x-2 pt-1">
+          <Checkbox
+            id="terms"
+            checked={agreeTerms}
+            onCheckedChange={(checked) => setAgreeTerms(!!checked)}
+            className="rounded border-border mt-0.5 data-[state=checked]:bg-primary"
+          />
+          <label htmlFor="terms" className="text-xs text-muted-foreground leading-snug cursor-pointer select-none">
+            {t('I agree to the', 'میں متفق ہوں')}{' '}
+            <Link href="/about" className="text-primary hover:underline font-medium">
+              {t('Terms of Service', 'شرائط و ضوابط')}
+            </Link>{' '}
+            {t('&', 'اور')}{' '}
+            <Link href="/about" className="text-primary hover:underline font-medium">
+              {t('Privacy Policy', 'رازداری کی پالیسی')}
+            </Link>
+          </label>
+        </div>
+
+        {/* Create Account Button */}
         <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setLang(lang === 'en' ? 'ur' : 'en')}
-          className="text-xs h-8 px-2.5 gap-1.5 text-muted-foreground hover:text-foreground"
+          type="submit"
+          disabled={loading}
+          className="w-full h-11 rounded-xl font-semibold shadow-md shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all text-sm mt-2"
         >
-          <Languages className="h-3.5 w-3.5 text-primary" />
-          <span>{lang === 'en' ? 'اردو' : 'English'}</span>
+          {loading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              {t('Creating account...', 'اکاؤنٹ بن رہا ہے...')}
+            </>
+          ) : (
+            <>
+              {t('Create Account', 'اکاؤنٹ بنائیں')}
+              <ArrowRight className="h-4 w-4 ml-1.5" />
+            </>
+          )}
         </Button>
-      </div>
-
-      <div className="w-full max-w-md mx-auto space-y-6 my-auto">
-        {/* Top Branding */}
-        <div className="text-center space-y-2">
-          <Link href="/" className="inline-flex items-center gap-2.5 group">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/25 group-hover:scale-105 transition-transform">
-              <Scale className="h-6 w-6" />
-            </div>
-            <div className="text-left">
-              <div className="font-bold text-xl tracking-tight text-foreground">
-                {t('QanoonPK', 'قانون پی کے')}
-              </div>
-              <div className="text-[11px] text-muted-foreground font-medium">
-                {t('Pakistan Legal Directory', 'پاکستان قانونی ڈائریکٹری')}
-              </div>
-            </div>
-          </Link>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground pt-2">
-            {t('Create an Account', 'نیا اکاؤنٹ بنائیں')}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {t('Join Pakistan\'s leading bilingual legal research directory', 'پاکستان کی سب سے بڑی قانونی ڈائریکٹری میں شامل ہوں')}
-          </p>
-        </div>
-
-        {/* Card */}
-        <Card className="border-border/80 shadow-lg shadow-black/5 bg-card/85 backdrop-blur-md">
-          <form onSubmit={handleSubmit}>
-            <CardHeader className="space-y-1 pb-4">
-              <CardTitle className="text-lg">
-                {t('Register', 'رجسٹریشن')}
-              </CardTitle>
-              <CardDescription>
-                {t('Fill out your details to get started for free', 'شروع کرنے کے لیے اپنی معلومات درج کریں')}
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="space-y-4">
-              {errorMessage && (
-                <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs font-medium flex items-start gap-2">
-                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                  <span>{errorMessage}</span>
-                </div>
-              )}
-
-              {/* Full Name */}
-              <div className="space-y-2">
-                <Label htmlFor="name" className="text-xs font-medium">
-                  {t('Full Name', 'پورا نام')}
-                </Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
-                  <Input
-                    id="name"
-                    type="text"
-                    autoComplete="name"
-                    placeholder={t('e.g. Barrister Ali Khan', 'مثلاً: بیرسٹر علی خان')}
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="pl-9 h-10 bg-background/50 focus-visible:ring-primary"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Email */}
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-xs font-medium">
-                  {t('Email Address', 'ای میل ایڈریس')}
-                </Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
-                  <Input
-                    id="email"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="lawyer@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-9 h-10 bg-background/50 focus-visible:ring-primary"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Password */}
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-xs font-medium">
-                  {t('Password', 'پاس ورڈ')}
-                </Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
-                  <Input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    autoComplete="new-password"
-                    placeholder={t('At least 6 characters', 'کم از کم 6 حروف')}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-9 pr-10 h-10 bg-background/50 focus-visible:ring-primary"
-                    required
-                    minLength={6}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition-colors"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Confirm Password */}
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-xs font-medium">
-                  {t('Confirm Password', 'پاس ورڈ کی تصدیق کریں')}
-                </Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
-                  <Input
-                    id="confirmPassword"
-                    type={showPassword ? 'text' : 'password'}
-                    autoComplete="new-password"
-                    placeholder={t('Re-enter your password', 'اپنا پاس ورڈ دوبارہ درج کریں')}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="pl-9 h-10 bg-background/50 focus-visible:ring-primary"
-                    required
-                    minLength={6}
-                  />
-                </div>
-              </div>
-
-              {/* Security notice */}
-              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground pt-1">
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                <span>{t('Free forever for citizens, lawyers, and students', 'شہریوں، وکلاء اور طلباء کے لیے مکمل طور پر مفت')}</span>
-              </div>
-            </CardContent>
-
-            <CardFooter className="flex flex-col space-y-3 pt-2">
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full h-10 font-medium shadow-sm"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    {t('Creating account...', 'اکاؤنٹ بن رہا ہے...')}
-                  </>
-                ) : (
-                  <>
-                    {t('Create Account', 'اکاؤنٹ بنائیں')}
-                    <ArrowRight className="h-4 w-4 ml-1.5" />
-                  </>
-                )}
-              </Button>
-
-              <div className="text-center text-xs text-muted-foreground pt-1">
-                {t('Already have an account?', 'کیا آپ کا پہلے سے اکاؤنٹ ہے؟')}{' '}
-                <Link
-                  href={`/login${callbackUrl !== '/' ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ''}`}
-                  className="font-semibold text-primary hover:underline"
-                >
-                  {t('Sign in here', 'یہاں لاگ ان کریں')}
-                </Link>
-              </div>
-            </CardFooter>
-          </form>
-        </Card>
-
-        {/* Security badge */}
-        <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
-          <ShieldCheck className="h-4 w-4 text-primary" />
-          <span>{t('Your personal data is encrypted and strictly protected', 'آپ کی معلومات مکمل محفوظ اور خفیہ ہیں')}</span>
-        </div>
-      </div>
-
-      {/* Bottom Minimal Copyright */}
-      <div className="w-full text-center text-xs text-muted-foreground pt-8">
-        © {new Date().getFullYear()} {t('QanoonPK — Pakistan Legal Directory. All rights reserved.', 'قانون پی کے — جملہ حقوق محفوظ ہیں۔')}
-      </div>
-    </div>
+      </form>
+    </AuthLayout>
   )
 }
 
@@ -327,8 +274,8 @@ export default function RegisterPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-[50vh] flex items-center justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       }
     >
