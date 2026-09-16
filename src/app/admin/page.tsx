@@ -762,18 +762,18 @@ export default function AdminPage() {
         </header>
 
         {/* Dashboard Main Content Body */}
-        <main className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6">
+        <main className="p-4 sm:p-6 lg:p-8 w-full space-y-6">
           {/* TAB 1: OVERVIEW */}
           {activeTab === 'overview' && (
-            <div className="space-y-6 animate-in fade-in-50 duration-200">
+            <div className="space-y-6 animate-in fade-in-50 duration-200 w-full">
               {/* Welcome Header */}
-              <div className="p-6 rounded-2xl bg-gradient-to-br from-primary/15 via-primary/5 to-background border border-primary/20 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="p-6 rounded-2xl bg-gradient-to-br from-primary/15 via-primary/5 to-background border border-primary/20 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4 w-full">
                 <div>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 text-[10px] font-bold">
                       {t('System Live', 'سسٹم متحرک')}
                     </Badge>
-                    <span className="text-xs text-muted-foreground">PostgreSQL / Neon DB</span>
+                    <span className="text-xs text-muted-foreground">SQLite / Local DB</span>
                   </div>
                   <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1 text-foreground">
                     {t('Welcome, Administrator', 'خوش آمدید، ایڈمنسٹریٹر')}
@@ -1152,7 +1152,7 @@ export default function AdminPage() {
                 </Button>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
                 {categories.map((c) => (
                   <Card key={c.id} className="hover:border-primary/40 transition-all shadow-sm">
                     <CardContent className="p-4 flex items-start justify-between gap-3">
