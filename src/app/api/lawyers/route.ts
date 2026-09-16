@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   const q = searchParams.get('q') ?? undefined
   const sort = searchParams.get('sort') ?? 'featured' // featured, rating, experience
   const page = Math.max(1, parseInt(searchParams.get('page') ?? '1'))
-  const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') ?? '12')))
+  const limit = Math.min(500, Math.max(1, parseInt(searchParams.get('limit') ?? '20')))
   const skip = (page - 1) * limit
 
   const where: Record<string, unknown> = {}

@@ -117,14 +117,78 @@ type AnalyticsData = {
   days: number
 }
 
+type AdminTab = 'overview' | 'laws' | 'categories' | 'lawyers' | 'templates' | 'analytics' | 'users'
+const VALID_TABS: AdminTab[] = ['overview', 'laws', 'categories', 'lawyers', 'templates', 'analytics', 'users']
+
 export default function AdminPage() {
   const { data: session, status } = useSession()
   const { theme, setTheme } = useTheme()
   const { t, lang, setLang } = useLanguage()
   const router = useRouter()
 
-  const [activeTab, setActiveTab] = React.useState<'overview' | 'laws' | 'categories' | 'lawyers' | 'templates' | 'analytics' | 'users'>('overview')
+  const [activeTab, setActiveTab] = React.useState<AdminTab>('overview')
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
+
+  // Synchronize active tab with URL (?tab=...) and localStorage
+  const handleTabChange = React.useCallback((tab: AdminTab) => {
+    setActiveTab(tab)
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('qpk-admin-tab', tab)
+        const url = new URL(window.location.href)
+        if (tab === 'overview') {
+          url.searchParams.delete('tab')
+        } else {
+          url.searchParams.set('tab', tab)
+        }
+        window.history.pushState(null, '', url.toString())
+      } catch {}
+    }
+  }, [])
+
+  // Restore tab on initial mount & listen to browser back/forward (popstate)
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const getInitialTab = (): AdminTab => {
+      try {
+        const paramTab = new URLSearchParams(window.location.search).get('tab') as AdminTab | null
+        if (paramTab && VALID_TABS.includes(paramTab)) {
+          localStorage.setItem('qpk-admin-tab', paramTab)
+          return paramTab
+        }
+        const savedTab = localStorage.getItem('qpk-admin-tab') as AdminTab | null
+        if (savedTab && VALID_TABS.includes(savedTab)) {
+          const url = new URL(window.location.href)
+          if (savedTab !== 'overview') {
+            url.searchParams.set('tab', savedTab)
+            window.history.replaceState(null, '', url.toString())
+          }
+          return savedTab
+        }
+      } catch {}
+      return 'overview'
+    }
+
+    const initial = getInitialTab()
+    setActiveTab(initial)
+
+    const onPopState = () => {
+      try {
+        const currentParam = new URLSearchParams(window.location.search).get('tab') as AdminTab | null
+        if (currentParam && VALID_TABS.includes(currentParam)) {
+          setActiveTab(currentParam)
+          localStorage.setItem('qpk-admin-tab', currentParam)
+        } else {
+          setActiveTab('overview')
+          localStorage.setItem('qpk-admin-tab', 'overview')
+        }
+      } catch {}
+    }
+
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [])
 
   // Data states
   const [laws, setLaws] = React.useState<Law[]>([])
@@ -155,14 +219,33 @@ export default function AdminPage() {
   const [creatingCategory, setCreatingCategory] = React.useState(false)
   const [creatingTemplate, setCreatingTemplate] = React.useState(false)
 
+  // Pagination states (20 items per page)
+  const LAWS_PER_PAGE = 20
+  const [lawsPage, setLawsPage] = React.useState(1)
+
+  const CATEGORIES_PER_PAGE = 20
+  const [categoriesPage, setCategoriesPage] = React.useState(1)
+
+  const LAWYERS_PER_PAGE = 20
+  const [lawyersPage, setLawyersPage] = React.useState(1)
+
+  // Reset page when filters change
+  React.useEffect(() => {
+    setLawsPage(1)
+  }, [search, selectedJurisdiction, selectedCategory])
+
+  React.useEffect(() => {
+    setLawyersPage(1)
+  }, [search])
+
   const loadAll = React.useCallback(() => {
     setLoading(true)
     Promise.all([
-      fetch('/api/laws?limit=100').then((r) => r.json()),
+      fetch('/api/laws?limit=500').then((r) => r.json()),
       fetch('/api/categories').then((r) => r.json()),
       fetch('/api/stats').then((r) => r.json()),
-      fetch('/api/lawyers?limit=100').then((r) => r.json()),
-      fetch('/api/templates?limit=100').then((r) => r.json()),
+      fetch('/api/lawyers?limit=500').then((r) => r.json()),
+      fetch('/api/templates?limit=500').then((r) => r.json()),
       fetch('/api/analytics').then((r) => r.json()),
       fetch('/api/admin/users').then((r) => (r.ok ? r.json() : { ok: false, users: [] })),
     ])
@@ -456,6 +539,16 @@ export default function AdminPage() {
     )
   })
 
+  // --- PAGINATED ITEMS (20 per page) ---
+  const totalLawsPages = Math.max(1, Math.ceil(filteredLaws.length / LAWS_PER_PAGE))
+  const paginatedLaws = filteredLaws.slice((lawsPage - 1) * LAWS_PER_PAGE, lawsPage * LAWS_PER_PAGE)
+
+  const totalCategoriesPages = Math.max(1, Math.ceil(categories.length / CATEGORIES_PER_PAGE))
+  const paginatedCategories = categories.slice((categoriesPage - 1) * CATEGORIES_PER_PAGE, categoriesPage * CATEGORIES_PER_PAGE)
+
+  const totalLawyersPages = Math.max(1, Math.ceil(filteredLawyers.length / LAWYERS_PER_PAGE))
+  const paginatedLawyers = filteredLawyers.slice((lawyersPage - 1) * LAWYERS_PER_PAGE, lawyersPage * LAWYERS_PER_PAGE)
+
   // --- SIDEBAR NAVIGATION DEFINITION ---
   const navItems = [
     {
@@ -547,7 +640,7 @@ export default function AdminPage() {
             <button
               key={item.id}
               onClick={() => {
-                setActiveTab(item.id as any)
+                handleTabChange(item.id as AdminTab)
                 setMobileMenuOpen(false)
               }}
               className={cn(
@@ -786,11 +879,11 @@ export default function AdminPage() {
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <Button size="sm" onClick={() => setActiveTab('laws')} className="h-9 gap-1.5">
+                  <Button size="sm" onClick={() => handleTabChange('laws')} className="h-9 gap-1.5">
                     <FileText className="h-4 w-4" />
                     <span>{t('Manage Laws', 'قوانین کا انتظام')}</span>
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => setActiveTab('analytics')} className="h-9 gap-1.5">
+                  <Button size="sm" variant="outline" onClick={() => handleTabChange('analytics')} className="h-9 gap-1.5">
                     <BarChart3 className="h-4 w-4" />
                     <span>{t('View Logs', 'لاگز ملاحظہ')}</span>
                   </Button>
@@ -805,35 +898,35 @@ export default function AdminPage() {
                     label={t('Total Laws', 'کل قوانین')}
                     value={stats.lawCount}
                     color="hsl(var(--primary))"
-                    onClick={() => setActiveTab('laws')}
+                    onClick={() => handleTabChange('laws')}
                   />
                   <StatCard
                     icon={Tags}
                     label={t('Categories', 'اقسام')}
                     value={stats.categoryCount}
                     color="#9333ea"
-                    onClick={() => setActiveTab('categories')}
+                    onClick={() => handleTabChange('categories')}
                   />
                   <StatCard
                     icon={Briefcase}
                     label={t('Lawyers', 'وکلاء')}
                     value={stats.lawyerCount ?? 0}
                     color="#0d9488"
-                    onClick={() => setActiveTab('lawyers')}
+                    onClick={() => handleTabChange('lawyers')}
                   />
                   <StatCard
                     icon={FilePlus}
                     label={t('Templates', 'ٹیمپلیٹس')}
                     value={stats.templateCount ?? 0}
                     color="#db2777"
-                    onClick={() => setActiveTab('templates')}
+                    onClick={() => handleTabChange('templates')}
                   />
                   <StatCard
                     icon={Users}
                     label={t('Users', 'صارفین')}
                     value={users.length}
                     color="#2563eb"
-                    onClick={() => setActiveTab('users')}
+                    onClick={() => handleTabChange('users')}
                   />
                   <StatCard
                     icon={Database}
@@ -861,7 +954,7 @@ export default function AdminPage() {
                         </p>
                       </div>
                     </div>
-                    <Button size="sm" variant="outline" onClick={() => setActiveTab('analytics')} className="h-8 text-xs">
+                    <Button size="sm" variant="outline" onClick={() => handleTabChange('analytics')} className="h-8 text-xs">
                       {t('Review Missing Queries', 'غیر موجود تلاش دیکھیں')}
                     </Button>
                   </CardContent>
@@ -882,7 +975,7 @@ export default function AdminPage() {
                         {laws.length} {t('registered acts and ordinances', 'اندراج شدہ ایکٹس اور آرڈیننس')}
                       </CardDescription>
                     </div>
-                    <Button variant="ghost" size="sm" onClick={() => setActiveTab('laws')} className="h-8 text-xs gap-1">
+                    <Button variant="ghost" size="sm" onClick={() => handleTabChange('laws')} className="h-8 text-xs gap-1">
                       <span>{t('View All', 'تمام دیکھیں')}</span>
                       <ChevronRight className="h-3.5 w-3.5" />
                     </Button>
@@ -924,7 +1017,7 @@ export default function AdminPage() {
                         {t('Real-time citizen search patterns', 'شہریوں کی حقیقی تلاش')}
                       </CardDescription>
                     </div>
-                    <Button variant="ghost" size="sm" onClick={() => setActiveTab('analytics')} className="h-8 text-xs gap-1">
+                    <Button variant="ghost" size="sm" onClick={() => handleTabChange('analytics')} className="h-8 text-xs gap-1">
                       <span>{t('Analytics', 'تجزیات')}</span>
                       <ChevronRight className="h-3.5 w-3.5" />
                     </Button>
@@ -969,7 +1062,8 @@ export default function AdminPage() {
                         {t('Laws Management', 'قوانین کا انتظام')}
                       </CardTitle>
                       <CardDescription className="text-xs mt-0.5">
-                        {filteredLaws.length} {t('of', 'از')} {laws.length} {t('laws listed', 'قوانین درج ہیں')}
+                        {filteredLaws.length} {t('laws listed', 'قوانین درج ہیں')}
+                        {filteredLaws.length > LAWS_PER_PAGE && ` • ${t('Page', 'صفحہ')} ${lawsPage} / ${totalLawsPages}`}
                       </CardDescription>
                     </div>
 
@@ -1049,83 +1143,144 @@ export default function AdminPage() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {filteredLaws.map((law, index) => (
-                            <TableRow key={law.id} className="hover:bg-muted/30">
-                              <TableCell className="text-center text-xs text-muted-foreground">{index + 1}</TableCell>
-                              <TableCell className="max-w-md">
-                                <div className="font-semibold text-xs text-foreground line-clamp-1">
-                                  {law.title}
-                                </div>
-                                {law.titleUrdu && (
-                                  <div className="text-[11px] text-muted-foreground font-urdu line-clamp-1 mt-0.5">
-                                    {law.titleUrdu}
+                          {paginatedLaws.map((law, index) => {
+                            const serialNumber = (lawsPage - 1) * LAWS_PER_PAGE + index + 1
+                            return (
+                              <TableRow key={law.id} className="hover:bg-muted/30">
+                                <TableCell className="text-center text-xs text-muted-foreground">{serialNumber}</TableCell>
+                                <TableCell className="max-w-md">
+                                  <div className="font-semibold text-xs text-foreground line-clamp-1">
+                                    {lang === 'ur' && law.titleUrdu ? law.titleUrdu : law.title}
                                   </div>
-                                )}
-                                <div className="text-[10px] text-muted-foreground/80 font-mono mt-0.5">
-                                  /{law.slug}
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <Badge variant="outline" className="text-[10px] font-normal" style={{ borderColor: law.category?.color ?? undefined }}>
-                                  {lang === 'ur' ? law.category?.nameUrdu : law.category?.name}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="text-xs font-mono">{law.yearEnacted}</TableCell>
-                              <TableCell>
-                                <span className="text-[11px] font-medium uppercase px-2 py-0.5 rounded bg-muted">
-                                  {law.jurisdiction}
-                                </span>
-                              </TableCell>
-                              <TableCell>
-                                <Badge
-                                  className={cn(
-                                    'text-[10px] capitalize font-medium',
-                                    law.status === 'active' && 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
-                                    law.status === 'repealed' && 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20',
-                                    law.status === 'amended' && 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
-                                  )}
-                                >
-                                  {law.status}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="text-center text-xs font-mono text-muted-foreground">
-                                {law.viewCount}
-                              </TableCell>
-                              <TableCell className="text-right pr-4 space-x-1">
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-8 w-8 text-primary hover:bg-primary/10"
-                                  onClick={() => setEditingLaw(law)}
-                                  title="Edit Law"
-                                >
-                                  <Edit2 className="h-3.5 w-3.5" />
-                                </Button>
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                                  asChild
-                                  title="View Live"
-                                >
-                                  <Link href={`/laws/${law.slug}`} target="_blank">
-                                    <ExternalLink className="h-3.5 w-3.5" />
-                                  </Link>
-                                </Button>
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                                  onClick={() => deleteLaw(law)}
-                                  title="Delete Law"
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          ))}
+                                  <div className="text-[10px] text-muted-foreground/80 font-mono mt-0.5">
+                                    /{law.slug}
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant="outline" className="text-[10px] font-normal" style={{ borderColor: law.category?.color ?? undefined }}>
+                                    {lang === 'ur' ? law.category?.nameUrdu : law.category?.name}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-xs font-mono">{law.yearEnacted}</TableCell>
+                                <TableCell>
+                                  <span className="text-[11px] font-medium uppercase px-2 py-0.5 rounded bg-muted">
+                                    {law.jurisdiction}
+                                  </span>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge
+                                    className={cn(
+                                      'text-[10px] capitalize font-medium',
+                                      law.status === 'active' && 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
+                                      law.status === 'repealed' && 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20',
+                                      law.status === 'amended' && 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
+                                    )}
+                                  >
+                                    {law.status}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-center text-xs font-mono text-muted-foreground">
+                                  {law.viewCount}
+                                </TableCell>
+                                <TableCell className="text-right pr-4 space-x-1">
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-8 w-8 text-primary hover:bg-primary/10"
+                                    onClick={() => setEditingLaw(law)}
+                                    title="Edit Law"
+                                  >
+                                    <Edit2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                    asChild
+                                    title="View Live"
+                                  >
+                                    <Link href={`/laws/${law.slug}`} target="_blank">
+                                      <ExternalLink className="h-3.5 w-3.5" />
+                                    </Link>
+                                  </Button>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                                    onClick={() => deleteLaw(law)}
+                                    title="Delete Law"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            )
+                          })}
                         </TableBody>
                       </Table>
+                    </div>
+                  )}
+
+                  {/* Laws Pagination Controls (20 per page) */}
+                  {!loading && filteredLaws.length > LAWS_PER_PAGE && (
+                    <div className="p-4 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-4 bg-muted/10">
+                      <div className="text-xs text-muted-foreground font-medium order-2 sm:order-1">
+                        {t(
+                          `Showing ${(lawsPage - 1) * LAWS_PER_PAGE + 1} to ${Math.min(lawsPage * LAWS_PER_PAGE, filteredLaws.length)} of ${filteredLaws.length} laws`,
+                          `${filteredLaws.length} میں سے ${(lawsPage - 1) * LAWS_PER_PAGE + 1} تا ${Math.min(lawsPage * LAWS_PER_PAGE, filteredLaws.length)} قوانین`
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 order-1 sm:order-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setLawsPage((p) => Math.max(1, p - 1))}
+                          disabled={lawsPage === 1}
+                          className="h-8 px-2.5 text-xs gap-1 cursor-pointer"
+                        >
+                          <ChevronLeft className={cn('h-3.5 w-3.5', lang === 'ur' && 'rotate-180')} />
+                          <span>{t('Previous', 'پچھلا')}</span>
+                        </Button>
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: Math.min(7, totalLawsPages) }).map((_, idx) => {
+                            let pNum: number
+                            if (totalLawsPages <= 7) {
+                              pNum = idx + 1
+                            } else if (lawsPage <= 4) {
+                              pNum = idx + 1
+                            } else if (lawsPage >= totalLawsPages - 3) {
+                              pNum = totalLawsPages - 6 + idx
+                            } else {
+                              pNum = lawsPage - 3 + idx
+                            }
+                            const isActive = pNum === lawsPage
+                            return (
+                              <Button
+                                key={pNum}
+                                variant={isActive ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => setLawsPage(pNum)}
+                                className={cn(
+                                  'h-8 w-8 p-0 text-xs tabular-nums cursor-pointer',
+                                  isActive && 'font-bold shadow-sm'
+                                )}
+                              >
+                                {pNum}
+                              </Button>
+                            )
+                          })}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setLawsPage((p) => Math.min(totalLawsPages, p + 1))}
+                          disabled={lawsPage === totalLawsPages}
+                          className="h-8 px-2.5 text-xs gap-1 cursor-pointer"
+                        >
+                          <span>{t('Next', 'اگلا')}</span>
+                          <ChevronRight className={cn('h-3.5 w-3.5', lang === 'ur' && 'rotate-180')} />
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </CardContent>
@@ -1144,6 +1299,7 @@ export default function AdminPage() {
                   </h2>
                   <p className="text-xs text-muted-foreground">
                     {categories.length} {t('specialized legal domains', 'قانونی شاخیں و اقسام')}
+                    {categories.length > CATEGORIES_PER_PAGE && ` • ${t('Page', 'صفحہ')} ${categoriesPage} / ${totalCategoriesPages}`}
                   </p>
                 </div>
                 <Button size="sm" onClick={() => setCreatingCategory(true)} className="h-9 text-xs gap-1.5 shadow-sm">
@@ -1153,7 +1309,7 @@ export default function AdminPage() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
-                {categories.map((c) => (
+                {paginatedCategories.map((c) => (
                   <Card key={c.id} className="hover:border-primary/40 transition-all shadow-sm">
                     <CardContent className="p-4 flex items-start justify-between gap-3">
                       <div className="flex items-start gap-3 min-w-0">
@@ -1162,11 +1318,14 @@ export default function AdminPage() {
                           style={{ backgroundColor: c.color ?? 'var(--primary)' }}
                         />
                         <div className="min-w-0">
-                          <p className="text-sm font-bold text-foreground truncate">{c.name}</p>
-                          <p className="text-xs text-muted-foreground font-urdu truncate">{c.nameUrdu}</p>
+                          <p className="text-sm font-bold text-foreground truncate">
+                            {lang === 'ur' && c.nameUrdu ? c.nameUrdu : c.name}
+                          </p>
                           <p className="text-[10px] text-muted-foreground/70 font-mono mt-0.5">/{c.slug}</p>
-                          {c.description && (
-                            <p className="text-[11px] text-muted-foreground mt-1.5 line-clamp-2">{c.description}</p>
+                          {(lang === 'ur' ? (c.descriptionUrdu || c.description) : c.description) && (
+                            <p className="text-[11px] text-muted-foreground mt-1.5 line-clamp-2">
+                              {lang === 'ur' ? (c.descriptionUrdu || c.description) : c.description}
+                            </p>
                           )}
                         </div>
                       </div>
@@ -1196,6 +1355,60 @@ export default function AdminPage() {
                   </Card>
                 ))}
               </div>
+
+              {/* Categories Pagination Controls (20 per page) */}
+              {categories.length > CATEGORIES_PER_PAGE && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-border/60">
+                  <div className="text-xs text-muted-foreground font-medium order-2 sm:order-1">
+                    {t(
+                      `Showing ${(categoriesPage - 1) * CATEGORIES_PER_PAGE + 1} to ${Math.min(categoriesPage * CATEGORIES_PER_PAGE, categories.length)} of ${categories.length} categories`,
+                      `${categories.length} میں سے ${(categoriesPage - 1) * CATEGORIES_PER_PAGE + 1} تا ${Math.min(categoriesPage * CATEGORIES_PER_PAGE, categories.length)} اقسام`
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5 order-1 sm:order-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCategoriesPage((p) => Math.max(1, p - 1))}
+                      disabled={categoriesPage === 1}
+                      className="h-8 px-2.5 text-xs gap-1 cursor-pointer"
+                    >
+                      <ChevronLeft className={cn('h-3.5 w-3.5', lang === 'ur' && 'rotate-180')} />
+                      <span>{t('Previous', 'پچھلا')}</span>
+                    </Button>
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: totalCategoriesPages }, (_, idx) => {
+                        const pNum = idx + 1
+                        const isActive = pNum === categoriesPage
+                        return (
+                          <Button
+                            key={pNum}
+                            variant={isActive ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setCategoriesPage(pNum)}
+                            className={cn(
+                              'h-8 w-8 p-0 text-xs tabular-nums cursor-pointer',
+                              isActive && 'font-bold shadow-sm'
+                            )}
+                          >
+                            {pNum}
+                          </Button>
+                        )
+                      })}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCategoriesPage((p) => Math.min(totalCategoriesPages, p + 1))}
+                      disabled={categoriesPage === totalCategoriesPages}
+                      className="h-8 px-2.5 text-xs gap-1 cursor-pointer"
+                    >
+                      <span>{t('Next', 'اگلا')}</span>
+                      <ChevronRight className={cn('h-3.5 w-3.5', lang === 'ur' && 'rotate-180')} />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -1212,6 +1425,7 @@ export default function AdminPage() {
                       </CardTitle>
                       <CardDescription className="text-xs mt-0.5">
                         {filteredLawyers.length} {t('practicing advocates and legal counsel', 'وکلاء و قانونی مشیران')}
+                        {filteredLawyers.length > LAWYERS_PER_PAGE && ` • ${t('Page', 'صفحہ')} ${lawyersPage} / ${totalLawyersPages}`}
                       </CardDescription>
                     </div>
                     <div className="flex items-center gap-2">
@@ -1246,84 +1460,136 @@ export default function AdminPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredLawyers.map((lawyer, idx) => (
-                          <TableRow key={lawyer.id} className="hover:bg-muted/30">
-                            <TableCell className="text-center text-xs text-muted-foreground">{idx + 1}</TableCell>
-                            <TableCell>
-                              <div className="font-semibold text-xs text-foreground flex items-center gap-1.5">
-                                {lawyer.name}
-                                {lawyer.verified && <ShieldCheck className="h-3.5 w-3.5 text-blue-500 shrink-0" />}
-                              </div>
-                              {lawyer.nameUrdu && (
-                                <div className="text-[11px] text-muted-foreground font-urdu mt-0.5">
-                                  {lawyer.nameUrdu}
+                        {paginatedLawyers.map((lawyer, idx) => {
+                          const serialNumber = (lawyersPage - 1) * LAWYERS_PER_PAGE + idx + 1
+                          return (
+                            <TableRow key={lawyer.id} className="hover:bg-muted/30">
+                              <TableCell className="text-center text-xs text-muted-foreground">{serialNumber}</TableCell>
+                              <TableCell>
+                                <div className="font-semibold text-xs text-foreground flex items-center gap-1.5">
+                                  {lang === 'ur' && lawyer.nameUrdu ? lawyer.nameUrdu : lawyer.name}
+                                  {lawyer.verified && <ShieldCheck className="h-3.5 w-3.5 text-blue-500 shrink-0" />}
                                 </div>
-                              )}
-                              <div className="text-[10px] text-muted-foreground mt-0.5">
-                                {lawyer.email || lawyer.phone || 'No direct contact'}
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-xs">
-                              <span className="font-medium text-foreground">{lawyer.city}</span>, {lawyer.province}
-                            </TableCell>
-                            <TableCell className="text-xs">
-                              <div className="flex flex-wrap gap-1 max-w-xs">
-                                {lawyer.specialization?.slice(0, 2).map((s, i) => (
-                                  <Badge key={i} variant="secondary" className="text-[9px] px-1 py-0">
-                                    {s}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Button
-                                size="sm"
-                                variant={lawyer.verified ? 'default' : 'outline'}
-                                onClick={() => toggleLawyerVerified(lawyer)}
-                                className={cn('h-6 px-2 text-[10px] rounded-full gap-1', lawyer.verified && 'bg-blue-600 hover:bg-blue-700 text-white')}
-                              >
-                                <ShieldCheck className="h-3 w-3" />
-                                <span>{lawyer.verified ? t('Verified', 'تصدیق شدہ') : t('Unverified', 'غیر تصدیق شدہ')}</span>
-                              </Button>
-                            </TableCell>
-                            <TableCell>
-                              <Button
-                                size="sm"
-                                variant={lawyer.featured ? 'default' : 'outline'}
-                                onClick={() => toggleLawyerFeatured(lawyer)}
-                                className={cn('h-6 px-2 text-[10px] rounded-full gap-1', lawyer.featured && 'bg-amber-600 hover:bg-amber-700 text-white')}
-                              >
-                                <Star className="h-3 w-3" />
-                                <span>{lawyer.featured ? t('Featured', 'نمایاں') : t('Standard', 'معیاری')}</span>
-                              </Button>
-                            </TableCell>
-                            <TableCell className="text-right pr-4 space-x-1">
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                                asChild
-                                title="View Public Profile"
-                              >
-                                <Link href={`/lawyers/${lawyer.slug}`} target="_blank">
-                                  <ExternalLink className="h-3.5 w-3.5" />
-                                </Link>
-                              </Button>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                                onClick={() => deleteLawyer(lawyer)}
-                                title="Delete Lawyer"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                                <div className="text-[10px] text-muted-foreground mt-0.5">
+                                  {lawyer.email || lawyer.phone || 'No direct contact'}
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-xs">
+                                <span className="font-medium text-foreground">{lawyer.city}</span>, {lawyer.province}
+                              </TableCell>
+                              <TableCell className="text-xs">
+                                <div className="flex flex-wrap gap-1 max-w-xs">
+                                  {lawyer.specialization?.slice(0, 2).map((s, i) => (
+                                    <Badge key={i} variant="secondary" className="text-[9px] px-1 py-0">
+                                      {s}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Button
+                                  size="sm"
+                                  variant={lawyer.verified ? 'default' : 'outline'}
+                                  onClick={() => toggleLawyerVerified(lawyer)}
+                                  className={cn('h-6 px-2 text-[10px] rounded-full gap-1', lawyer.verified && 'bg-blue-600 hover:bg-blue-700 text-white')}
+                                >
+                                  <ShieldCheck className="h-3 w-3" />
+                                  <span>{lawyer.verified ? t('Verified', 'تصدیق شدہ') : t('Unverified', 'غیر تصدیق شدہ')}</span>
+                                </Button>
+                              </TableCell>
+                              <TableCell>
+                                <Button
+                                  size="sm"
+                                  variant={lawyer.featured ? 'default' : 'outline'}
+                                  onClick={() => toggleLawyerFeatured(lawyer)}
+                                  className={cn('h-6 px-2 text-[10px] rounded-full gap-1', lawyer.featured && 'bg-amber-600 hover:bg-amber-700 text-white')}
+                                >
+                                  <Star className="h-3 w-3" />
+                                  <span>{lawyer.featured ? t('Featured', 'نمایاں') : t('Standard', 'معیاری')}</span>
+                                </Button>
+                              </TableCell>
+                              <TableCell className="text-right pr-4 space-x-1">
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                  asChild
+                                  title="View Public Profile"
+                                >
+                                  <Link href={`/lawyers/${lawyer.slug}`} target="_blank">
+                                    <ExternalLink className="h-3.5 w-3.5" />
+                                  </Link>
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                                  onClick={() => deleteLawyer(lawyer)}
+                                  title="Delete Lawyer"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })}
                       </TableBody>
                     </Table>
                   </div>
+
+                  {/* Lawyers Pagination Controls (20 per page) */}
+                  {!loading && filteredLawyers.length > LAWYERS_PER_PAGE && (
+                    <div className="p-4 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-4 bg-muted/10">
+                      <div className="text-xs text-muted-foreground font-medium order-2 sm:order-1">
+                        {t(
+                          `Showing ${(lawyersPage - 1) * LAWYERS_PER_PAGE + 1} to ${Math.min(lawyersPage * LAWYERS_PER_PAGE, filteredLawyers.length)} of ${filteredLawyers.length} lawyers`,
+                          `${filteredLawyers.length} میں سے ${(lawyersPage - 1) * LAWYERS_PER_PAGE + 1} تا ${Math.min(lawyersPage * LAWYERS_PER_PAGE, filteredLawyers.length)} وکلاء`
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 order-1 sm:order-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setLawyersPage((p) => Math.max(1, p - 1))}
+                          disabled={lawyersPage === 1}
+                          className="h-8 px-2.5 text-xs gap-1 cursor-pointer"
+                        >
+                          <ChevronLeft className={cn('h-3.5 w-3.5', lang === 'ur' && 'rotate-180')} />
+                          <span>{t('Previous', 'پچھلا')}</span>
+                        </Button>
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: totalLawyersPages }, (_, idx) => {
+                            const pNum = idx + 1
+                            const isActive = pNum === lawyersPage
+                            return (
+                              <Button
+                                key={pNum}
+                                variant={isActive ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => setLawyersPage(pNum)}
+                                className={cn(
+                                  'h-8 w-8 p-0 text-xs tabular-nums cursor-pointer',
+                                  isActive && 'font-bold shadow-sm'
+                                )}
+                              >
+                                {pNum}
+                              </Button>
+                            )
+                          })}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setLawyersPage((p) => Math.min(totalLawyersPages, p + 1))}
+                          disabled={lawyersPage === totalLawyersPages}
+                          className="h-8 px-2.5 text-xs gap-1 cursor-pointer"
+                        >
+                          <span>{t('Next', 'اگلا')}</span>
+                          <ChevronRight className={cn('h-3.5 w-3.5', lang === 'ur' && 'rotate-180')} />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -1378,12 +1644,9 @@ export default function AdminPage() {
                           <TableRow key={tpl.id} className="hover:bg-muted/30">
                             <TableCell className="text-center text-xs text-muted-foreground">{i + 1}</TableCell>
                             <TableCell>
-                              <div className="font-semibold text-xs text-foreground">{tpl.title}</div>
-                              {tpl.titleUrdu && (
-                                <div className="text-[11px] text-muted-foreground font-urdu mt-0.5">
-                                  {tpl.titleUrdu}
-                                </div>
-                              )}
+                              <div className="font-semibold text-xs text-foreground">
+                                {lang === 'ur' && tpl.titleUrdu ? tpl.titleUrdu : tpl.title}
+                              </div>
                               <div className="text-[10px] text-muted-foreground font-mono mt-0.5">/{tpl.slug}</div>
                             </TableCell>
                             <TableCell>
@@ -1503,7 +1766,7 @@ export default function AdminPage() {
                                   variant="outline"
                                   className="h-7 text-[11px] gap-1"
                                   onClick={() => {
-                                    setActiveTab('laws')
+                                    handleTabChange('laws')
                                     setCreatingLaw(true)
                                   }}
                                 >
@@ -1748,7 +2011,7 @@ function LawEditDialog({
   onClose: () => void
   onSaved: () => void
 }) {
-  const { t } = useLanguage()
+  const { t, lang } = useLanguage()
   const [form, setForm] = React.useState({
     title: law?.title ?? '',
     titleUrdu: law?.titleUrdu ?? '',
@@ -1823,12 +2086,12 @@ function LawEditDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-urdu">{t('Title (Urdu)', 'عنوان (اردو)')}</Label>
+              <Label className={cn('text-xs', lang === 'ur' && 'font-urdu')}>{t('Title (Urdu)', 'عنوان (اردو)')}</Label>
               <Input
                 value={form.titleUrdu}
                 onChange={(e) => setForm({ ...form, titleUrdu: e.target.value })}
-                placeholder="مثلاً قانونِ معاہدہ 1872"
-                className="text-xs font-urdu"
+                placeholder={lang === 'ur' ? 'مثلاً قانونِ معاہدہ 1872' : 'Urdu title (optional) e.g. قانونِ معاہدہ'}
+                className={cn('text-xs', lang === 'ur' && 'font-urdu')}
               />
             </div>
           </div>
@@ -1851,12 +2114,12 @@ function LawEditDialog({
                 onValueChange={(val) => setForm({ ...form, categoryId: val })}
               >
                 <SelectTrigger className="text-xs">
-                  <SelectValue placeholder="Select Category" />
+                  <SelectValue placeholder={t('Select Category', 'شعبہ منتخب کریں')} />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((c) => (
                     <SelectItem key={c.id} value={c.id} className="text-xs">
-                      {c.name} ({c.nameUrdu})
+                      {lang === 'ur' ? c.nameUrdu : c.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1934,13 +2197,13 @@ function LawEditDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs font-urdu">{t('Summary (Urdu)', 'خلاصہ (اردو)')}</Label>
+            <Label className={cn('text-xs', lang === 'ur' && 'font-urdu')}>{t('Summary (Urdu)', 'خلاصہ (اردو)')}</Label>
             <Textarea
               value={form.summaryUrdu}
               onChange={(e) => setForm({ ...form, summaryUrdu: e.target.value })}
               rows={3}
-              placeholder="قانون کا اردو میں مختصر خلاصہ..."
-              className="text-xs font-urdu"
+              placeholder={lang === 'ur' ? 'قانون کا اردو میں مختصر خلاصہ...' : 'Urdu summary translation (optional)...'}
+              className={cn('text-xs', lang === 'ur' && 'font-urdu')}
             />
           </div>
 
@@ -1976,7 +2239,7 @@ function CategoryCreateDialog({
   onClose: () => void
   onSaved: () => void
 }) {
-  const { t } = useLanguage()
+  const { t, lang } = useLanguage()
   const [form, setForm] = React.useState({
     name: '',
     nameUrdu: '',
@@ -2034,12 +2297,12 @@ function CategoryCreateDialog({
           </div>
 
           <div className="space-y-1">
-            <Label className="text-xs font-urdu">{t('Category Name (Urdu) *', 'نام (اردو) *')}</Label>
+            <Label className={cn('text-xs', lang === 'ur' && 'font-urdu')}>{t('Category Name (Urdu)', 'نام (اردو) *')}</Label>
             <Input
               value={form.nameUrdu}
               onChange={(e) => setForm({ ...form, nameUrdu: e.target.value })}
-              placeholder="مثلاً آئینی قانون"
-              className="text-xs font-urdu"
+              placeholder={lang === 'ur' ? 'مثلاً آئینی قانون' : 'Urdu category name (optional) e.g. آئینی قانون'}
+              className={cn('text-xs', lang === 'ur' && 'font-urdu')}
             />
           </div>
 
@@ -2104,7 +2367,7 @@ function LawyerCreateDialog({
   onClose: () => void
   onSaved: () => void
 }) {
-  const { t } = useLanguage()
+  const { t, lang } = useLanguage()
   const [form, setForm] = React.useState({
     name: '',
     nameUrdu: '',
@@ -2179,12 +2442,12 @@ function LawyerCreateDialog({
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs font-urdu">{t('Name (Urdu)', 'نام (اردو)')}</Label>
+              <Label className={cn('text-xs', lang === 'ur' && 'font-urdu')}>{t('Name (Urdu)', 'نام (اردو)')}</Label>
               <Input
                 value={form.nameUrdu}
                 onChange={(e) => setForm({ ...form, nameUrdu: e.target.value })}
-                placeholder="ایڈووکیٹ علی خان"
-                className="text-xs font-urdu"
+                placeholder={lang === 'ur' ? 'ایڈووکیٹ علی خان' : 'Urdu name (optional) e.g. علی خان'}
+                className={cn('text-xs', lang === 'ur' && 'font-urdu')}
               />
             </div>
           </div>
@@ -2300,7 +2563,7 @@ function TemplateCreateDialog({
   onClose: () => void
   onSaved: () => void
 }) {
-  const { t } = useLanguage()
+  const { t, lang } = useLanguage()
   const [form, setForm] = React.useState({
     title: '',
     titleUrdu: '',
@@ -2363,12 +2626,12 @@ function TemplateCreateDialog({
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs font-urdu">{t('Title (Urdu)', 'عنوان (اردو)')}</Label>
+              <Label className={cn('text-xs', lang === 'ur' && 'font-urdu')}>{t('Title (Urdu)', 'عنوان (اردو)')}</Label>
               <Input
                 value={form.titleUrdu}
                 onChange={(e) => setForm({ ...form, titleUrdu: e.target.value })}
-                placeholder="مثلاً کرایہ نامہ"
-                className="text-xs font-urdu"
+                placeholder={lang === 'ur' ? 'مثلاً کرایہ نامہ' : 'Urdu title (optional) e.g. کرایہ نامہ'}
+                className={cn('text-xs', lang === 'ur' && 'font-urdu')}
               />
             </div>
           </div>
@@ -2390,12 +2653,12 @@ function TemplateCreateDialog({
                 onValueChange={(val) => setForm({ ...form, category: val })}
               >
                 <SelectTrigger className="text-xs">
-                  <SelectValue />
+                  <SelectValue placeholder={t('Select Category', 'شعبہ منتخب کریں')} />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((c) => (
                     <SelectItem key={c.id} value={c.slug} className="text-xs">
-                      {c.name}
+                      {lang === 'ur' ? c.nameUrdu : c.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

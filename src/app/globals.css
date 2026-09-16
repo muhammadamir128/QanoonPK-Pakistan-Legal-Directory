@@ -218,3 +218,82 @@
 kbd {
   font-family: var(--font-mono), monospace;
 }
+
+/* ==========================================================================
+   GLOBAL DROPDOWN SCROLLBAR
+   When a dropdown contains more than 5 menu items, a scrollbar is displayed.
+   Each item is ~36px, so 5 items = ~180px + 8px padding = ~188px (11.75rem - 12rem).
+   Dropdowns with <= 5 items do not overflow and show no scrollbar.
+   Dropdowns with > 5 items overflow and display a sleek custom scrollbar.
+   ========================================================================== */
+
+[data-slot="select-content"] {
+  max-height: 12rem !important;
+  overflow: hidden !important;
+}
+
+[data-radix-select-viewport] {
+  max-height: 12rem !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: color-mix(in oklch, var(--muted-foreground) 40%, transparent) transparent !important;
+}
+
+[data-slot="dropdown-menu-content"],
+[data-slot="dropdown-menu-sub-content"],
+[data-slot="menubar-content"],
+[data-slot="menubar-sub-content"],
+[data-slot="context-menu-content"],
+[data-slot="context-menu-sub-content"] {
+  max-height: 12rem !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: color-mix(in oklch, var(--muted-foreground) 40%, transparent) transparent !important;
+}
+
+/* Force visible custom scrollbar across all webkit browsers, overriding Radix UI's hidden scrollbar */
+[data-radix-select-viewport]::-webkit-scrollbar,
+[data-slot="dropdown-menu-content"]::-webkit-scrollbar,
+[data-slot="dropdown-menu-sub-content"]::-webkit-scrollbar,
+[data-slot="menubar-content"]::-webkit-scrollbar,
+[data-slot="menubar-sub-content"]::-webkit-scrollbar,
+[data-slot="context-menu-content"]::-webkit-scrollbar,
+[data-slot="context-menu-sub-content"]::-webkit-scrollbar {
+  display: block !important;
+  width: 6px !important;
+  height: 6px !important;
+}
+
+[data-radix-select-viewport]::-webkit-scrollbar-track,
+[data-slot="dropdown-menu-content"]::-webkit-scrollbar-track,
+[data-slot="dropdown-menu-sub-content"]::-webkit-scrollbar-track,
+[data-slot="menubar-content"]::-webkit-scrollbar-track,
+[data-slot="menubar-sub-content"]::-webkit-scrollbar-track,
+[data-slot="context-menu-content"]::-webkit-scrollbar-track,
+[data-slot="context-menu-sub-content"]::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+[data-radix-select-viewport]::-webkit-scrollbar-thumb,
+[data-slot="dropdown-menu-content"]::-webkit-scrollbar-thumb,
+[data-slot="dropdown-menu-sub-content"]::-webkit-scrollbar-thumb,
+[data-slot="menubar-content"]::-webkit-scrollbar-thumb,
+[data-slot="menubar-sub-content"]::-webkit-scrollbar-thumb,
+[data-slot="context-menu-content"]::-webkit-scrollbar-thumb,
+[data-slot="context-menu-sub-content"]::-webkit-scrollbar-thumb {
+  background-color: color-mix(in oklch, var(--muted-foreground) 40%, transparent) !important;
+  border-radius: 9999px !important;
+}
+
+[data-radix-select-viewport]::-webkit-scrollbar-thumb:hover,
+[data-slot="dropdown-menu-content"]::-webkit-scrollbar-thumb:hover,
+[data-slot="dropdown-menu-sub-content"]::-webkit-scrollbar-thumb:hover,
+[data-slot="menubar-content"]::-webkit-scrollbar-thumb:hover,
+[data-slot="menubar-sub-content"]::-webkit-scrollbar-thumb:hover,
+[data-slot="context-menu-content"]::-webkit-scrollbar-thumb:hover,
+[data-slot="context-menu-sub-content"]::-webkit-scrollbar-thumb:hover {
+  background-color: var(--primary) !important;
+}
+

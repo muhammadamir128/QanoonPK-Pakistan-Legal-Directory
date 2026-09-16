@@ -41,7 +41,7 @@ export default function CategoriesPage() {
   const [categories, setCategories] = React.useState<Category[]>([])
   const [loading, setLoading] = React.useState(true)
   const [page, setPage] = React.useState(1)
-  const itemsPerPage = 12
+  const itemsPerPage = 20
   const topRef = React.useRef<HTMLDivElement>(null)
 
   const totalPages = Math.max(1, Math.ceil(categories.length / itemsPerPage))

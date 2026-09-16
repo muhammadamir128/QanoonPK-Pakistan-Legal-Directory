@@ -92,7 +92,7 @@ export default function LawyersPage() {
     if (specialization !== 'all') params.set('specialization', specialization)
     if (sort) params.set('sort', sort)
     params.set('page', String(page))
-    params.set('limit', '12')
+    params.set('limit', '20')
 
     fetch(`/api/lawyers?${params.toString()}`)
       .then((r) => r.json())

@@ -39,6 +39,12 @@ export default function TemplatesPage() {
   const [loading, setLoading] = React.useState(true)
   const [q, setQ] = React.useState('')
   const [category, setCategory] = React.useState('all')
+  const [page, setPage] = React.useState(1)
+  const itemsPerPage = 20
+
+  React.useEffect(() => {
+    setPage(1)
+  }, [q, category])
 
   const categories = React.useMemo(() => {
     const set = new Map<string, { en: string; ur: string }>()
@@ -50,7 +56,7 @@ export default function TemplatesPage() {
 
   React.useEffect(() => {
     setLoading(true)
-    fetch('/api/templates')
+    fetch('/api/templates?limit=500')
       .then((r) => r.json())
       .then((d) => {
         const all = d.items ?? []
@@ -73,6 +79,9 @@ export default function TemplatesPage() {
       )
     })
   }, [templates, q, category])
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage))
+  const paginatedTemplates = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage)
 
   const clearFilters = () => {
     setQ('')
@@ -197,44 +206,95 @@ export default function TemplatesPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((tpl, i) => (
-            <Link
-              key={tpl.id}
-              href={`/templates/${tpl.slug}`}
-              className="group block animate-fade-in-up"
-              style={{ animationDelay: `${i * 30}ms` }}
-            >
-              <Card className="hover:shadow-lg hover:border-primary/30 transition-all duration-300 h-full overflow-hidden relative">
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-primary/50" />
-                <CardContent className="p-5 pt-6">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                      <FileText className="h-5 w-5" />
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {paginatedTemplates.map((tpl, i) => (
+              <Link
+                key={tpl.id}
+                href={`/templates/${tpl.slug}`}
+                className="group block animate-fade-in-up"
+                style={{ animationDelay: `${i * 30}ms` }}
+              >
+                <Card className="hover:shadow-lg hover:border-primary/30 transition-all duration-300 h-full overflow-hidden relative">
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-primary/50" />
+                  <CardContent className="p-5 pt-6">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                        <FileText className="h-5 w-5" />
+                      </div>
+                      <Badge variant="secondary" className="text-[10px]">{tpl.fields.length} {t('fields', 'خانے')}</Badge>
                     </div>
-                    <Badge variant="secondary" className="text-[10px]">{tpl.fields.length} {t('fields', 'خانے')}</Badge>
-                  </div>
-                  <h3 className="font-semibold text-base leading-tight group-hover:text-primary transition-colors line-clamp-2">
-                    {lang === 'ur' && tpl.titleUrdu ? tpl.titleUrdu : tpl.title}
-                  </h3>
+                    <h3 className="font-semibold text-base leading-tight group-hover:text-primary transition-colors line-clamp-2">
+                      {lang === 'ur' && tpl.titleUrdu ? tpl.titleUrdu : tpl.title}
+                    </h3>
 
+                    <p className="text-sm text-muted-foreground mt-2 line-clamp-2 leading-relaxed">
+                      {lang === 'ur' && tpl.descriptionUrdu ? tpl.descriptionUrdu : tpl.description}
+                    </p>
+                    <div className="mt-4 pt-3 border-t border-border/40 flex items-center justify-between">
+                      <Badge variant="outline" className="text-[10px]">
+                        {lang === 'ur' ? tpl.categoryUrdu : tpl.category}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                        <Download className="h-3 w-3" /> {tpl.downloads}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
 
-                  <p className="text-sm text-muted-foreground mt-2 line-clamp-2 leading-relaxed">
-                    {lang === 'ur' && tpl.descriptionUrdu ? tpl.descriptionUrdu : tpl.description}
-                  </p>
-                  <div className="mt-4 pt-3 border-t border-border/40 flex items-center justify-between">
-                    <Badge variant="outline" className="text-[10px]">
-                      {lang === 'ur' ? tpl.categoryUrdu : tpl.category}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
-                      <Download className="h-3 w-3" /> {tpl.downloads}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-border/60">
+              <div className="text-xs text-muted-foreground font-medium order-2 sm:order-1">
+                {t(
+                  `Showing ${(page - 1) * itemsPerPage + 1} to ${Math.min(page * itemsPerPage, filtered.length)} of ${filtered.length} templates`,
+                  `${filtered.length} میں سے ${(page - 1) * itemsPerPage + 1} تا ${Math.min(page * itemsPerPage, filtered.length)} ٹیمپلیٹس`
+                )}
+              </div>
+              <div className="flex items-center gap-1.5 order-1 sm:order-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="h-8 px-2.5 text-xs gap-1 cursor-pointer"
+                >
+                  <ChevronRight className={cn('h-3.5 w-3.5', lang !== 'ur' && 'rotate-180')} />
+                  <span>{t('Previous', 'پچھلا')}</span>
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, idx) => {
+                    const pageNum = idx + 1
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={pageNum === page ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setPage(pageNum)}
+                        className="h-8 w-8 p-0 text-xs tabular-nums cursor-pointer"
+                      >
+                        {pageNum}
+                      </Button>
+                    )
+                  })}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="h-8 px-2.5 text-xs gap-1 cursor-pointer"
+                >
+                  <span>{t('Next', 'اگلا')}</span>
+                  <ChevronRight className={cn('h-3.5 w-3.5', lang === 'ur' && 'rotate-180')} />
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* Disclaimer */}

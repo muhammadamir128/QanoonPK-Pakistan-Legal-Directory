@@ -100,7 +100,7 @@ function LawsPageInner() {
     if (year !== 'all') params.set('year', year)
     if (sort !== 'popular') params.set('sort', sort)
     params.set('page', String(page))
-    params.set('limit', '12')
+    params.set('limit', '20')
 
     setLoading(true)
     fetch(`/api/laws?${params.toString()}`)
