@@ -5,7 +5,9 @@ import Link from 'next/link'
 import {
   Compass, ChevronRight, ChevronLeft, ArrowRight, RefreshCw,
   FileText, ArrowLeft, BookOpen, Scale, CheckCircle2, ShieldAlert,
-  Phone, Sparkles, Building2, Gavel, HelpCircle, ExternalLink
+  Phone, Sparkles, Building2, Gavel, HelpCircle, ExternalLink,
+  CreditCard, Home, HeartHandshake, Laptop, Briefcase, Zap,
+  AlertCircle, ShieldCheck, Filter
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -45,7 +47,10 @@ type Law = {
 const COMMON_ROADMAPS = [
   {
     id: 'cheque',
-    icon: '💳',
+    category: 'financial',
+    categoryName: 'Finance & Banking',
+    categoryNameUrdu: 'مالیات و چیک',
+    icon: CreditCard,
     color: '#dc2626',
     title: 'Dishonoured / Bounced Cheque',
     titleUrdu: 'باؤنس چیک / سیکشن 489-F',
@@ -61,7 +66,10 @@ const COMMON_ROADMAPS = [
   },
   {
     id: 'rent',
-    icon: '🏠',
+    category: 'property',
+    categoryName: 'Tenancy & Rent',
+    categoryNameUrdu: 'کرایہ داری و بے دخلی',
+    icon: Home,
     color: '#ea580c',
     title: 'Tenant Eviction & Rent Default',
     titleUrdu: 'کرایہ دار کی بے دخلی و کرایہ کی عدم ادائیگی',
@@ -77,7 +85,10 @@ const COMMON_ROADMAPS = [
   },
   {
     id: 'family',
-    icon: '👨‍👩‍👧',
+    category: 'family',
+    categoryName: 'Family & Custody',
+    categoryNameUrdu: 'خاندانی و نکاح/خلع',
+    icon: HeartHandshake,
     color: '#db2777',
     title: 'Divorce, Khula & Child Custody',
     titleUrdu: 'طلاق، خلع، خرچہ نان نفقہ و تحویل اطفال',
@@ -93,7 +104,10 @@ const COMMON_ROADMAPS = [
   },
   {
     id: 'cyber',
-    icon: '📱',
+    category: 'cyber',
+    categoryName: 'Cyber & Online',
+    categoryNameUrdu: 'سائبر کرائم و بلیک میلنگ',
+    icon: Laptop,
     color: '#7c3aed',
     title: 'Cyber Blackmail, Harassment & Online Fraud',
     titleUrdu: 'آن لائن بلیک میلنگ، ہراسانی و سائبر فراڈ',
@@ -108,7 +122,10 @@ const COMMON_ROADMAPS = [
   },
   {
     id: 'workplace',
-    icon: '🏢',
+    category: 'labour',
+    categoryName: 'Labour & Workplace',
+    categoryNameUrdu: 'ملازمت و تنخواہ',
+    icon: Briefcase,
     color: '#0d9488',
     title: 'Workplace Harassment & Unpaid Salary',
     titleUrdu: 'دفتر میں ہراسانی و تنخواہ کی بندش',
@@ -124,7 +141,10 @@ const COMMON_ROADMAPS = [
   },
   {
     id: 'property',
-    icon: '📜',
+    category: 'property',
+    categoryName: 'Land & Property',
+    categoryNameUrdu: 'اراضی و قبضہ مافیا',
+    icon: Scale,
     color: '#0284c7',
     title: 'Property Fraud & Land Grabbing',
     titleUrdu: 'پراپرٹی فراڈ، جعلی رجسٹری و قبضہ مافیا',
@@ -149,6 +169,7 @@ export default function FinderPage() {
   const [matchedSlugs, setMatchedSlugs] = React.useState<string[]>([])
   const [results, setResults] = React.useState<Law[] | null>(null)
   const [fetchingResults, setFetchingResults] = React.useState(false)
+  const [roadmapCategory, setRoadmapCategory] = React.useState('all')
 
   React.useEffect(() => {
     fetch('/api/finder')
@@ -156,6 +177,11 @@ export default function FinderPage() {
       .then((d) => { setQuestions(d.items ?? []); setLoading(false) })
       .catch(() => setLoading(false))
   }, [])
+
+  const filteredRoadmaps = React.useMemo(() => {
+    if (roadmapCategory === 'all') return COMMON_ROADMAPS
+    return COMMON_ROADMAPS.filter((rm) => rm.category === roadmapCategory)
+  }, [roadmapCategory])
 
   const currentQuestion = questions[currentIdx]
 
@@ -210,16 +236,23 @@ export default function FinderPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-8 md:py-12">
+    <div className="container mx-auto max-w-5xl px-4 py-6 md:py-10">
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
+        <Link href="/" className="hover:text-primary">{t('Home', 'صفحۂ اول')}</Link>
+        <ChevronRight className={cn('h-3 w-3', lang === 'ur' && 'rotate-180')} />
+        <span>{t('Legal Finder', 'قانونی رہنمائی')}</span>
+      </div>
+
       {/* Header */}
-      <div className="text-center mb-8">
-        <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-3">
-          <Compass className="h-7 w-7" />
+      <div className="text-center mb-6">
+        <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-md mb-2.5">
+          <Compass className="h-6 w-6" />
         </div>
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
           {t('Which Law Applies to You?', 'آپ کے مسئلے پر کون سا قانون لاگو ہوتا ہے؟')}
         </h1>
-        <p className="text-muted-foreground mt-2 text-sm max-w-xl mx-auto">
+        <p className="text-muted-foreground mt-1.5 text-xs sm:text-sm max-w-xl mx-auto">
           {t(
             'Interactive legal guide — take the step-by-step questionnaire or explore instant roadmaps for common Pakistani legal problems.',
             'انٹرایکٹو قانونی رہنمائی — مرحلہ وار سوال نامے کے ذریعے یا عام قانونی مسائل کے فوری روڈ میپ کے ذریعے حل تلاش کریں۔'
@@ -228,92 +261,152 @@ export default function FinderPage() {
       </div>
 
       {/* Emergency Helpline Bar */}
-      <div className="mb-8 p-3 rounded-xl border border-primary/20 bg-primary/5 flex items-center justify-between gap-3 flex-wrap text-xs">
-        <div className="flex items-center gap-2">
-          <ShieldAlert className="h-4 w-4 text-primary shrink-0" />
-          <span className="font-semibold text-foreground">{t('Emergency Official Helplines:', 'سرکاری ہنگامی ہیلپ لائنز:')}</span>
+      <div className="mb-6 p-3 rounded-xl border border-primary/20 bg-gradient-to-r from-primary/5 via-card to-primary/5 flex items-center justify-between gap-3 flex-wrap text-xs shadow-xs">
+        <div className="flex items-center gap-2 font-semibold text-primary">
+          <Phone className="h-4 w-4" />
+          <span>{t('Emergency Official Helplines:', 'سرکاری ہنگامی ہیلپ لائنز:')}</span>
         </div>
-        <div className="flex items-center gap-3 flex-wrap font-medium">
-          <span className="inline-flex items-center gap-1">🚨 Police: <strong className="text-primary font-bold">15</strong></span>
-          <span className="inline-flex items-center gap-1">💻 Cyber Crime FIA: <strong className="text-primary font-bold">1991</strong></span>
-          <span className="inline-flex items-center gap-1">👩 Women Helpline: <strong className="text-primary font-bold">1043</strong></span>
-          <span className="inline-flex items-center gap-1">👶 Child Protection: <strong className="text-primary font-bold">1121</strong></span>
+        <div className="flex items-center gap-2 flex-wrap font-medium">
+          <a href="tel:15" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-card border border-border/80 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer">
+            <span>🚓</span> <span>{t('Police:', 'پولیس:')}</span> <strong className="font-mono text-primary font-bold">15</strong>
+          </a>
+          <a href="tel:1991" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-card border border-border/80 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer">
+            <span>💻</span> <span>{t('Cyber Crime FIA:', 'سائبر کرائم:')}</span> <strong className="font-mono text-primary font-bold">1991</strong>
+          </a>
+          <a href="tel:1043" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-card border border-border/80 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer">
+            <span>👩</span> <span>{t('Women Protection:', 'تحفظ خواتین:')}</span> <strong className="font-mono text-primary font-bold">1043</strong>
+          </a>
+          <a href="tel:1121" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-card border border-border/80 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer">
+            <span>👶</span> <span>{t('Child Protection:', 'بچوں کا تحفظ:')}</span> <strong className="font-mono text-primary font-bold">1121</strong>
+          </a>
         </div>
       </div>
 
       <Tabs defaultValue="roadmaps" className="space-y-6">
         <div className="flex justify-center">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="roadmaps" className="text-xs sm:text-sm">
-              <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+          <TabsList className="grid w-full max-w-md grid-cols-2 p-1 bg-muted/60 border border-border/60">
+            <TabsTrigger value="roadmaps" className="text-xs sm:text-sm cursor-pointer data-[state=active]:shadow-sm">
+              <Sparkles className="h-3.5 w-3.5 mr-1.5 text-amber-500" />
               {t('Popular Roadmaps', 'فوری قانونی روڈ میپ')}
             </TabsTrigger>
-            <TabsTrigger value="wizard" className="text-xs sm:text-sm">
-              <Compass className="h-3.5 w-3.5 mr-1.5" />
+            <TabsTrigger value="wizard" className="text-xs sm:text-sm cursor-pointer data-[state=active]:shadow-sm">
+              <Compass className="h-3.5 w-3.5 mr-1.5 text-primary" />
               {t('Interactive Wizard', 'مرحلہ وار سوال نامہ')}
             </TabsTrigger>
           </TabsList>
         </div>
 
         {/* Tab 1: Instant Roadmaps */}
-        <TabsContent value="roadmaps" className="space-y-4">
+        <TabsContent value="roadmaps" className="space-y-5">
+          {/* Quick Category Filter Pills */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {[
+              { id: 'all', en: 'All Roadmaps', ur: 'تمام مسائل' },
+              { id: 'financial', en: 'Cheque & Banking', ur: 'چیک و بینکنگ' },
+              { id: 'property', en: 'Tenancy & Land', ur: 'کرایہ داری و زمین' },
+              { id: 'family', en: 'Family & Custody', ur: 'خاندانی و خلع' },
+              { id: 'cyber', en: 'Cyber Crime', ur: 'سائبر کرائم' },
+              { id: 'labour', en: 'Workplace & Salary', ur: 'ملازمت و تنخواہ' },
+            ].map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setRoadmapCategory(cat.id)}
+                className={cn(
+                  'px-3 py-1.5 rounded-full text-xs font-medium transition-all border cursor-pointer',
+                  roadmapCategory === cat.id
+                    ? 'bg-primary text-primary-foreground border-primary shadow-xs'
+                    : 'bg-card border-border/80 hover:bg-accent hover:border-border text-muted-foreground'
+                )}
+              >
+                {lang === 'ur' ? cat.ur : cat.en}
+              </button>
+            ))}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {COMMON_ROADMAPS.map((rm) => (
-              <Card key={rm.id} className="border-border/70 hover:border-primary/40 hover:shadow-md transition-all flex flex-col justify-between">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2.5">
-                      <span className="text-2xl">{rm.icon}</span>
-                      <div>
-                        <CardTitle className="text-base font-bold">
+            {filteredRoadmaps.map((rm) => {
+              const Icon = rm.icon
+              return (
+                <Card
+                  key={rm.id}
+                  className="relative overflow-hidden border-border/80 hover:border-primary/50 hover:shadow-lg transition-all duration-300 flex flex-col justify-between group"
+                >
+                  <div
+                    className="absolute top-0 left-0 right-0 h-1"
+                    style={{ backgroundColor: rm.color }}
+                  />
+                  <CardHeader className="pb-3 pt-5">
+                    <div className="flex items-start gap-3.5">
+                      <div
+                        className="flex h-11 w-11 items-center justify-center rounded-xl text-white shadow-xs shrink-0 group-hover:scale-105 transition-transform"
+                        style={{ background: `linear-gradient(135deg, ${rm.color}, ${rm.color}cc)` }}
+                      >
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <Badge variant="outline" className="text-[10px] font-medium px-2 py-0 border-border/60">
+                            {lang === 'ur' ? rm.categoryNameUrdu : rm.categoryName}
+                          </Badge>
+                          {rm.helpline && (
+                            <Badge variant="destructive" className="text-[10px] font-bold px-1.5 py-0 flex items-center gap-1">
+                              <Phone className="h-2.5 w-2.5" /> {rm.helpline}
+                            </Badge>
+                          )}
+                        </div>
+                        <CardTitle className="text-base font-bold group-hover:text-primary transition-colors leading-tight">
                           {lang === 'ur' ? rm.titleUrdu : rm.title}
                         </CardTitle>
-                        <p className="text-[11px] text-primary font-medium mt-0.5">
+                        <p className="text-[11px] text-muted-foreground mt-1 line-clamp-1 font-medium">
                           {lang === 'ur' ? rm.statuteUrdu : rm.statute}
                         </p>
                       </div>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3 pt-0 text-xs">
-                  <div className="p-2.5 rounded-lg bg-muted/40 border border-border/40 space-y-1">
-                    <span className="font-semibold text-[10px] text-muted-foreground uppercase tracking-wider block">
-                      {t('Immediate First Step:', 'پہلا فوری اقدام:')}
-                    </span>
-                    <p className="leading-relaxed text-foreground/90">
-                      {lang === 'ur' ? rm.firstStepUrdu : rm.firstStep}
-                    </p>
-                  </div>
+                  </CardHeader>
 
-                  <div className="flex items-start gap-1.5 text-muted-foreground text-[11px]">
-                    <Building2 className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
-                    <span><strong>{t('Court / Forum:', 'مجاز فورم:')}</strong> {lang === 'ur' ? rm.forumUrdu : rm.forum}</span>
-                  </div>
+                  <CardContent className="space-y-3 pt-0 text-xs flex-1 flex flex-col justify-between">
+                    <div className="space-y-2.5">
+                      {/* Immediate Step Box */}
+                      <div className="p-3 rounded-xl bg-muted/40 border border-border/60 space-y-1">
+                        <span className="font-bold text-[10px] text-primary uppercase tracking-wider flex items-center gap-1.5">
+                          <Zap className="h-3 w-3 fill-primary/20 text-primary" />
+                          {t('Immediate First Step:', 'پہلا فوری اقدام:')}
+                        </span>
+                        <p className="leading-relaxed text-foreground/90 text-xs">
+                          {lang === 'ur' ? rm.firstStepUrdu : rm.firstStep}
+                        </p>
+                      </div>
 
-                  <div className="pt-2 border-t border-border/40 flex items-center justify-between gap-2 flex-wrap">
-                    <Button asChild variant="outline" size="sm" className="h-7 text-xs">
-                      <Link href={`/laws/${rm.statuteSlug}`}>
-                        <BookOpen className="h-3 w-3 mr-1" />
-                        {t('Read Law', 'قانون پڑھیں')}
-                      </Link>
-                    </Button>
-                    {rm.templateSlug && (
-                      <Button asChild variant="secondary" size="sm" className="h-7 text-xs">
-                        <Link href={`/templates/${rm.templateSlug}`}>
-                          <FileText className="h-3 w-3 mr-1" />
-                          {t('Get Template', 'ٹیمپلیٹ حاصل کریں')}
+                      {/* Forum Box */}
+                      <div className="flex items-start gap-2 p-2.5 rounded-lg bg-accent/20 border border-border/40 text-muted-foreground text-[11px]">
+                        <Building2 className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+                        <div>
+                          <strong className="text-foreground">{t('Competent Forum / Court:', 'مجاز عدالت یا فورم:')}</strong>{' '}
+                          <span>{lang === 'ur' ? rm.forumUrdu : rm.forum}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-border/50 flex items-center justify-between gap-2 flex-wrap">
+                      <Button asChild variant="outline" size="sm" className="h-8 text-xs hover:border-primary/40 hover:text-primary">
+                        <Link href={`/laws/${rm.statuteSlug}`}>
+                          <BookOpen className="h-3.5 w-3.5 mr-1.5 text-primary" />
+                          {t('Read Statute', 'قانون پڑھیں')}
                         </Link>
                       </Button>
-                    )}
-                    {rm.helpline && (
-                      <Badge variant="destructive" className="text-[10px] font-bold">
-                        Helpline: {rm.helpline}
-                      </Badge>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                      {rm.templateSlug && (
+                        <Button asChild variant="secondary" size="sm" className="h-8 text-xs">
+                          <Link href={`/templates/${rm.templateSlug}`}>
+                            <FileText className="h-3.5 w-3.5 mr-1.5" />
+                            {t('Get Ready Template', 'تیار ٹیمپلیٹ لیں')}
+                          </Link>
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
           </div>
         </TabsContent>
 

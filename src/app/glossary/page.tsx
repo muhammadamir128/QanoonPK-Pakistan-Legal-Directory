@@ -3,7 +3,7 @@
 import * as React from 'react'
 import Link from 'next/link'
 import {
-  ChevronRight, Search, BookOpen, ArrowRight, Volume2,
+  ChevronRight, ChevronLeft, Search, BookOpen, ArrowRight, Volume2,
   Languages, Filter, Copy, Check, Scale, Sparkles
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -37,6 +37,13 @@ export default function GlossaryPage() {
   const [category, setCategory] = React.useState<string>('all')
   const [selectedLetter, setSelectedLetter] = React.useState<string>('ALL')
   const [expanded, setExpanded] = React.useState<Set<string>>(new Set())
+  const [page, setPage] = React.useState(1)
+  const itemsPerPage = 10
+  const topRef = React.useRef<HTMLDivElement>(null)
+
+  React.useEffect(() => {
+    setPage(1)
+  }, [search, category, selectedLetter])
 
   const categories = React.useMemo(() => {
     const set = new Map<string, { en: string; ur: string }>()
@@ -72,6 +79,16 @@ export default function GlossaryPage() {
     })
   }, [search, category, selectedLetter])
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage))
+  const paginatedTerms = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage)
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setPage(newPage)
+      topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+
   const toggle = (id: string) => {
     setExpanded((prev) => {
       const next = new Set(prev)
@@ -97,7 +114,7 @@ export default function GlossaryPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-8 md:py-12">
+    <div ref={topRef} className="container mx-auto max-w-5xl px-4 py-8 md:py-12 scroll-mt-20">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
@@ -226,6 +243,22 @@ export default function GlossaryPage() {
       </div>
 
       {/* Terms list */}
+      {filtered.length > 0 && (
+        <div className="flex items-center justify-between text-xs text-muted-foreground mb-3 font-medium">
+          <span>
+            {t(
+              `Showing ${(page - 1) * itemsPerPage + 1}–${Math.min(page * itemsPerPage, filtered.length)} of ${filtered.length} terms`,
+              `${filtered.length} میں سے ${(page - 1) * itemsPerPage + 1}–${Math.min(page * itemsPerPage, filtered.length)} اصطلاحات`
+            )}
+          </span>
+          {totalPages > 1 && (
+            <span>
+              {t(`Page ${page} of ${totalPages}`, `صفحہ ${page} از ${totalPages}`)}
+            </span>
+          )}
+        </div>
+      )}
+
       {filtered.length === 0 ? (
         <Card className="border-dashed">
           <CardContent className="py-12 text-center">
@@ -244,20 +277,72 @@ export default function GlossaryPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-          {filtered.map((term) => (
-            <GlossaryTermCard
-              key={term.id}
-              term={term}
-              lang={lang}
-              t={t}
-              expanded={expanded.has(term.id)}
-              onToggle={() => toggle(term.id)}
-              onSpeak={() => speak(lang === 'ur' ? term.termUrdu : term.term)}
-              onCopy={() => copyTerm(term)}
-            />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            {paginatedTerms.map((term) => (
+              <GlossaryTermCard
+                key={term.id}
+                term={term}
+                lang={lang}
+                t={t}
+                expanded={expanded.has(term.id)}
+                onToggle={() => toggle(term.id)}
+                onSpeak={() => speak(lang === 'ur' ? term.termUrdu : term.term)}
+                onCopy={() => copyTerm(term)}
+              />
+            ))}
+          </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-border/60">
+              <div className="text-xs text-muted-foreground font-medium order-2 sm:order-1">
+                {t(
+                  `Showing ${(page - 1) * itemsPerPage + 1} to ${Math.min(page * itemsPerPage, filtered.length)} of ${filtered.length} terms`,
+                  `${filtered.length} میں سے ${(page - 1) * itemsPerPage + 1} تا ${Math.min(page * itemsPerPage, filtered.length)} اصطلاحات`
+                )}
+              </div>
+              <div className="flex items-center gap-1.5 order-1 sm:order-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={page === 1}
+                  className="h-8 px-2.5 text-xs gap-1 cursor-pointer"
+                >
+                  <ChevronLeft className={cn('h-3.5 w-3.5', lang === 'ur' && 'rotate-180')} />
+                  <span>{t('Previous', 'پچھلا')}</span>
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, idx) => {
+                    const pageNum = idx + 1
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={pageNum === page ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => handlePageChange(pageNum)}
+                        className="h-8 w-8 p-0 text-xs tabular-nums cursor-pointer"
+                      >
+                        {pageNum}
+                      </Button>
+                    )
+                  })}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={page === totalPages}
+                  className="h-8 px-2.5 text-xs gap-1 cursor-pointer"
+                >
+                  <span>{t('Next', 'اگلا')}</span>
+                  <ChevronRight className={cn('h-3.5 w-3.5', lang === 'ur' && 'rotate-180')} />
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   )

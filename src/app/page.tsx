@@ -156,11 +156,6 @@ export default function HomePage() {
         <div className="absolute inset-0 pattern-dots opacity-30 pointer-events-none" />
         <div className="container mx-auto max-w-7xl px-4 py-16 md:py-24 lg:py-28 relative">
           <div className="max-w-3xl mx-auto text-center space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-medium text-primary animate-fade-in-up">
-              <Sparkles className="h-3.5 w-3.5" />
-              {t('Bilingual • Searchable • Free', 'دو لسانی • تلاش کے قابل • مفت')}
-            </div>
-
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-balance animate-fade-in-up">
               {t('Pakistan\'s Laws,', 'پاکستان کے قوانین،')}
               <br />
