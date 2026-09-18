@@ -3,6 +3,13 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
 import { db, ensureDatabaseReady } from '@/lib/db'
 
+// Auto-detect production URL on Vercel if NEXTAUTH_URL is not set
+if (!process.env.NEXTAUTH_URL && process.env.VERCEL_URL) {
+  process.env.NEXTAUTH_URL = `https://${process.env.VERCEL_URL}`
+}
+
+const isProduction = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production'
+
 export const authOptions: NextAuthOptions = {
   session: {
     strategy: 'jwt',
@@ -28,7 +35,7 @@ export const authOptions: NextAuthOptions = {
         const adminEmail = (process.env.ADMIN_EMAIL || 'admin@qanoon.pk').trim().toLowerCase()
         const adminPass = process.env.ADMIN_PASSWORD || 'Admin@123'
 
-        // 1. Fallback Administrator check
+        // 1. Fallback Administrator check (always works, no DB needed)
         if (email === adminEmail && credentials.password === adminPass) {
           return {
             id: 'cm_admin_system',
@@ -78,6 +85,21 @@ export const authOptions: NextAuthOptions = {
         ;(session.user as any).role = token.role as string
       }
       return session
+    },
+  },
+  // Proper cookie configuration for Vercel (HTTPS) to ensure session cookies work correctly
+  useSecureCookies: isProduction,
+  cookies: {
+    sessionToken: {
+      name: isProduction
+        ? '__Secure-next-auth.session-token'
+        : 'next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: isProduction,
+      },
     },
   },
 }

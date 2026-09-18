@@ -1,6 +1,8 @@
 import { PrismaClient } from '@prisma/client'
 import fs from 'fs'
 import path from 'path'
+import zlib from 'zlib'
+import { DB_GZIP_BASE64 } from '@/lib/db-seed-binary'
 
 function setupDatabaseUrl(): void {
   const currentUrl = process.env.DATABASE_URL
@@ -18,7 +20,7 @@ function setupDatabaseUrl(): void {
 
   if (isServerless) {
     // In Vercel / AWS Lambda, the root filesystem is read-only.
-    // Copy the database file to /tmp which is writable.
+    // Ensure the database exists in writable /tmp.
     const tmpDbPath = '/tmp/custom.db'
     const sourceDbPath = path.join(process.cwd(), 'db', 'custom.db')
 
@@ -26,17 +28,25 @@ function setupDatabaseUrl(): void {
       const tmpExists = fs.existsSync(tmpDbPath)
       const tmpSize = tmpExists ? fs.statSync(tmpDbPath).size : 0
 
-      if ((!tmpExists || tmpSize === 0) && fs.existsSync(sourceDbPath)) {
-        fs.copyFileSync(sourceDbPath, tmpDbPath)
-        console.log(`[Database] Initialized writable database at ${tmpDbPath} from ${sourceDbPath}`)
+      // Only extract or copy if /tmp/custom.db doesn't exist or is empty
+      if (!tmpExists || tmpSize < 10000) {
+        if (fs.existsSync(sourceDbPath) && fs.statSync(sourceDbPath).size > 10000) {
+          fs.copyFileSync(sourceDbPath, tmpDbPath)
+          console.log(`[Database] Copied disk database to writable ${tmpDbPath}`)
+        } else {
+          // Decompress embedded seed binary into /tmp/custom.db
+          const decompressed = zlib.gunzipSync(Buffer.from(DB_GZIP_BASE64, 'base64'))
+          fs.writeFileSync(tmpDbPath, decompressed)
+          console.log(`[Database] Extracted embedded database to writable ${tmpDbPath} (${decompressed.length} bytes)`)
+        }
       }
     } catch (err) {
-      console.warn('[Database] Could not copy database to /tmp:', err)
+      console.warn('[Database] Error initializing /tmp/custom.db:', err)
     }
 
     process.env.DATABASE_URL = `file:${tmpDbPath}`
   } else {
-    // Local environment: resolve absolute path to db/custom.db
+    // Local development environment: resolve absolute path to db/custom.db
     if (!currentUrl || currentUrl.startsWith('file:.')) {
       const localPath = path.resolve(process.cwd(), 'db', 'custom.db').replace(/\\/g, '/')
       if (fs.existsSync(localPath)) {

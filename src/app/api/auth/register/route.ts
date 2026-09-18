@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
         ok: false,
         error: error?.message?.includes('Unique constraint')
           ? 'An account with this email already exists.'
-          : 'Failed to create account. Please try again.',
+          : error?.message || 'Failed to create account. Please try again.',
       },
       { status: 500 }
     )
