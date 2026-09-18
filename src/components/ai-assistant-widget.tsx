@@ -332,11 +332,11 @@ export function AiAssistantWidget() {
       )}
 
       {/* Floating Trigger Button (Positioned on the Left Side - Icon Only) */}
-      <div className="fixed bottom-6 left-6 z-50 flex items-center">
+      <div className="fixed bottom-3 left-3 sm:bottom-6 sm:left-6 z-50 flex items-center">
         <button
           onClick={() => setIsOpen((prev) => !prev)}
           className={cn(
-            'group relative flex items-center justify-center h-12 w-12 rounded-full transition-all duration-300 shadow-xl cursor-pointer border',
+            'group relative flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 rounded-full transition-all duration-300 shadow-xl cursor-pointer border',
             isOpen
               ? 'bg-muted text-foreground border-border/80 hover:bg-accent hover:scale-105'
               : 'bg-primary text-primary-foreground border-primary/20 hover:scale-110 active:scale-95 shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40'

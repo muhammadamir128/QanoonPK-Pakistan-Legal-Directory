@@ -13,7 +13,6 @@ export async function GET() {
     { url: '/lawyers', priority: '0.8', changefreq: 'weekly' },
     { url: '/templates', priority: '0.8', changefreq: 'weekly' },
     { url: '/finder', priority: '0.7', changefreq: 'monthly' },
-    { url: '/chat', priority: '0.7', changefreq: 'monthly' },
     { url: '/courts', priority: '0.7', changefreq: 'monthly' },
     { url: '/glossary', priority: '0.7', changefreq: 'weekly' },
     { url: '/faq', priority: '0.7', changefreq: 'weekly' },

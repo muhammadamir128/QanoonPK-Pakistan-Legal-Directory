@@ -196,9 +196,6 @@ export default function LawyerDetailPage() {
                   </Badge>
                 )}
               </div>
-              {lang === 'en' && lawyer.nameUrdu && (
-                <p className="text-sm text-muted-foreground font-urdu" dir="rtl">{lawyer.nameUrdu}</p>
-              )}
               <div className="flex items-center gap-3 mt-2 flex-wrap text-sm">
                 <span className="inline-flex items-center gap-1.5 text-muted-foreground">
                   <MapPin className="h-4 w-4" />

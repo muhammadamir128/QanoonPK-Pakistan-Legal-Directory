@@ -164,13 +164,13 @@ export function SiteFooter() {
           {/* Tools & Services (2 cols on lg) */}
           <div className="lg:col-span-2 space-y-3">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground">
-              {t('Tools & AI', 'اوزار اور خدمات')}
+              {t('Tools & Resources', 'اوزار اور وسائل')}
             </h3>
             <ul className="space-y-2.5 text-sm">
               <li>
-                <Link href="/chat" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group">
-                  <Bot className="h-3.5 w-3.5 text-muted-foreground/70 group-hover:text-primary transition-colors" />
-                  <span>{t('AI Legal Assistant', 'اے آئی اسسٹنٹ')}</span>
+                <Link href="/finder" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group">
+                  <Compass className="h-3.5 w-3.5 text-muted-foreground/70 group-hover:text-primary transition-colors" />
+                  <span>{t('Which Law Applies?', 'کون سا قانون؟')}</span>
                 </Link>
               </li>
               <li>

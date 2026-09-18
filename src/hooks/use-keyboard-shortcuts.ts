@@ -16,7 +16,6 @@ const SHORTCUTS: Array<{
   { key: 'g f', description: 'Go to Finder', descriptionUrdu: 'فائنڈر', action: (r) => r.push('/finder') },
   { key: 'g w', description: 'Go to Lawyers', descriptionUrdu: 'وکلاء', action: (r) => r.push('/lawyers') },
   { key: 'g t', description: 'Go to Templates', descriptionUrdu: 'ٹیمپلیٹس', action: (r) => r.push('/templates') },
-  { key: 'g a', description: 'Go to AI Chat', descriptionUrdu: 'اے آئی چیٹ', action: (r) => r.push('/chat') },
   { key: 'g q', description: 'Go to FAQ', descriptionUrdu: 'سوالات', action: (r) => r.push('/faq') },
   { key: 'g o', description: 'Go to Compare', descriptionUrdu: 'موازنہ', action: (r) => r.push('/compare') },
   { key: '?', description: 'Show shortcuts', descriptionUrdu: 'شارٹ کٹس دکھائیں', action: () => showHelp() },

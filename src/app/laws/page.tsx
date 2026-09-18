@@ -145,7 +145,7 @@ function LawsPageInner() {
   }
 
   return (
-    <div className="container mx-auto max-w-7xl px-4 py-8 md:py-12">
+    <div className="container mx-auto max-w-7xl px-3 sm:px-4 py-6 md:py-12">
       {/* Page header */}
       <div className="mb-6">
         <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
@@ -164,7 +164,7 @@ function LawsPageInner() {
 
       {/* Search & Filters */}
       <Card className="mb-6 border-border/60">
-        <CardContent className="p-4 md:p-5 space-y-4">
+        <CardContent className="p-3.5 sm:p-5 space-y-3 sm:space-y-4">
           {/* Search row */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -178,9 +178,14 @@ function LawsPageInner() {
           </div>
 
           {/* Filter grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-2.5">
             <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger className="h-10"><Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" /><SelectValue placeholder={t('Category', 'قسم')} /></SelectTrigger>
+              <SelectTrigger className="h-10 w-full min-w-0">
+                <span className="flex items-center gap-1.5 min-w-0 truncate">
+                  <Filter className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <span className="truncate"><SelectValue placeholder={t('Category', 'قسم')} /></span>
+                </span>
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t('All categories', 'تمام اقسام')}</SelectItem>
                 {categories.map((c) => (
@@ -190,7 +195,12 @@ function LawsPageInner() {
             </Select>
 
             <Select value={jurisdiction} onValueChange={setJurisdiction}>
-              <SelectTrigger className="h-10"><Building2 className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" /><SelectValue placeholder={t('Jurisdiction', 'عدلیہ')} /></SelectTrigger>
+              <SelectTrigger className="h-10 w-full min-w-0">
+                <span className="flex items-center gap-1.5 min-w-0 truncate">
+                  <Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <span className="truncate"><SelectValue placeholder={t('Jurisdiction', 'عدلیہ')} /></span>
+                </span>
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t('All jurisdictions', 'تمام عدلیہ')}</SelectItem>
                 {Object.entries(JURISDICTION_LABELS).map(([k, v]) => (
@@ -200,7 +210,12 @@ function LawsPageInner() {
             </Select>
 
             <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="h-10"><Gavel className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" /><SelectValue placeholder={t('Status', 'صورتحرال')} /></SelectTrigger>
+              <SelectTrigger className="h-10 w-full min-w-0">
+                <span className="flex items-center gap-1.5 min-w-0 truncate">
+                  <Gavel className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <span className="truncate"><SelectValue placeholder={t('Status', 'صورتحرال')} /></span>
+                </span>
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t('All statuses', 'تمام صورتحرال')}</SelectItem>
                 {Object.entries(STATUS_LABELS).map(([k, v]) => (
@@ -210,7 +225,12 @@ function LawsPageInner() {
             </Select>
 
             <Select value={year} onValueChange={setYear}>
-              <SelectTrigger className="h-10"><Calendar className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" /><SelectValue placeholder={t('Year', 'سال')} /></SelectTrigger>
+              <SelectTrigger className="h-10 w-full min-w-0">
+                <span className="flex items-center gap-1.5 min-w-0 truncate">
+                  <Calendar className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <span className="truncate"><SelectValue placeholder={t('Year', 'سال')} /></span>
+                </span>
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t('All years', 'تمام سال')}</SelectItem>
                 {years.map((y) => (<SelectItem key={y} value={String(y)}>{y}</SelectItem>))}
@@ -218,7 +238,12 @@ function LawsPageInner() {
             </Select>
 
             <Select value={sort} onValueChange={setSort}>
-              <SelectTrigger className="h-10"><SlidersHorizontal className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" /><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-10 w-full min-w-0">
+                <span className="flex items-center gap-1.5 min-w-0 truncate">
+                  <SlidersHorizontal className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <span className="truncate"><SelectValue /></span>
+                </span>
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="popular">{t('Most viewed', 'سب سے زیادہ دیکھے گئے')}</SelectItem>
                 <SelectItem value="newest">{t('Newest', 'تازہ ترین')}</SelectItem>
@@ -231,7 +256,7 @@ function LawsPageInner() {
 
           {/* Active filters summary */}
           {(hasFilters || q) && (
-            <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center justify-between flex-wrap gap-2 pt-1">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <SlidersHorizontal className="h-4 w-4" />
                 <span>{total} {t('results found', 'نتائج ملے')}</span>
@@ -269,17 +294,25 @@ function LawsPageInner() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-8">
+            <div className="flex items-center justify-between sm:justify-center gap-2 mt-8 pt-4 border-t border-border/50 max-w-full">
               <Button
                 variant="outline"
                 size="sm"
+                className="h-9 px-2.5 sm:px-3 text-xs sm:text-sm shrink-0"
                 disabled={page === 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
               >
                 {lang === 'ur' ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-                {t('Prev', 'پچھلا')}
+                <span>{t('Prev', 'پچھلا')}</span>
               </Button>
-              <div className="flex items-center gap-1">
+
+              {/* Mobile page indicator */}
+              <div className="flex sm:hidden items-center justify-center px-2.5 py-1 rounded-md bg-muted/60 text-xs font-semibold tabular-nums text-foreground shrink-0">
+                {page} / {totalPages}
+              </div>
+
+              {/* Desktop / tablet numbered buttons */}
+              <div className="hidden sm:flex items-center gap-1">
                 {Array.from({ length: Math.min(7, totalPages) }).map((_, idx) => {
                   let p: number
                   if (totalPages <= 7) p = idx + 1
@@ -291,7 +324,7 @@ function LawsPageInner() {
                       key={p}
                       variant={p === page ? 'default' : 'outline'}
                       size="sm"
-                      className="h-9 w-9 p-0 tabular-nums"
+                      className="h-9 w-9 p-0 tabular-nums text-xs"
                       onClick={() => setPage(p)}
                     >
                       {p}
@@ -299,13 +332,15 @@ function LawsPageInner() {
                   )
                 })}
               </div>
+
               <Button
                 variant="outline"
                 size="sm"
+                className="h-9 px-2.5 sm:px-3 text-xs sm:text-sm shrink-0"
                 disabled={page === totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               >
-                {t('Next', 'اگلا')}
+                <span>{t('Next', 'اگلا')}</span>
                 {lang === 'ur' ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
               </Button>
             </div>

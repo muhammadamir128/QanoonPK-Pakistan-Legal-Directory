@@ -195,7 +195,7 @@ export default function LawDetailPage() {
   })
 
   return (
-    <div className="container mx-auto max-w-6xl px-4 py-6 md:py-10">
+    <div className="container mx-auto max-w-6xl px-3 sm:px-4 py-4 md:py-8">
       {/* Structured Data (JSON-LD) */}
       <script
         type="application/ld+json"
@@ -226,16 +226,16 @@ export default function LawDetailPage() {
         }}
       />
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-xs text-muted-foreground mb-4 flex-wrap">
-        <Link href="/" className="hover:text-primary">{t('Home', 'صفحۂ اول')}</Link>
-        <ChevronRight className={cn('h-3 w-3', lang === 'ur' && 'rotate-180')} />
-        <Link href="/laws" className="hover:text-primary">{t('Laws', 'قوانین')}</Link>
-        <ChevronRight className={cn('h-3 w-3', lang === 'ur' && 'rotate-180')} />
-        <Link href={`/categories/${law.category.slug}`} className="hover:text-primary" style={{ color: law.category.color ?? undefined }}>
+      <nav className="flex items-center gap-1.5 sm:gap-2 text-xs text-muted-foreground mb-4 flex-wrap">
+        <Link href="/" className="hover:text-primary shrink-0">{t('Home', 'صفحۂ اول')}</Link>
+        <ChevronRight className={cn('h-3 w-3 shrink-0', lang === 'ur' && 'rotate-180')} />
+        <Link href="/laws" className="hover:text-primary shrink-0">{t('Laws', 'قوانین')}</Link>
+        <ChevronRight className={cn('h-3 w-3 shrink-0', lang === 'ur' && 'rotate-180')} />
+        <Link href={`/categories/${law.category.slug}`} className="hover:text-primary shrink-0" style={{ color: law.category.color ?? undefined }}>
           {lang === 'ur' && law.category.nameUrdu ? law.category.nameUrdu : law.category.name}
         </Link>
-        <ChevronRight className={cn('h-3 w-3', lang === 'ur' && 'rotate-180')} />
-        <span className="truncate">{lang === 'ur' && law.titleUrdu ? law.titleUrdu : law.title}</span>
+        <ChevronRight className={cn('h-3 w-3 shrink-0', lang === 'ur' && 'rotate-180')} />
+        <span className="truncate max-w-[120px] sm:max-w-none text-foreground font-medium">{lang === 'ur' && law.titleUrdu ? law.titleUrdu : law.title}</span>
       </nav>
 
       {/* Title block */}
@@ -249,59 +249,59 @@ export default function LawDetailPage() {
           className="absolute top-0 left-0 right-0 h-1.5"
           style={{ backgroundColor: law.category.color ?? '#0d9488' }}
         />
-        <div className="p-6 md:p-8 space-y-4">
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap mb-2">
-                <Badge
-                  variant="secondary"
-                  className="font-medium"
-                  style={{
-                    backgroundColor: `${law.category.color ?? '#0d9488'}1a`,
-                    color: law.category.color ?? '#0d9488',
-                    border: 'none',
-                  }}
-                >
-                  {lang === 'ur' && law.category.nameUrdu ? law.category.nameUrdu : law.category.name}
-                </Badge>
-                <Badge variant="outline" className="text-xs">
-                  <Calendar className="h-3 w-3 mr-1" />
-                  {law.yearEnacted}
-                </Badge>
-                <Badge variant="outline" className="text-xs">
-                  <Building2 className="h-3 w-3 mr-1" />
-                  {lang === 'ur' ? jur.ur : jur.en}
-                </Badge>
-                <Badge variant="outline" className="text-xs" style={{ color: status.color, borderColor: `${status.color}40` }}>
-                  <Gavel className="h-3 w-3 mr-1" />
-                  {lang === 'ur' ? status.ur : status.en}
-                </Badge>
-              </div>
-              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight leading-tight">
-                {lang === 'ur' && law.titleUrdu ? law.titleUrdu : law.title}
-              </h1>
-              {lang === 'en' && law.titleUrdu && (
-                <p className="text-lg text-muted-foreground font-urdu mt-2" dir="rtl">{law.titleUrdu}</p>
-              )}
-            </div>
+        <div className="p-4 sm:p-6 md:p-8 space-y-3.5 sm:space-y-4">
+          {/* Top Bar: Category on left, Actions on right */}
+          <div className="flex items-center justify-between gap-2.5">
+            <Badge
+              variant="secondary"
+              className="font-medium text-xs truncate max-w-[180px] sm:max-w-xs"
+              style={{
+                backgroundColor: `${law.category.color ?? '#0d9488'}1a`,
+                color: law.category.color ?? '#0d9488',
+                border: 'none',
+              }}
+            >
+              {lang === 'ur' && law.category.nameUrdu ? law.category.nameUrdu : law.category.name}
+            </Badge>
 
             {/* Actions */}
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-1.5 shrink-0">
               <Button
                 variant={bookmarked ? 'default' : 'outline'}
                 size="sm"
                 onClick={toggleBookmark}
-                className="h-9"
+                className="h-8 px-2.5 text-xs cursor-pointer"
               >
-                {bookmarked ? <BookmarkCheck className="h-4 w-4 mr-1.5" /> : <Bookmark className="h-4 w-4 mr-1.5" />}
+                {bookmarked ? <BookmarkCheck className="h-3.5 w-3.5 sm:mr-1.5 text-primary" /> : <Bookmark className="h-3.5 w-3.5 sm:mr-1.5" />}
                 <span className="hidden sm:inline">{bookmarked ? t('Saved', 'محفوظ') : t('Save', 'محفوظ کریں')}</span>
               </Button>
-              <SocialShare title={law.title} slug={params.slug} size="icon" />
-              <Button variant="outline" size="sm" onClick={() => window.print()} className="h-9 hidden sm:flex">
-                <Printer className="h-4 w-4" />
+              <SocialShare title={law.title} slug={params.slug} size="icon" className="h-8 w-8" />
+              <Button variant="outline" size="sm" onClick={() => window.print()} className="h-8 w-8 hidden sm:flex cursor-pointer">
+                <Printer className="h-3.5 w-3.5" />
               </Button>
             </div>
           </div>
+
+          {/* Badges row: Year, Jurisdiction, Status */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <Badge variant="outline" className="text-xs px-2 py-0.5">
+              <Calendar className="h-3 w-3 mr-1" />
+              {law.yearEnacted}
+            </Badge>
+            <Badge variant="outline" className="text-xs px-2 py-0.5">
+              <Building2 className="h-3 w-3 mr-1" />
+              {lang === 'ur' ? jur.ur : jur.en}
+            </Badge>
+            <Badge variant="outline" className="text-xs px-2 py-0.5" style={{ color: status.color, borderColor: `${status.color}40` }}>
+              <Gavel className="h-3 w-3 mr-1" />
+              {lang === 'ur' ? status.ur : status.en}
+            </Badge>
+          </div>
+
+          {/* Law Title: Full Width */}
+          <h1 className="text-xl sm:text-3xl lg:text-4xl font-bold tracking-tight leading-snug sm:leading-tight text-foreground">
+            {lang === 'ur' && law.titleUrdu ? law.titleUrdu : law.title}
+          </h1>
 
           {/* Meta grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2 border-t border-border/40">
@@ -349,15 +349,6 @@ export default function LawDetailPage() {
               <p className="text-sm md:text-base leading-relaxed text-foreground/90">
                 {lang === 'ur' && law.summaryUrdu ? law.summaryUrdu : law.summary ?? ''}
               </p>
-              {lang === 'en' && law.summaryUrdu && (
-                <div className="mt-4 pt-4 border-t border-border/40">
-                  <div className="text-xs text-muted-foreground mb-1.5 flex items-center gap-1.5">
-                    <Quote className="h-3.5 w-3.5" />
-                    {t('Urdu summary', 'اردو خلاصہ')}
-                  </div>
-                  <p className="text-sm font-urdu leading-loose" dir="rtl">{law.summaryUrdu}</p>
-                </div>
-              )}
             </CardContent>
           </Card>
 
@@ -410,13 +401,8 @@ export default function LawDetailPage() {
                         )}
                       </div>
                       <p className="text-sm leading-relaxed text-foreground/85 whitespace-pre-line">
-                        {highlightSearch(section.content, sectionSearch)}
+                        {highlightSearch(lang === 'ur' && section.contentUrdu ? section.contentUrdu : section.content, sectionSearch)}
                       </p>
-                      {lang === 'en' && section.contentUrdu && (
-                        <p className="text-sm font-urdu leading-loose mt-2 pt-2 border-t border-border/30 text-muted-foreground" dir="rtl">
-                          {section.contentUrdu}
-                        </p>
-                      )}
                     </div>
                   ))
                 )}

@@ -221,20 +221,20 @@ export default function FAQPage() {
           </h2>
           <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
             {t(
-              'Ask our AI assistant for free, or browse our full law directory.',
-              'ہمارے اے آئی اسسٹنٹ سے مفت پوچھیں، یا ہماری مکمل قانون ڈائریکٹری دیکھیں۔'
+              'Find applicable laws using our interactive finder, or browse our full law directory.',
+              'ہمارے انٹرایکٹو فائنڈر سے متعلقہ قوانین تلاش کریں، یا ہماری مکمل قانون ڈائریکٹری دیکھیں۔'
             )}
           </p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
             <Button asChild size="sm">
-              <Link href="/chat">
-                <Lightbulb className="h-4 w-4 mr-2" />
-                {t('Ask AI Assistant', 'اے آئی اسسٹنٹ سے پوچھیں')}
+              <Link href="/finder">
+                <HelpCircle className="h-4 w-4 mr-2" />
+                {t('Which Law Applies?', 'کون سا قانون لاگو ہوتا ہے؟')}
               </Link>
             </Button>
             <Button asChild variant="outline" size="sm">
-              <Link href="/finder">
-                {t('Use Law Finder', 'قانون فائنڈر استعمال کریں')}
+              <Link href="/laws">
+                {t('Browse All Laws', 'تمام قوانین دیکھیں')}
                 <ArrowRight className={cn('h-4 w-4 ml-2', lang === 'ur' && 'rotate-180')} />
               </Link>
             </Button>
@@ -285,9 +285,6 @@ function FAQAccordionItem({
             <p className="font-medium text-sm leading-snug">
               {lang === 'ur' ? item.questionUrdu : item.question}
             </p>
-            {lang === 'en' && (
-              <p className="text-xs text-muted-foreground font-urdu mt-0.5" dir="rtl">{item.questionUrdu}</p>
-            )}
           </div>
         </div>
       </AccordionTrigger>
@@ -296,14 +293,6 @@ function FAQAccordionItem({
           <p className="text-sm leading-relaxed text-foreground/85 whitespace-pre-line">
             {lang === 'ur' ? item.answerUrdu : item.answer}
           </p>
-          {lang === 'en' && (
-            <details className="text-xs">
-              <summary className="cursor-pointer text-muted-foreground hover:text-primary">
-                {t('Show Urdu translation', 'اردو ترجمہ دکھائیں')}
-              </summary>
-              <p className="font-urdu leading-loose mt-2 text-muted-foreground" dir="rtl">{item.answerUrdu}</p>
-            </details>
-          )}
           {/* Related laws */}
           {item.relatedLaws && item.relatedLaws.length > 0 && (
             <div className="pt-2 border-t border-border/40">

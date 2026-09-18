@@ -282,9 +282,6 @@ export default function CourtsPage() {
               <CardTitle className="text-base leading-tight">
                 {lang === 'ur' ? sc.nameUrdu : sc.name}
               </CardTitle>
-              {lang === 'en' && (
-                <CardDescription className="text-xs font-urdu" dir="rtl">{sc.nameUrdu}</CardDescription>
-              )}
             </CardHeader>
             <CardContent>
               <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
@@ -383,9 +380,6 @@ function CourtLevelCard({
             <CardTitle className="text-lg md:text-xl mt-1 leading-tight">
               {lang === 'ur' ? level.nameUrdu : level.name}
             </CardTitle>
-            {lang === 'en' && (
-              <CardDescription className="text-sm font-urdu mt-0.5" dir="rtl">{level.nameUrdu}</CardDescription>
-            )}
           </div>
         </div>
       </CardHeader>

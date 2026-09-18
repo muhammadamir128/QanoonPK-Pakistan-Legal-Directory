@@ -180,8 +180,13 @@ export default function CategoriesPage() {
                   <span className="text-xs font-medium">{t('Previous', 'پچھلا')}</span>
                 </Button>
 
+                {/* Mobile page indicator */}
+                <div className="flex sm:hidden items-center justify-center px-2.5 py-1 rounded-md bg-muted/60 text-xs font-semibold tabular-nums text-foreground shrink-0">
+                  {page} / {totalPages}
+                </div>
+
                 {/* Page Number Buttons */}
-                <div className="flex items-center gap-1">
+                <div className="hidden sm:flex items-center gap-1">
                   {Array.from({ length: totalPages }, (_, idx) => {
                     const pageNum = idx + 1
                     const isActive = pageNum === page

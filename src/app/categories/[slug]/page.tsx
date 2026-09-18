@@ -132,9 +132,6 @@ export default function CategoryDetailPage() {
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
               {lang === 'ur' && category.nameUrdu ? category.nameUrdu : category.name}
             </h1>
-            {lang === 'en' && category.nameUrdu && (
-              <p className="text-lg text-muted-foreground font-urdu mt-1" dir="rtl">{category.nameUrdu}</p>
-            )}
             <p className="text-sm md:text-base text-muted-foreground mt-2 leading-relaxed max-w-2xl">
               {lang === 'ur' && category.descriptionUrdu ? category.descriptionUrdu : category.description}
             </p>
@@ -200,9 +197,6 @@ export default function CategoryDetailPage() {
                     <h3 className="font-semibold text-base leading-snug group-hover:text-primary transition-colors">
                       {lang === 'ur' && law.titleUrdu ? law.titleUrdu : law.title}
                     </h3>
-                    {lang === 'en' && law.titleUrdu && (
-                      <p className="text-xs text-muted-foreground font-urdu mt-0.5" dir="rtl">{law.titleUrdu}</p>
-                    )}
                     <p className="text-sm text-muted-foreground mt-2 line-clamp-2 leading-relaxed">
                       {lang === 'ur' && law.summaryUrdu ? law.summaryUrdu : law.summary ?? ''}
                     </p>

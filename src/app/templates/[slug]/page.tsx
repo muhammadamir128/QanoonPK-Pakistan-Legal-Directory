@@ -238,9 +238,6 @@ export default function TemplateDetailPage() {
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
               {lang === 'ur' && template.titleUrdu ? template.titleUrdu : template.title}
             </h1>
-            {lang === 'en' && template.titleUrdu && (
-              <p className="text-sm text-muted-foreground font-urdu mt-1" dir="rtl">{template.titleUrdu}</p>
-            )}
             <p className="text-sm text-muted-foreground mt-2 leading-relaxed max-w-2xl">
               {lang === 'ur' && template.descriptionUrdu ? template.descriptionUrdu : template.description}
             </p>

@@ -115,23 +115,23 @@ export default function LawyersPage() {
   const hasFilters = q || city !== 'all' || specialization !== 'all'
 
   return (
-    <div className="container mx-auto max-w-7xl px-4 py-8 md:py-12">
+    <div className="container mx-auto max-w-7xl px-3 sm:px-4 py-6 md:py-12">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-6 sm:mb-8">
         <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
           <Link href="/" className="hover:text-primary">{t('Home', 'صفحۂ اول')}</Link>
           <ChevronRight className={cn('h-3 w-3', lang === 'ur' && 'rotate-180')} />
           <span>{t('Lawyers', 'وکلاء')}</span>
         </div>
-        <div className="flex items-start gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-lg shrink-0">
-            <Briefcase className="h-7 w-7" />
+        <div className="flex items-start gap-3 sm:gap-4">
+          <div className="flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-md sm:shadow-lg shrink-0">
+            <Briefcase className="h-5 w-5 sm:h-7 sm:w-7" />
           </div>
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight">
               {t('Verified Lawyer Directory', 'تصدیق شدہ وکلاء ڈائریکٹری')}
             </h1>
-            <p className="text-muted-foreground mt-1 text-sm max-w-2xl">
+            <p className="text-muted-foreground mt-1 text-xs sm:text-sm max-w-2xl">
               {t(
                 'Find licensed lawyers across Pakistan. Filter by city and specialization. All listings are verified.',
                 'پاکستان بھر میں لائسنس یافتہ وکلاء تلاش کریں۔ شہر اور تخصیص سے فلٹر کریں۔ تمام فہرستیں تصدیق شدہ ہیں۔'
@@ -154,9 +154,14 @@ export default function LawyersPage() {
               className="pl-9 h-11"
             />
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
             <Select value={city} onValueChange={setCity}>
-              <SelectTrigger className="h-10"><MapPin className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" /><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-10 w-full min-w-0">
+                <span className="flex items-center gap-1.5 min-w-0 truncate">
+                  <MapPin className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <span className="truncate"><SelectValue /></span>
+                </span>
+              </SelectTrigger>
               <SelectContent>
                 {CITIES.map((c) => (
                   <SelectItem key={c.value} value={c.value}>{lang === 'ur' ? c.ur : c.en}</SelectItem>
@@ -164,7 +169,12 @@ export default function LawyersPage() {
               </SelectContent>
             </Select>
             <Select value={specialization} onValueChange={setSpecialization}>
-              <SelectTrigger className="h-10"><Briefcase className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" /><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-10 w-full min-w-0">
+                <span className="flex items-center gap-1.5 min-w-0 truncate">
+                  <Briefcase className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <span className="truncate"><SelectValue /></span>
+                </span>
+              </SelectTrigger>
               <SelectContent>
                 {SPECIALIZATIONS.map((s) => (
                   <SelectItem key={s.value} value={s.value}>{lang === 'ur' ? s.ur : s.en}</SelectItem>
@@ -172,7 +182,12 @@ export default function LawyersPage() {
               </SelectContent>
             </Select>
             <Select value={sort} onValueChange={setSort}>
-              <SelectTrigger className="h-10"><Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" /><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-10 w-full min-w-0">
+                <span className="flex items-center gap-1.5 min-w-0 truncate">
+                  <Filter className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <span className="truncate"><SelectValue /></span>
+                </span>
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="featured">{t('Featured first', 'نمایاں پہلے')}</SelectItem>
                 <SelectItem value="rating">{t('Highest rated', 'اعلیٰ درجہ بندی')}</SelectItem>
@@ -225,16 +240,25 @@ export default function LawyersPage() {
           </div>
 
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-8">
+            <div className="flex items-center justify-between sm:justify-center gap-2 mt-8 pt-4 border-t border-border/50 max-w-full">
               <Button
                 variant="outline"
                 size="sm"
+                className="h-9 px-2.5 sm:px-3 text-xs sm:text-sm shrink-0"
                 disabled={page === 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
               >
-                {t('Prev', 'پچھلا')}
+                {lang === 'ur' ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                <span>{t('Prev', 'پچھلا')}</span>
               </Button>
-              <div className="flex items-center gap-1">
+
+              {/* Mobile page indicator */}
+              <div className="flex sm:hidden items-center justify-center px-2.5 py-1 rounded-md bg-muted/60 text-xs font-semibold tabular-nums text-foreground shrink-0">
+                {page} / {totalPages}
+              </div>
+
+              {/* Desktop / tablet numbered buttons */}
+              <div className="hidden sm:flex items-center gap-1">
                 {Array.from({ length: totalPages }).slice(0, 7).map((_, idx) => {
                   const p = idx + 1
                   return (
@@ -242,7 +266,7 @@ export default function LawyersPage() {
                       key={p}
                       variant={p === page ? 'default' : 'outline'}
                       size="sm"
-                      className="h-9 w-9 p-0 tabular-nums"
+                      className="h-9 w-9 p-0 tabular-nums text-xs"
                       onClick={() => setPage(p)}
                     >
                       {p}
@@ -250,13 +274,16 @@ export default function LawyersPage() {
                   )
                 })}
               </div>
+
               <Button
                 variant="outline"
                 size="sm"
+                className="h-9 px-2.5 sm:px-3 text-xs sm:text-sm shrink-0"
                 disabled={page === totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               >
-                {t('Next', 'اگلا')}
+                <span>{t('Next', 'اگلا')}</span>
+                {lang === 'ur' ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
               </Button>
             </div>
           )}
@@ -282,58 +309,63 @@ export default function LawyersPage() {
 }
 
 function LawyerCard({ lawyer, delay }: { lawyer: Lawyer, delay: number }) {
-  const { lang } = useLanguage()
+  const { lang, t } = useLanguage()
   const color = lawyer.imageColor ?? '#0d9488'
   return (
     <Link href={`/lawyers/${lawyer.slug}`} className="block animate-fade-in-up" style={{ animationDelay: `${delay}ms` }}>
-      <Card className="group hover:shadow-lg hover:border-primary/30 transition-all duration-300 h-full overflow-hidden relative">
+      <Card className="group hover:shadow-lg hover:border-primary/30 transition-all duration-300 h-full overflow-hidden relative border-border/60">
         <div className="h-1.5 w-full" style={{ backgroundColor: color }} />
-        <CardContent className="p-5">
+        <CardContent className="p-4 sm:p-5">
           <div className="flex items-start gap-3 mb-3">
             <div
-              className="flex h-14 w-14 items-center justify-center rounded-full text-white text-lg font-bold shrink-0 shadow-md group-hover:scale-105 transition-transform"
+              className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full text-white text-base sm:text-lg font-bold shrink-0 shadow-md group-hover:scale-105 transition-transform"
               style={{ background: `linear-gradient(135deg, ${color}, ${color}cc)` }}
             >
               {lawyer.name.split(' ').slice(0, 2).map((n) => n[0]).join('')}
             </div>
             <div className="flex-1 min-w-0">
+              {lawyer.featured && (
+                <div className="mb-1">
+                  <Badge variant="secondary" className="text-[9px] uppercase tracking-wider font-semibold py-0.5 px-2 bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30 inline-flex items-center gap-1">
+                    <Award className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                    <span>{lang === 'ur' ? 'نمایاں وکیل' : 'Featured'}</span>
+                  </Badge>
+                </div>
+              )}
               <div className="flex items-center gap-1.5">
-                <h3 className="font-semibold text-base leading-tight truncate group-hover:text-primary transition-colors">
+                <h3 className="font-semibold text-sm sm:text-base leading-snug group-hover:text-primary transition-colors line-clamp-1">
                   {lang === 'ur' && lawyer.nameUrdu ? lawyer.nameUrdu : lawyer.name}
                 </h3>
                 {lawyer.verified && (
                   <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" aria-label="Verified" />
                 )}
               </div>
-              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                <MapPin className="h-3 w-3" />
-                <span>{lang === 'ur' && lawyer.cityUrdu ? lawyer.cityUrdu : lawyer.city}</span>
+              <div className="flex items-center flex-wrap gap-x-1.5 gap-y-0.5 text-xs text-muted-foreground mt-1">
+                <span className="inline-flex items-center gap-1">
+                  <MapPin className="h-3 w-3 shrink-0 text-muted-foreground/80" />
+                  <span>{lang === 'ur' && lawyer.cityUrdu ? lawyer.cityUrdu : lawyer.city}</span>
+                </span>
                 {lawyer.experienceYears && (
-                  <>
+                  <span className="inline-flex items-center gap-1">
                     <span>•</span>
-                    <span>{lawyer.experienceYears}+ {lang === 'ur' ? 'سال' : 'yrs'}</span>
-                  </>
+                    <span className="whitespace-nowrap">{lawyer.experienceYears}+ {lang === 'ur' ? 'سال' : 'yrs'}</span>
+                  </span>
                 )}
               </div>
             </div>
-            {lawyer.featured && (
-              <Badge variant="secondary" className="text-[10px] uppercase shrink-0">
-                <Award className="h-3 w-3 mr-1" />{lang === 'ur' ? 'نمایاں' : 'Featured'}
-              </Badge>
-            )}
           </div>
 
           {/* Specializations */}
           <div className="flex flex-wrap gap-1 mb-3">
             {lawyer.specialization.slice(0, 3).map((spec) => (
-              <Badge key={spec} variant="outline" className="text-[10px] capitalize">
+              <Badge key={spec} variant="outline" className="text-[10px] capitalize font-normal px-2 py-0.5">
                 {spec.replace(/-/g, ' ')}
               </Badge>
             ))}
           </div>
 
           {/* Bio */}
-          <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+          <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 leading-relaxed">
             {lang === 'ur' && lawyer.bioUrdu ? lawyer.bioUrdu : lawyer.bio ?? ''}
           </p>
 
@@ -348,8 +380,8 @@ function LawyerCard({ lawyer, delay }: { lawyer: Lawyer, delay: number }) {
                   />
                 ))}
               </div>
-              <span className="text-xs text-muted-foreground tabular-nums">
-                {lawyer.rating.toFixed(1)} ({lawyer.reviewCount})
+              <span className="text-xs text-muted-foreground tabular-nums font-medium">
+                {lawyer.rating.toFixed(1)} <span className="text-muted-foreground/60">({lawyer.reviewCount})</span>
               </span>
             </div>
             <ArrowRight className={cn('h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all', lang === 'ur' && 'rotate-180')} />

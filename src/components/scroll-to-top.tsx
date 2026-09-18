@@ -52,7 +52,7 @@ export function ScrollToTop() {
   return (
     <div
       className={cn(
-        'fixed bottom-6 right-6 z-40 transition-all duration-300 ease-out pointer-events-none select-none',
+        'fixed bottom-3 right-3 sm:bottom-6 sm:right-6 z-40 transition-all duration-300 ease-out pointer-events-none select-none',
         isVisible
           ? 'opacity-100 translate-y-0 pointer-events-auto scale-100'
           : 'opacity-0 translate-y-4 scale-90 pointer-events-none'
@@ -80,7 +80,7 @@ export function ScrollToTop() {
           aria-label={t('Scroll to top', 'صفحے کے اوپر جائیں')}
           className={cn(
             'relative flex items-center justify-center rounded-full',
-            'w-11 h-11 transition-all duration-300 cursor-pointer',
+            'w-9 h-9 sm:w-11 sm:h-11 transition-all duration-300 cursor-pointer',
             'bg-background/85 dark:bg-card/90 backdrop-blur-md border border-border/80 text-foreground',
             'shadow-lg shadow-black/5 dark:shadow-black/20',
             'hover:bg-primary hover:text-primary-foreground hover:border-primary',

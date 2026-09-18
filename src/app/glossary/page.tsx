@@ -260,9 +260,8 @@ function GlossaryTermCard({
                 <span className="text-[10px] text-muted-foreground font-mono">/{term.pronunciation}/</span>
               )}
             </div>
-            <CardTitle className="text-base leading-tight flex items-baseline gap-2">
-              <span>{term.term}</span>
-              <span className="text-sm font-normal text-muted-foreground font-urdu" dir="rtl">{term.termUrdu}</span>
+            <CardTitle className="text-base leading-tight">
+              <span>{lang === 'ur' && term.termUrdu ? term.termUrdu : term.term}</span>
             </CardTitle>
           </div>
           <button
@@ -284,15 +283,6 @@ function GlossaryTermCard({
         >
           {lang === 'ur' ? term.definitionUrdu : term.definition}
         </p>
-        {expanded && lang === 'en' && (
-          <div className="mt-3 pt-3 border-t border-border/40">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1 flex items-center gap-1">
-              <Languages className="h-3 w-3" />
-              {t('Urdu Definition', 'اردو تعریف')}
-            </p>
-            <p className="text-sm font-urdu leading-loose" dir="rtl">{term.definitionUrdu}</p>
-          </div>
-        )}
         <button
           onClick={onToggle}
           className="mt-2 text-xs text-primary hover:underline inline-flex items-center gap-1"

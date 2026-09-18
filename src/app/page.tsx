@@ -212,47 +212,77 @@ export default function HomePage() {
 
       {/* Law of the Day */}
       {stats && stats.lawOfDay && (
-        <section className="container mx-auto max-w-7xl px-4 py-8">
+        <section className="container mx-auto max-w-7xl px-3 sm:px-4 py-6 sm:py-8">
           <Link href={`/laws/${stats.lawOfDay.slug}`} className="group block animate-fade-in-up">
-            <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 relative">
+            <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 relative rounded-2xl border-border/80">
               <div className="absolute inset-0 pattern-dots opacity-[0.03] pointer-events-none" />
               <div
                 className="absolute top-0 left-0 right-0 h-1.5"
                 style={{ backgroundColor: stats.lawOfDay.category.color ?? 'var(--primary)' }}
               />
-              <CardContent className="p-6 md:p-8 relative">
-                <div className="flex items-start gap-5 flex-wrap">
-                  <div
-                    className="flex h-16 w-16 items-center justify-center rounded-2xl text-white shrink-0 shadow-lg group-hover:scale-105 transition-transform"
-                    style={{
-                      background: `linear-gradient(135deg, ${stats.lawOfDay.category.color ?? '#0d9488'}, ${(stats.lawOfDay.category.color ?? '#0d9488')}cc)`,
-                    }}
-                  >
-                    <CalendarDays className="h-8 w-8" />
+              <CardContent className="p-4 sm:p-6 md:p-8 relative">
+                <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-5">
+                  {/* Top Bar for Mobile / Left Icon for Desktop */}
+                  <div className="flex items-center justify-between sm:justify-start gap-3 shrink-0">
+                    <div
+                      className="flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-xl sm:rounded-2xl text-white shrink-0 shadow-md group-hover:scale-105 transition-transform"
+                      style={{
+                        background: `linear-gradient(135deg, ${stats.lawOfDay.category.color ?? '#0d9488'}, ${(stats.lawOfDay.category.color ?? '#0d9488')}cc)`,
+                      }}
+                    >
+                      <CalendarDays className="h-6 w-6 sm:h-8 sm:w-8" />
+                    </div>
+
+                    {/* Mobile Only: Top Badges */}
+                    <div className="sm:hidden flex flex-wrap items-center gap-1.5 flex-1 min-w-0">
+                      <Badge variant="secondary" className="text-[11px] font-semibold px-2 py-0.5">
+                        <Sparkles className="h-3 w-3 mr-1 text-primary" />
+                        {t('Law of the Day', 'آج کا قانون')}
+                      </Badge>
+                      <Badge variant="outline" className="text-[10px] px-2 py-0.5 truncate max-w-[140px]" style={{ color: stats.lawOfDay.category.color ?? undefined }}>
+                        {lang === 'ur' ? stats.lawOfDay.category.nameUrdu : stats.lawOfDay.category.name}
+                      </Badge>
+                    </div>
                   </div>
+
+                  {/* Main Content Area */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2 flex-wrap">
-                      <Badge variant="secondary" className="text-xs">
-                        <Sparkles className="h-3 w-3 mr-1" />
+                    {/* Desktop Badges */}
+                    <div className="hidden sm:flex items-center gap-2 mb-2.5 flex-wrap">
+                      <Badge variant="secondary" className="text-xs font-semibold">
+                        <Sparkles className="h-3 w-3 mr-1 text-primary" />
                         {t('Law of the Day', 'آج کا قانون')}
                       </Badge>
                       <Badge variant="outline" className="text-xs" style={{ color: stats.lawOfDay.category.color ?? undefined }}>
                         {lang === 'ur' ? stats.lawOfDay.category.nameUrdu : stats.lawOfDay.category.name}
                       </Badge>
-                      <Badge variant="outline" className="text-xs tabular-nums">{stats.lawOfDay.yearEnacted}</Badge>
+                      <Badge variant="outline" className="text-xs tabular-nums font-mono">{stats.lawOfDay.yearEnacted}</Badge>
                       <Badge variant="secondary" className="text-xs">{stats.lawOfDay.sectionCount} {t('sections', 'شقیں')}</Badge>
                     </div>
-                    <h2 className="text-xl md:text-2xl font-bold tracking-tight group-hover:text-primary transition-colors">
+
+                    {/* Mobile Badges Row: Year & Sections */}
+                    <div className="sm:hidden flex items-center gap-1.5 my-1.5">
+                      <Badge variant="outline" className="text-[10px] tabular-nums font-mono px-2 py-0.5">{stats.lawOfDay.yearEnacted}</Badge>
+                      <Badge variant="secondary" className="text-[10px] px-2 py-0.5">{stats.lawOfDay.sectionCount} {t('sections', 'شقیں')}</Badge>
+                    </div>
+
+                    {/* Title (Takes full width) */}
+                    <h2 className="text-base sm:text-xl md:text-2xl font-bold tracking-tight text-foreground group-hover:text-primary transition-colors leading-snug break-words">
                       {lang === 'ur' && stats.lawOfDay.titleUrdu ? stats.lawOfDay.titleUrdu : stats.lawOfDay.title}
                     </h2>
 
-                    <p className="text-sm text-muted-foreground mt-2 line-clamp-2 leading-relaxed">
-                      {lang === 'ur' && stats.lawOfDay.summaryUrdu ? stats.lawOfDay.summaryUrdu : stats.lawOfDay.summary ?? ''}
-                    </p>
+                    {/* Summary */}
+                    {stats.lawOfDay.summary && (
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-2 line-clamp-2 leading-relaxed">
+                        {lang === 'ur' && stats.lawOfDay.summaryUrdu ? stats.lawOfDay.summaryUrdu : stats.lawOfDay.summary}
+                      </p>
+                    )}
                   </div>
-                  <div className="flex items-center gap-1 text-sm font-medium text-primary shrink-0 mt-2">
-                    {t('Read', 'پڑھیں')}
-                    <ArrowRight className={cn('h-4 w-4 group-hover:translate-x-1 transition-transform', lang === 'ur' && 'rotate-180')} />
+
+                  {/* Read Link */}
+                  <div className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-primary shrink-0 self-end sm:self-center mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/40 w-full sm:w-auto justify-end sm:justify-start">
+                    <span>{t('Read Law', 'قانون پڑھیں')}</span>
+                    <ArrowRight className={cn('h-3.5 w-3.5 sm:h-4 sm:w-4 group-hover:translate-x-1 transition-transform', lang === 'ur' && 'rotate-180')} />
                   </div>
                 </div>
               </CardContent>
@@ -449,17 +479,6 @@ export default function HomePage() {
                       <h3 className="font-bold text-base mt-4 text-foreground group-hover:text-primary transition-colors leading-snug line-clamp-2 relative z-10">
                         {lang === 'ur' && law.titleUrdu ? law.titleUrdu : law.title}
                       </h3>
-
-                      {/* Dual-language sub-label */}
-                      {lang === 'en' && law.titleUrdu ? (
-                        <p className="text-xs text-muted-foreground/80 mt-1.5 font-urdu line-clamp-1">
-                          {law.titleUrdu}
-                        </p>
-                      ) : lang === 'ur' && law.title ? (
-                        <p className="text-xs text-muted-foreground/80 mt-1.5 line-clamp-1">
-                          {law.title}
-                        </p>
-                      ) : null}
                     </div>
 
                     {/* Bottom Details Bar */}
@@ -686,17 +705,6 @@ export default function HomePage() {
                     <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug">
                       {lang === 'ur' && law.titleUrdu ? law.titleUrdu : law.title}
                     </h3>
-
-                    {/* Dual-language sub-label */}
-                    {lang === 'en' && law.titleUrdu ? (
-                      <p className="text-xs text-muted-foreground/80 mt-1.5 font-urdu line-clamp-1">
-                        {law.titleUrdu}
-                      </p>
-                    ) : lang === 'ur' && law.title ? (
-                      <p className="text-xs text-muted-foreground/80 mt-1.5 line-clamp-1">
-                        {law.title}
-                      </p>
-                    ) : null}
                   </div>
 
                   {/* Footer */}
@@ -791,14 +799,13 @@ export default function HomePage() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <ToolCard
-            icon={Bot}
-            titleEn="AI Legal Assistant"
-            titleUr="اے آئی قانونی اسسٹنٹ"
-            descriptionEn="Ask questions in plain English or Urdu. Our RAG-based AI cites real laws from the database."
-            descriptionUr="سادہ انگریزی یا اردو میں سوال پوچھیں۔ ہمارا آر اے جی اے آئی ڈیٹابیس کے حقیقی قوانین کا حوالہ دیتا ہے۔"
-            href="/chat"
-            color="#7c3aed"
-            badge="Beta"
+            icon={Compass}
+            titleEn="Which Law Applies?"
+            titleUr="کون سا قانون لاگو ہوتا ہے؟"
+            descriptionEn="Answer a few quick questions to find which Pakistani statutes and courts apply to your situation."
+            descriptionUr="چند فوری سوالات کے جوابات دیں تاکہ معلوم ہو سکے کہ کون سا قانون آپ کی صورتحال پر لاگو ہوتا ہے۔"
+            href="/finder"
+            color="#2563eb"
             delay={0}
           />
           <ToolCard
@@ -1031,9 +1038,6 @@ function ToolCard({
             <h3 className="font-semibold text-lg leading-tight group-hover:text-primary transition-colors">
               {t(titleEn, titleUr)}
             </h3>
-            {lang === 'en' && (
-              <p className="text-xs text-muted-foreground font-urdu mt-0.5" dir="rtl">{titleUr}</p>
-            )}
           </div>
           <p className="text-sm text-muted-foreground leading-relaxed">
             {t(descriptionEn, descriptionUr)}
