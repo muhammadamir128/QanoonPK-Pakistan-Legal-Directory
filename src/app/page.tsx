@@ -179,9 +179,8 @@ export default function HomePage() {
             {/* Search bar */}
             <form onSubmit={onSearch} className="relative max-w-2xl mx-auto animate-fade-in-up">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
-              <Input
-                type="search"
-                placeholder={t('Search e.g. "Section 302", "harassment", "tax filing"...', 'تلاش مثلاً "سیکشن 302"، "ہراسانی"، "ٹیکس"')}
+              <Input type="search"
+                placeholder={t('Search... ', 'تلاش کریں')}
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 className="h-14 pl-12 pr-32 text-base shadow-lg border-primary/30 focus-visible:ring-2 focus-visible:ring-primary"
@@ -299,8 +298,8 @@ export default function HomePage() {
           {loading
             ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
             : paginatedCategories.map((cat, i) => (
-                <CategoryCard key={cat.id} cat={cat} delay={i * 40} />
-              ))}
+              <CategoryCard key={cat.id} cat={cat} delay={i * 40} />
+            ))}
         </div>
 
         {/* Pagination Controls */}

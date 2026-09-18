@@ -331,36 +331,29 @@ export function AiAssistantWidget() {
         </Card>
       )}
 
-      {/* Floating Trigger Button (Positioned on the Left Side) */}
+      {/* Floating Trigger Button (Positioned on the Left Side - Icon Only) */}
       <div className="fixed bottom-6 left-6 z-50 flex items-center">
         <button
           onClick={() => setIsOpen((prev) => !prev)}
           className={cn(
-            'group flex items-center gap-2.5 px-4 py-3 rounded-full text-xs font-bold transition-all duration-300 shadow-xl cursor-pointer border',
+            'group relative flex items-center justify-center h-12 w-12 rounded-full transition-all duration-300 shadow-xl cursor-pointer border',
             isOpen
-              ? 'bg-muted text-foreground border-border/80 hover:bg-accent'
-              : 'bg-primary text-primary-foreground border-primary/20 hover:scale-105 active:scale-95 shadow-primary/25 hover:shadow-2xl hover:shadow-primary/30'
+              ? 'bg-muted text-foreground border-border/80 hover:bg-accent hover:scale-105'
+              : 'bg-primary text-primary-foreground border-primary/20 hover:scale-110 active:scale-95 shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40'
           )}
-          aria-label={isOpen ? t('Close Inbox', 'ان باکس بند کریں') : t('Open Legal Inbox', 'قانونی ان باکس کھولیں')}
+          title={isOpen ? t('Close Inbox', 'ان باکس بند کریں') : t('Inbox (AI Assistant)', 'ان باکس (اے آئی اسسٹنٹ)')}
+          aria-label={isOpen ? t('Close Inbox', 'ان باکس بند کریں') : t('Inbox (AI Assistant)', 'ان باکس (اے آئی اسسٹنٹ)')}
         >
           {isOpen ? (
-            <>
-              <ChevronDown className="h-4 w-4 transition-transform group-hover:translate-y-0.5" />
-              <span>{t('Close Inbox', 'ان باکس بند کریں')}</span>
-            </>
+            <X className="h-5 w-5 transition-transform group-hover:rotate-90 duration-200" />
           ) : (
-            <>
-              <div className="relative flex items-center justify-center">
-                <Inbox className="h-4 w-4 transition-transform group-hover:scale-110" />
-                <span className="absolute -top-1 -right-1 flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
-                </span>
-              </div>
-              <span className="tracking-tight">
-                {t('Inbox (AI Assistant)', 'ان باکس (اے آئی اسسٹنٹ)')}
+            <div className="relative flex items-center justify-center">
+              <Inbox className="h-5 w-5 transition-transform group-hover:scale-110 duration-200" />
+              <span className="absolute -top-1.5 -right-1.5 flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400 border border-background" />
               </span>
-            </>
+            </div>
           )}
         </button>
       </div>
