@@ -832,19 +832,19 @@ export default function HomePage() {
       </section>
 
       {/* Services: Lawyers + Templates */}
-      <section className="container mx-auto max-w-7xl px-4 py-16 border-t border-border/40">
-        <div className="text-center mb-10">
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
+      <section className="container mx-auto max-w-4xl px-4 py-8 md:py-10 border-t border-border/40">
+        <div className="text-center mb-6">
+          <h2 className="text-xl md:text-2xl font-bold tracking-tight">
             {t('Connect & Create', 'ربط قائم کریں اور بنائیں')}
           </h2>
-          <p className="text-muted-foreground mt-2 text-sm max-w-2xl mx-auto">
+          <p className="text-muted-foreground mt-1.5 text-xs sm:text-sm max-w-lg mx-auto">
             {t(
               'Find a verified lawyer or generate common legal documents in minutes.',
               'تصدیق شدہ وکیل تلاش کریں یا منٹوں میں عام قانونی دستاویزات تیار کریں۔'
             )}
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
           <ToolCard
             icon={Briefcase}
             titleEn="Lawyer Directory"
@@ -854,6 +854,7 @@ export default function HomePage() {
             href="/lawyers"
             color="#0d9488"
             delay={0}
+            compact
           />
           <ToolCard
             icon={FilePlus}
@@ -865,6 +866,7 @@ export default function HomePage() {
             color="#9333ea"
             badge="New"
             delay={60}
+            compact
           />
         </div>
       </section>
@@ -1005,7 +1007,7 @@ function SkeletonCard() {
 }
 
 function ToolCard({
-  icon: Icon, titleEn, titleUr, descriptionEn, descriptionUr, href, color, badge, delay,
+  icon: Icon, titleEn, titleUr, descriptionEn, descriptionUr, href, color, badge, delay, compact,
 }: {
   icon: React.ComponentType<{ className?: string }>
   titleEn: string
@@ -1016,35 +1018,41 @@ function ToolCard({
   color: string
   badge?: string
   delay: number
+  compact?: boolean
 }) {
   const { t, lang } = useLanguage()
   return (
     <Link href={href} className="block group animate-fade-in-up" style={{ animationDelay: `${delay}ms` }}>
-      <Card className="relative overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all duration-300 h-full">
-        <div className="absolute top-0 left-0 right-0 h-1.5" style={{ backgroundColor: color }} />
-        <CardContent className="p-6 pt-7 space-y-4">
-          <div className="flex items-start justify-between">
-            <div
-              className="flex h-12 w-12 items-center justify-center rounded-xl text-white shadow-md group-hover:scale-110 transition-transform"
-              style={{ background: `linear-gradient(135deg, ${color}, ${color}cc)` }}
-            >
-              <Icon className="h-6 w-6" />
+      <Card className="relative overflow-hidden hover:shadow-lg hover:border-primary/30 transition-all duration-300 h-full flex flex-col justify-between">
+        <div className="absolute top-0 left-0 right-0 h-1" style={{ backgroundColor: color }} />
+        <CardContent className={cn('flex flex-col justify-between flex-1', compact ? 'p-4 pt-4.5 space-y-2' : 'p-5 pt-6 space-y-3')}>
+          <div className="space-y-2">
+            <div className="flex items-start justify-between">
+              <div
+                className={cn(
+                  'flex items-center justify-center rounded-xl text-white shadow-xs group-hover:scale-105 transition-transform',
+                  compact ? 'h-9 w-9 rounded-lg' : 'h-10 w-10'
+                )}
+                style={{ background: `linear-gradient(135deg, ${color}, ${color}cc)` }}
+              >
+                <Icon className={compact ? 'h-4.5 w-4.5' : 'h-5 w-5'} />
+              </div>
+              {badge && (
+                <Badge variant="secondary" className="text-[9px] uppercase tracking-wider py-0 px-1.5">{badge}</Badge>
+              )}
             </div>
-            {badge && (
-              <Badge variant="secondary" className="text-[10px] uppercase tracking-wide">{badge}</Badge>
-            )}
+            <div>
+              <h3 className={cn('font-semibold leading-snug group-hover:text-primary transition-colors', compact ? 'text-sm sm:text-base' : 'text-base')}>
+                {t(titleEn, titleUr)}
+              </h3>
+            </div>
+            <p className={cn('text-muted-foreground leading-relaxed', compact ? 'text-xs line-clamp-2' : 'text-xs sm:text-sm line-clamp-2')}>
+              {t(descriptionEn, descriptionUr)}
+            </p>
           </div>
-          <div>
-            <h3 className="font-semibold text-lg leading-tight group-hover:text-primary transition-colors">
-              {t(titleEn, titleUr)}
-            </h3>
-          </div>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            {t(descriptionEn, descriptionUr)}
-          </p>
-          <div className="flex items-center gap-1 text-sm font-medium text-primary pt-2">
+          <div className="flex items-center gap-1 text-xs font-semibold text-primary pt-1.5">
             {t('Open', 'کھولیں')}
-            <ArrowRight className={cn('h-4 w-4 group-hover:translate-x-1 transition-transform', lang === 'ur' && 'rotate-180')} />
+            <ArrowRight className={cn('h-3.5 w-3.5 group-hover:translate-x-1 transition-transform', lang === 'ur' && 'rotate-180')} />
           </div>
         </CardContent>
       </Card>

@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import {
   Search, Languages, Sun, Moon, Menu, Scale, BookText, Compass, LayoutDashboard, X,
   Bot, Landmark, BookOpen, ChevronDown, Briefcase, FilePlus, HelpCircle, GitCompare, Check,
-  LogIn, UserPlus, LogOut, Bookmark, User,
+  LogIn, UserPlus, LogOut, Bookmark, User, Info,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -28,16 +28,19 @@ import { cn } from '@/lib/utils'
 const navItems = [
   { href: '/laws', labelEn: 'Laws', labelUr: 'قوانین' },
   { href: '/categories', labelEn: 'Categories', labelUr: 'اقسام' },
+  { href: '/courts', labelEn: 'Courts', labelUr: 'عدالتیں' },
   { href: '/lawyers', labelEn: 'Lawyers', labelUr: 'وکلاء' },
   { href: '/templates', labelEn: 'Templates', labelUr: 'ٹیمپلیٹس' },
   { href: '/compare', labelEn: 'Compare', labelUr: 'موازنہ' },
+  { href: '/about', labelEn: 'About', labelUr: 'تعارف' },
 ]
 
 const toolsItems = [
   { href: '/finder', labelEn: 'Which Law Applies?', labelUr: 'کون سا قانون؟', icon: 'Compass', descEn: 'Find applicable law', descUr: 'مسئلے کا متعلقہ قانون' },
-  { href: '/courts', labelEn: 'Court Hierarchy', labelUr: 'عدالتی درجہ بندی', icon: 'Landmark', descEn: 'Court system', descUr: 'عدالتی نظام' },
-  { href: '/glossary', labelEn: 'Glossary', labelUr: 'فرہنگ', icon: 'BookOpen', descEn: 'Legal terms', descUr: 'قانونی اصطلاحات' },
-  { href: '/faq', labelEn: 'FAQ / Help', labelUr: 'سوالات و مدد', icon: 'HelpCircle', descEn: 'Common questions', descUr: 'عام سوالات' },
+  { href: '/courts', labelEn: 'Court Hierarchy', labelUr: 'عدالتی درجہ بندی', icon: 'Landmark', descEn: 'Court system & hierarchy', descUr: 'عدالتی نظام و درجہ بندی' },
+  { href: '/glossary', labelEn: 'Legal Glossary', labelUr: 'قانونی فرہنگ', icon: 'BookOpen', descEn: 'Pakistani legal terms explained', descUr: 'اہم قانونی اصطلاحات کا مفہوم' },
+  { href: '/faq', labelEn: 'FAQ & Help', labelUr: 'سوالات و مدد', icon: 'HelpCircle', descEn: 'Frequently asked questions', descUr: 'عام سوالات و رہنمائی' },
+  { href: '/about', labelEn: 'About QanoonPK', labelUr: 'ہمارے متعلق', icon: 'Info', descEn: 'Directory methodology & sources', descUr: 'ڈائریکٹری کا طریقہ کار' },
 ]
 
 
@@ -107,7 +110,7 @@ export function SiteHeader() {
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      'rounded-md px-2 xl:px-3 py-1.5 xl:py-2 text-xs xl:text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground whitespace-nowrap shrink-0 inline-flex items-center gap-1.5',
+                      'rounded-md px-1.5 xl:px-2.5 py-1.5 text-xs xl:text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground whitespace-nowrap shrink-0 inline-flex items-center',
                       isActive(item.href)
                         ? 'bg-accent text-accent-foreground font-semibold'
                         : 'text-foreground/80'
@@ -121,7 +124,7 @@ export function SiteHeader() {
                   <DropdownMenuTrigger asChild>
                     <button
                       className={cn(
-                        'rounded-md px-2 xl:px-3 py-1.5 xl:py-2 text-xs xl:text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground inline-flex items-center gap-1 whitespace-nowrap shrink-0',
+                        'rounded-md px-1.5 xl:px-2.5 py-1.5 text-xs xl:text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground inline-flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer',
                         toolsItems.some((item) => isActive(item.href)) ? 'bg-accent text-accent-foreground font-semibold' : 'text-foreground/80'
                       )}
                     >
@@ -370,20 +373,22 @@ export function SiteHeader() {
                         <div className="text-[10px] uppercase tracking-wide text-muted-foreground px-3 mb-1 font-semibold">
                           {t('Tools', 'اوزار')}
                         </div>
-                        {toolsItems.map((item) => {
-                          const Icon = iconForTool(item.icon)
-                          return (
-                            <SheetClose asChild key={item.href}>
-                              <Link href={item.href} className={cn(
-                                'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors hover:bg-accent',
-                                isActive(item.href) ? 'bg-accent text-accent-foreground' : ''
-                              )}>
-                                <Icon className="h-4 w-4 text-primary" />
-                                {t(item.labelEn, item.labelUr)}
-                              </Link>
-                            </SheetClose>
-                          )
-                        })}
+                        {toolsItems
+                          .filter((item) => !navItems.some((n) => n.href === item.href))
+                          .map((item) => {
+                            const Icon = iconForTool(item.icon)
+                            return (
+                              <SheetClose asChild key={item.href}>
+                                <Link href={item.href} className={cn(
+                                  'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors hover:bg-accent',
+                                  isActive(item.href) ? 'bg-accent text-accent-foreground' : ''
+                                )}>
+                                  <Icon className="h-4 w-4 text-primary" />
+                                  {t(item.labelEn, item.labelUr)}
+                                </Link>
+                              </SheetClose>
+                            )
+                          })}
                       </div>
                       {(session?.user as any)?.role === 'admin' && (
                         <div className="pt-2 mt-2 border-t border-border/40">
@@ -484,10 +489,14 @@ function iconFor(href: string) {
   switch (href) {
     case '/laws': return BookText
     case '/categories': return LayoutDashboard
+    case '/courts': return Landmark
     case '/finder': return Compass
     case '/lawyers': return Briefcase
     case '/templates': return FilePlus
     case '/compare': return GitCompare
+    case '/about': return Info
+    case '/glossary': return BookOpen
+    case '/faq': return HelpCircle
     case '/admin': return LayoutDashboard
     default: return Scale
   }
@@ -501,6 +510,7 @@ function iconForTool(name: string) {
     case 'Landmark': return Landmark
     case 'BookOpen': return BookOpen
     case 'HelpCircle': return HelpCircle
+    case 'Info': return Info
     default: return Scale
   }
 }

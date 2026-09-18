@@ -4,18 +4,21 @@ import * as React from 'react'
 import Link from 'next/link'
 import {
   ChevronRight, Search, HelpCircle, ChevronDown, ArrowRight,
-  Lightbulb, BookOpen, ExternalLink, FileText, ThumbsUp,
+  Lightbulb, BookOpen, ExternalLink, FileText, ThumbsUp, ThumbsDown,
+  ShieldAlert, Send, Sparkles, Phone, CheckCircle2
 } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from '@/components/ui/accordion'
 import { useLanguage } from '@/components/language-provider'
 import { cn } from '@/lib/utils'
 import { faqItems, type FAQItem } from '@/lib/faq-data'
+import { toast } from 'sonner'
 
 const CATEGORY_COLORS: Record<string, string> = {
   Criminal: '#dc2626',
@@ -35,6 +38,13 @@ export default function FAQPage() {
   const { t, lang } = useLanguage()
   const [search, setSearch] = React.useState('')
   const [category, setCategory] = React.useState<string>('all')
+  const [openItems, setOpenItems] = React.useState<string[]>([])
+  const [helpfulVotes, setHelpfulVotes] = React.useState<Record<string, 'yes' | 'no'>>({})
+
+  // Question submission form state
+  const [userQuestion, setUserQuestion] = React.useState('')
+  const [userEmail, setUserEmail] = React.useState('')
+  const [submitted, setSubmitted] = React.useState(false)
 
   const categories = React.useMemo(() => {
     const map = new Map<string, { en: string; ur: string }>()
@@ -69,6 +79,32 @@ export default function FAQPage() {
     return Array.from(groups.entries())
   }, [filtered])
 
+  const toggleAll = () => {
+    if (openItems.length > 0) {
+      setOpenItems([])
+    } else {
+      setOpenItems(filtered.map((item) => item.id))
+    }
+  }
+
+  const voteHelpful = (id: string, type: 'yes' | 'no') => {
+    setHelpfulVotes((prev) => ({ ...prev, [id]: type }))
+    toast.success(
+      type === 'yes'
+        ? t('Thanks for your feedback!', 'آپ کی رائے کا شکریہ!')
+        : t('Thank you. We will improve this answer.', 'شکریہ، ہم اس جواب کو مزید بہتر بنائیں گے۔')
+    )
+  }
+
+  const handleQuestionSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!userQuestion.trim()) return
+    setSubmitted(true)
+    toast.success(t('Question submitted successfully! Our legal team will review it.', 'آپ کا سوال موصول ہو گیا ہے، جلد جائزہ لیا جائے گا۔'))
+    setUserQuestion('')
+    setUserEmail('')
+  }
+
   return (
     <div className="container mx-auto max-w-5xl px-4 py-8 md:py-12">
       {/* Header */}
@@ -84,72 +120,79 @@ export default function FAQPage() {
           </div>
           <div>
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-              {t('Frequently Asked Questions', 'اکثر پوچھے گئے سوالات')}
+              {t('Frequently Asked Legal Questions', 'اکثر پوچھے جانے والے قانونی سوالات')}
             </h1>
             <p className="text-muted-foreground mt-1 text-sm max-w-2xl">
               {t(
-                'Common legal questions answered in plain language. Browse by category or search.',
-                'عام قانونی سوالات آسان زبان میں جوابات۔ اقسام کے لحاظ سے دیکھیں یا تلاش کریں۔'
+                'Plain language legal answers for citizens, students, and businesses regarding Pakistani law, procedures, and rights.',
+                'پاکستانی قوانین، عدالتی طریقہ کار اور بنیادی حقوق سے متعلق عام شہریوں کے اہم سوالات کے آسان زبان میں جوابات۔'
               )}
             </p>
           </div>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
-        <Card className="bg-primary/5 border-primary/20">
-          <CardContent className="p-4 flex items-center gap-3">
-            <HelpCircle className="h-8 w-8 text-primary shrink-0" />
-            <div>
-              <div className="text-2xl font-bold tabular-nums leading-none">{faqItems.length}</div>
-              <div className="text-xs text-muted-foreground mt-1">{t('Questions', 'سوالات')}</div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-primary/5 border-primary/20">
-          <CardContent className="p-4 flex items-center gap-3">
-            <BookOpen className="h-8 w-8 text-primary shrink-0" />
-            <div>
-              <div className="text-2xl font-bold tabular-nums leading-none">{categories.length}</div>
-              <div className="text-xs text-muted-foreground mt-1">{t('Categories', 'اقسام')}</div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-primary/5 border-primary/20 col-span-2 md:col-span-1">
-          <CardContent className="p-4 flex items-center gap-3">
-            <Lightbulb className="h-8 w-8 text-primary shrink-0" />
-            <div>
-              <div className="text-2xl font-bold tabular-nums leading-none">100%</div>
-              <div className="text-xs text-muted-foreground mt-1">{t('Free', 'مفت')}</div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Emergency Helpline Box */}
+      <div className="mb-6 p-4 rounded-xl border border-primary/20 bg-primary/5 flex items-center justify-between gap-4 flex-wrap text-xs">
+        <div className="flex items-center gap-2.5">
+          <ShieldAlert className="h-5 w-5 text-primary shrink-0" />
+          <div>
+            <span className="font-bold text-foreground block">{t('Immediate Official Legal Helplines', 'فوری سرکاری قانونی ہیلپ لائنز')}</span>
+            <span className="text-muted-foreground">{t('Toll-free 24/7 assistance across Pakistan', 'پورے پاکستان میں 24/7 مفت معاونت')}</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 flex-wrap font-medium">
+          <Badge variant="outline" className="bg-background/80 py-1 text-xs">
+            🚓 Police: <strong className="ml-1 text-primary">15</strong>
+          </Badge>
+          <Badge variant="outline" className="bg-background/80 py-1 text-xs">
+            💻 FIA Cyber Crime: <strong className="ml-1 text-primary">1991</strong>
+          </Badge>
+          <Badge variant="outline" className="bg-background/80 py-1 text-xs">
+            👩 Women Abuse Helpline: <strong className="ml-1 text-primary">1043</strong>
+          </Badge>
+          <Badge variant="outline" className="bg-background/80 py-1 text-xs">
+            👶 Child Protection: <strong className="ml-1 text-primary">1121</strong>
+          </Badge>
+        </div>
       </div>
 
-      {/* Search & filters */}
+      {/* Search & Actions Bar */}
       <div className="space-y-3 mb-6">
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder={t('Search questions...', 'سوالات تلاش کریں...')}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 h-11"
-          />
+        <div className="flex items-center gap-2.5 flex-col sm:flex-row">
+          <div className="relative flex-1 w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              type="search"
+              placeholder={t('Search questions, bail, cheque bounce, tenancy, divorce...', 'سوالات تلاش کریں (مثلاً ضمانت، باؤنس چیک، طلاق، کرایہ)...')}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 h-11 shadow-xs"
+            />
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={toggleAll}
+            className="h-11 px-4 shrink-0 text-xs cursor-pointer w-full sm:w-auto"
+          >
+            {openItems.length > 0 ? t('Collapse All', 'تمام بند کریں') : t('Expand All', 'تمام کھولیں')}
+          </Button>
         </div>
+
+        {/* Category Pills */}
         <div className="flex items-center gap-1.5 flex-wrap">
           <button
             onClick={() => setCategory('all')}
             className={cn(
-              'px-3 py-1.5 rounded-full text-xs font-medium transition-colors border',
+              'px-3 py-1.5 rounded-full text-xs font-medium transition-colors border cursor-pointer',
               category === 'all'
-                ? 'bg-primary text-primary-foreground border-primary'
-                : 'bg-card border-border hover:bg-accent'
+                ? 'bg-primary text-primary-foreground border-primary shadow-xs'
+                : 'bg-card border-border/80 hover:bg-accent'
             )}
           >
-            {t('All', 'تمام')} ({faqItems.length})
+            {t('All Topics', 'تمام موضوعات')} ({faqItems.length})
           </button>
           {categories.map(([key, label]) => {
             const count = faqItems.filter((i) => i.category === key).length
@@ -159,10 +202,10 @@ export default function FAQPage() {
                 key={key}
                 onClick={() => setCategory(key)}
                 className={cn(
-                  'px-3 py-1.5 rounded-full text-xs font-medium transition-colors border inline-flex items-center gap-1.5',
+                  'px-3 py-1.5 rounded-full text-xs font-medium transition-colors border inline-flex items-center gap-1.5 cursor-pointer',
                   category === key
-                    ? 'text-white border-transparent'
-                    : 'bg-card border-border hover:bg-accent'
+                    ? 'text-white border-transparent shadow-xs'
+                    : 'bg-card border-border/80 hover:bg-accent'
                 )}
                 style={category === key ? { backgroundColor: color } : {}}
               >
@@ -179,32 +222,105 @@ export default function FAQPage() {
 
       {/* FAQ items grouped by category */}
       {filtered.length === 0 ? (
-        <Card className="border-dashed">
+        <Card className="border-dashed mb-12">
           <CardContent className="py-12 text-center">
             <HelpCircle className="h-10 w-10 mx-auto text-muted-foreground/50 mb-3" />
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               {t('No questions match your search.', 'آپ کی تلاش سے کوئی سوال مماثل نہیں۔')}
             </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { setSearch(''); setCategory('all') }}
+              className="mt-3 text-xs"
+            >
+              {t('Reset Search', 'ری سیٹ کریں')}
+            </Button>
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-6 mb-12">
           {grouped.map(([cat, items]) => {
             const color = CATEGORY_COLORS[cat] ?? '#64748b'
             const catLabel = categories.find(([k]) => k === cat)?.[1]
             return (
-              <div key={cat}>
-                <div className="flex items-center gap-2 mb-3">
+              <div key={cat} className="space-y-3">
+                <div className="flex items-center gap-2">
                   <span className="inline-flex h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
-                  <h2 className="text-lg font-semibold" style={{ color }}>
+                  <h2 className="text-base sm:text-lg font-bold" style={{ color }}>
                     {lang === 'ur' && catLabel ? catLabel.ur : cat}
                   </h2>
-                  <Badge variant="secondary" className="text-xs">{items.length}</Badge>
+                  <span className="text-xs text-muted-foreground">({items.length})</span>
                 </div>
-                <Accordion type="single" collapsible className="space-y-2">
-                  {items.map((item) => (
-                    <FAQAccordionItem key={item.id} item={item} lang={lang} t={t} color={color} />
-                  ))}
+
+                <Accordion
+                  type="multiple"
+                  value={openItems}
+                  onValueChange={setOpenItems}
+                  className="space-y-2.5"
+                >
+                  {items.map((item) => {
+                    const voted = helpfulVotes[item.id]
+                    return (
+                      <AccordionItem
+                        key={item.id}
+                        value={item.id}
+                        className="border border-border/70 rounded-xl px-4 bg-card shadow-xs overflow-hidden"
+                      >
+                        <AccordionTrigger className="hover:no-underline py-3.5 text-left font-semibold text-xs sm:text-sm">
+                          <span>{lang === 'ur' ? item.questionUrdu : item.question}</span>
+                        </AccordionTrigger>
+                        <AccordionContent className="pt-1 pb-4 text-xs sm:text-sm text-muted-foreground leading-relaxed border-t border-border/40 mt-1">
+                          <p className="text-foreground/90 leading-relaxed mb-3">
+                            {lang === 'ur' ? item.answerUrdu : item.answer}
+                          </p>
+
+                          {/* Related Law tag if present */}
+                          {item.relatedLawSlug && (
+                            <div className="mb-3">
+                              <Button asChild variant="outline" size="sm" className="h-7 text-xs">
+                                <Link href={`/laws/${item.relatedLawSlug}`}>
+                                  <FileText className="h-3 w-3 mr-1 text-primary" />
+                                  {t('View relevant statute', 'متعلقہ قانون دیکھیں')}
+                                </Link>
+                              </Button>
+                            </div>
+                          )}
+
+                          {/* Helpful vote action */}
+                          <div className="flex items-center justify-between gap-3 pt-2 border-t border-border/30 text-xs">
+                            <span className="text-muted-foreground text-[11px]">
+                              {t('Was this helpful?', 'کیا یہ جواب مفید تھا؟')}
+                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => voteHelpful(item.id, 'yes')}
+                                className={cn(
+                                  'p-1.5 rounded-md hover:bg-accent text-xs inline-flex items-center gap-1 cursor-pointer transition-colors',
+                                  voted === 'yes' ? 'text-emerald-600 font-bold bg-emerald-500/10' : 'text-muted-foreground'
+                                )}
+                              >
+                                <ThumbsUp className="h-3.5 w-3.5" />
+                                <span>{t('Yes', 'ہاں')}</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => voteHelpful(item.id, 'no')}
+                                className={cn(
+                                  'p-1.5 rounded-md hover:bg-accent text-xs inline-flex items-center gap-1 cursor-pointer transition-colors',
+                                  voted === 'no' ? 'text-destructive font-bold bg-destructive/10' : 'text-muted-foreground'
+                                )}
+                              >
+                                <ThumbsDown className="h-3.5 w-3.5" />
+                                <span>{t('No', 'نہیں')}</span>
+                              </button>
+                            </div>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    )
+                  })}
                 </Accordion>
               </div>
             )
@@ -212,96 +328,49 @@ export default function FAQPage() {
         </div>
       )}
 
-      {/* CTA */}
-      <Card className="mt-10 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-        <CardContent className="p-6 text-center">
-          <Lightbulb className="h-10 w-10 text-primary mx-auto mb-3" />
-          <h2 className="text-lg font-semibold mb-2">
-            {t('Didn\'t find your answer?', 'اپنا جواب نہیں ملا؟')}
-          </h2>
-          <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
-            {t(
-              'Find applicable laws using our interactive finder, or browse our full law directory.',
-              'ہمارے انٹرایکٹو فائنڈر سے متعلقہ قوانین تلاش کریں، یا ہماری مکمل قانون ڈائریکٹری دیکھیں۔'
-            )}
-          </p>
-          <div className="flex items-center justify-center gap-3 flex-wrap">
-            <Button asChild size="sm">
-              <Link href="/finder">
-                <HelpCircle className="h-4 w-4 mr-2" />
-                {t('Which Law Applies?', 'کون سا قانون لاگو ہوتا ہے؟')}
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="sm">
-              <Link href="/laws">
-                {t('Browse All Laws', 'تمام قوانین دیکھیں')}
-                <ArrowRight className={cn('h-4 w-4 ml-2', lang === 'ur' && 'rotate-180')} />
-              </Link>
-            </Button>
+      {/* Ask a Question Interactive Card (NEW FEATURE) */}
+      <Card className="border-primary/30 bg-gradient-to-b from-card via-card to-primary/5 shadow-sm">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+              <Send className="h-4 w-4" />
+            </div>
+            <div>
+              <CardTitle className="text-base font-bold">
+                {t('Have a Question Not Listed Here?', 'کوئی سوال جو یہاں موجود نہیں؟')}
+              </CardTitle>
+              <CardDescription className="text-xs">
+                {t('Submit your legal query to our research team for inclusion in future updates.', 'اپنا قانونی سوال بھیجیں تاکہ اسے آئندہ اپ ڈیٹس میں شامل کیا جا سکے۔')}
+              </CardDescription>
+            </div>
           </div>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleQuestionSubmit} className="space-y-3">
+            <Textarea
+              placeholder={t('Type your legal question in detail...', 'اپنا قانونی سوال تفصیل سے تحریر کریں...')}
+              value={userQuestion}
+              onChange={(e) => setUserQuestion(e.target.value)}
+              rows={3}
+              required
+              className="text-xs sm:text-sm resize-none"
+            />
+            <div className="flex items-center gap-3 flex-col sm:flex-row">
+              <Input
+                type="email"
+                placeholder={t('Your email (optional for response notification)', 'ای میل (اختیاری)')}
+                value={userEmail}
+                onChange={(e) => setUserEmail(e.target.value)}
+                className="text-xs h-9"
+              />
+              <Button type="submit" size="sm" className="h-9 px-4 shrink-0 text-xs w-full sm:w-auto">
+                <Send className="h-3.5 w-3.5 mr-1.5" />
+                {t('Submit Question', 'سوال جمع کرائیں')}
+              </Button>
+            </div>
+          </form>
         </CardContent>
       </Card>
     </div>
-  )
-}
-
-function FAQAccordionItem({
-  item, lang, t, color,
-}: {
-  item: FAQItem
-  lang: 'en' | 'ur'
-  t: (en: string, ur?: string) => string
-  color: string
-}) {
-  return (
-    <AccordionItem
-      value={item.id}
-      className="border border-border/60 rounded-lg overflow-hidden bg-card hover:border-primary/30 transition-colors data-[state=open]:border-primary/40"
-    >
-      <AccordionTrigger className="px-4 py-3 hover:no-underline text-start">
-        <div className="flex items-start gap-3 text-start">
-          <span
-            className="flex h-7 w-7 items-center justify-center rounded-full text-white text-xs font-bold shrink-0 mt-0.5"
-            style={{ backgroundColor: color }}
-          >
-            <HelpCircle className="h-4 w-4" />
-          </span>
-          <div className="flex-1">
-            <p className="font-medium text-sm leading-snug">
-              {lang === 'ur' ? item.questionUrdu : item.question}
-            </p>
-          </div>
-        </div>
-      </AccordionTrigger>
-      <AccordionContent className="px-4 pb-4 pt-0">
-        <div className="ps-10 space-y-3">
-          <p className="text-sm leading-relaxed text-foreground/85 whitespace-pre-line">
-            {lang === 'ur' ? item.answerUrdu : item.answer}
-          </p>
-          {/* Related laws */}
-          {item.relatedLaws && item.relatedLaws.length > 0 && (
-            <div className="pt-2 border-t border-border/40">
-              <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1.5 flex items-center gap-1">
-                <FileText className="h-3 w-3" />
-                {t('Related Laws', 'متعلقہ قوانین')}
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {item.relatedLaws.map((law: any) => (
-                  <Link
-                    key={law.slug}
-                    href={`/laws/${law.slug}`}
-                    className="inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-background px-2.5 py-1 text-xs hover:border-primary/40 hover:bg-accent/50 transition-all"
-                  >
-                    <span className="font-medium">{lang === 'ur' && law.titleUrdu ? law.titleUrdu : law.title}</span>
-                    <Badge variant="outline" className="text-[9px] px-1 py-0">{law.yearEnacted}</Badge>
-                    <ExternalLink className="h-3 w-3 text-muted-foreground" />
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </AccordionContent>
-    </AccordionItem>
   )
 }

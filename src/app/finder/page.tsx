@@ -4,12 +4,14 @@ import * as React from 'react'
 import Link from 'next/link'
 import {
   Compass, ChevronRight, ChevronLeft, ArrowRight, RefreshCw,
-  FileText, ArrowLeft, BookOpen, Scale, CheckCircle2,
+  FileText, ArrowLeft, BookOpen, Scale, CheckCircle2, ShieldAlert,
+  Phone, Sparkles, Building2, Gavel, HelpCircle, ExternalLink
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useLanguage } from '@/components/language-provider'
 import { cn } from '@/lib/utils'
 
@@ -40,6 +42,104 @@ type Law = {
   category: { name: string; slug: string; color?: string | null; nameUrdu: string }
 }
 
+const COMMON_ROADMAPS = [
+  {
+    id: 'cheque',
+    icon: '💳',
+    color: '#dc2626',
+    title: 'Dishonoured / Bounced Cheque',
+    titleUrdu: 'باؤنس چیک / سیکشن 489-F',
+    statute: 'Pakistan Penal Code (Section 489-F) & Negotiable Instruments Act 1881',
+    statuteUrdu: 'تعزیراتِ پاکستان دفعہ 489-F اور نیگوشئیبل انسٹرومنٹس ایکٹ 1881',
+    statuteSlug: 'pakistan-penal-code-1860',
+    firstStep: 'Obtain written Bank Return Memo with dishonour stamp, then issue 14-day formal Legal Notice to drawer.',
+    firstStepUrdu: 'بینک سے ڈس آنر میمو حاصل کریں اور کھاتہ دار کو 14 روزہ باضابطہ قانونی نوٹس بذریعہ وکیل ارسال کریں۔',
+    forum: 'Area Police Station (FIR under 489-F) or Civil Court (Suit for Recovery under Order XXXVII CPC)',
+    forumUrdu: 'متعلقہ تھانہ (ایف آئی آر دفعہ 489-F) یا دیوانی عدالت (آرڈر 37 ضابطہ دیوانی سمری دعویٰ)',
+    templateSlug: 'legal-notice-recovery-dues',
+    templateTitle: 'Recovery Notice Draft'
+  },
+  {
+    id: 'rent',
+    icon: '🏠',
+    color: '#ea580c',
+    title: 'Tenant Eviction & Rent Default',
+    titleUrdu: 'کرایہ دار کی بے دخلی و کرایہ کی عدم ادائیگی',
+    statute: 'Punjab Rented Premises Act 2009 / Sindh Rented Premises Ordinance 1979',
+    statuteUrdu: 'پنجاب رینٹڈ پریمسز ایکٹ 2009 / سندھ رینٹڈ پریمسز آرڈیننس 1979',
+    statuteSlug: 'punjab-rented-premises-act-2009',
+    firstStep: 'Check tenancy expiry date or issue notice of rent default, then file Eviction Petition before Rent Tribunal / Controller.',
+    firstStepUrdu: 'معاہدہ کی میعاد یا ڈیفالٹ چیک کریں اور رینٹ ٹربیونل یا رینٹ کنٹرولر کے روبرو بے دخلی کی درخواست دائر کریں۔',
+    forum: 'Special Rent Tribunal / Rent Controller of the district',
+    forumUrdu: 'ضلعی رینٹ ٹربیونل / اسپیشل رینٹ کنٹرولر',
+    templateSlug: 'residential-tenancy-agreement',
+    templateTitle: 'Tenancy Agreement'
+  },
+  {
+    id: 'family',
+    icon: '👨‍👩‍👧',
+    color: '#db2777',
+    title: 'Divorce, Khula & Child Custody',
+    titleUrdu: 'طلاق، خلع، خرچہ نان نفقہ و تحویل اطفال',
+    statute: 'Muslim Family Laws Ordinance 1961, Family Courts Act 1964 & Guardian and Wards Act 1890',
+    statuteUrdu: 'مسلم فیملی لاز آرڈیننس 1961، فیملی کورٹس ایکٹ 1964 اور گارڈین اینڈ وارڈز ایکٹ',
+    statuteSlug: 'family-courts-act-1964',
+    firstStep: 'For Khula/Maintenance file Plaint in Family Court; for Talaq send mandatory written notice to Chairman Union Council.',
+    firstStepUrdu: 'خلع یا خرچے کے لیے فیملی کورٹ میں دعویٰ دائر کریں؛ طلاق کی صورت میں چیئرمین یونین کونسل کو تحریری نوٹس بھیجیں۔',
+    forum: 'Family Court & Guardian Judge at Tehsil/District headquarters',
+    forumUrdu: 'فیملی کورٹ و گارڈین جج کی عدالت',
+    templateSlug: 'talaq-notice-union-council',
+    templateTitle: 'Talaq Notice to Union Council'
+  },
+  {
+    id: 'cyber',
+    icon: '📱',
+    color: '#7c3aed',
+    title: 'Cyber Blackmail, Harassment & Online Fraud',
+    titleUrdu: 'آن لائن بلیک میلنگ، ہراسانی و سائبر فراڈ',
+    statute: 'Prevention of Electronic Crimes Act (PECA) 2016 & NCCIA Act 2024',
+    statuteUrdu: 'پریوینشن آف الیکٹرانک کرائمز ایکٹ (پیکا) 2016 اور این سی سی آئی اے ایکٹ 2024',
+    statuteSlug: 'prevention-of-electronic-crimes-act-2016',
+    firstStep: 'Take clear screenshots, save URLs, preservation of digital logs, and file online complaint at FIA Cyber Crime portal / call 1991.',
+    firstStepUrdu: 'اسکرین شاٹس محفوظ کریں اور ایف آئی اے سائبر کرائم پورٹل پر آن لائن شکایت درج کرائیں یا ہیلپ لائن 1991 پر رابطہ کریں۔',
+    forum: 'National Cyber Crime Investigation Agency (NCCIA) / FIA Cyber Crime Wing & Special PECA Courts',
+    forumUrdu: 'این سی سی آئی اے / ایف آئی اے سائبر کرائم سیل و اسپیشل پیکا کورٹس',
+    helpline: '1991'
+  },
+  {
+    id: 'workplace',
+    icon: '🏢',
+    color: '#0d9488',
+    title: 'Workplace Harassment & Unpaid Salary',
+    titleUrdu: 'دفتر میں ہراسانی و تنخواہ کی بندش',
+    statute: 'Protection Against Harassment at Workplace Act 2010 & Payment of Wages Act 1936',
+    statuteUrdu: 'خواتین کو جائے کار پر ہراسانی سے تحفظ کا ایکٹ 2010 اور ادائیگی اجرت ایکٹ 1936',
+    statuteSlug: 'protection-against-harassment-of-women-at-workplace-act-2010',
+    firstStep: 'File formal written complaint to internal Inquiry Committee or directly to the Provincial/Federal Ombudsman (Mohtasib).',
+    firstStepUrdu: 'ادارے کی داخلی انکوائری کمیٹی یا براہ راست وفاقی/صوبائی محتسب برائے انسداد ہراسانی کو تحریری درخواست دیں۔',
+    forum: 'Federal / Provincial Ombudsperson (Mohtasib) & Labour Courts',
+    forumUrdu: 'وفاقی و صوبائی محتسب سیکرٹریٹ اور لیبر کورٹ',
+    templateSlug: 'employment-contract-staff',
+    templateTitle: 'Employment Contract'
+  },
+  {
+    id: 'property',
+    icon: '📜',
+    color: '#0284c7',
+    title: 'Property Fraud & Land Grabbing',
+    titleUrdu: 'پراپرٹی فراڈ، جعلی رجسٹری و قبضہ مافیا',
+    statute: 'Transfer of Property Act 1882, Specific Relief Act 1877 & Illegal Dispossession Act 2005',
+    statuteUrdu: 'ٹرانسفر آف پراپرٹی ایکٹ، سپیسفک ریلیف ایکٹ اور ال لیگل ڈسپوزیشن ایکٹ 2005',
+    statuteSlug: 'specific-relief-act-1877',
+    firstStep: 'File suit for Declaration & Permanent Injunction with temporary stay application under Order 39 CPC.',
+    firstStepUrdu: 'سول کورٹ میں دعویٰ استقرارِ حق بمع درخواست حکمِ امتناعی (اسٹے آرڈر) آرڈر 39 ضابطہ دیوانی دائر کریں۔',
+    forum: 'Civil Court & Sessions Court under Illegal Dispossession Act',
+    forumUrdu: 'سول کورٹ اور سیشن کورٹ',
+    templateSlug: 'special-power-of-attorney-property',
+    templateTitle: 'Power of Attorney'
+  }
+]
+
 export default function FinderPage() {
   const { t, lang } = useLanguage()
   const [questions, setQuestions] = React.useState<Question[]>([])
@@ -63,24 +163,20 @@ export default function FinderPage() {
     const newAnswers = { ...answers, [currentQuestion.id]: opt }
     setAnswers(newAnswers)
 
-    // Accumulate matched slugs
     const allSlugs = new Set<string>()
     Object.values(newAnswers).forEach((a) => {
       if (a.categoryIds) a.categoryIds.forEach((s) => allSlugs.add(s))
     })
 
-    // If option has nextIdx navigate to that question index
     if (typeof opt.nextIdx === 'number' && opt.nextIdx >= 0 && opt.nextIdx < questions.length) {
       setCurrentIdx(opt.nextIdx)
       return
     }
 
-    // Otherwise this is a terminal option — if we have matched slugs, finish
     if (allSlugs.size > 0) {
       setMatchedSlugs(Array.from(allSlugs))
       finish(Array.from(allSlugs))
     } else {
-      // No matches yet, advance to next question
       if (currentIdx < questions.length - 1) {
         setCurrentIdx((i) => i + 1)
       } else {
@@ -98,7 +194,9 @@ export default function FinderPage() {
         body: JSON.stringify({ slugs }),
       })
       const data = await res.json()
-      setResults(data.items ?? [])
+      setResults(data.laws ?? [])
+    } catch {
+      setResults([])
     } finally {
       setFetchingResults(false)
     }
@@ -106,200 +204,267 @@ export default function FinderPage() {
 
   const restart = () => {
     setAnswers({})
-    setResults(null)
     setMatchedSlugs([])
+    setResults(null)
     setCurrentIdx(0)
   }
 
-  const back = () => {
-    if (currentIdx > 0) setCurrentIdx((i) => i - 1)
-  }
-
-  // Results screen
-  if (results) {
-    return (
-      <div className="container mx-auto max-w-4xl px-4 py-8 md:py-12">
-        <div className="text-center mb-8">
-          <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-950/40 mb-3">
-            <CheckCircle2 className="h-7 w-7 text-emerald-600" />
-          </div>
-          <h1 className="text-2xl md:text-3xl font-bold">
-            {t('Recommended Laws for Your Situation', 'آپ کے مسئلے کے لیے تجویز کردہ قوانین')}
-          </h1>
-          <p className="text-muted-foreground mt-2 text-sm">
-            {t('Based on your answers, here are the most relevant laws.', 'آپ کے جوابات کے بنیاد پر یہ متعلقہ قوانین ہیں۔')}
-          </p>
-        </div>
-
-        {results.length === 0 ? (
-          <Card className="border-dashed">
-            <CardContent className="py-12 text-center">
-              <FileText className="h-10 w-10 mx-auto text-muted-foreground/50 mb-3" />
-              <p className="text-muted-foreground">
-                {t('No specific match found. Please browse all laws or consult a lawyer.', 'کوئی مخصوص-match نہیں ملا۔ تمام قوانین دیکھیں یا وکیل سے رجوع کریں۔')}
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {results.map((law, i) => (
-              <Link key={law.slug} href={`/laws/${law.slug}`} className="block animate-fade-in-up" style={{ animationDelay: `${i * 60}ms` }}>
-                <Card className="group hover:shadow-md hover:border-primary/30 transition-all">
-                  <CardContent className="p-5">
-                    <div className="flex items-start gap-4">
-                      <div
-                        className="flex h-10 w-10 items-center justify-center rounded-full text-white shrink-0 text-sm font-bold"
-                        style={{ backgroundColor: law.category.color ?? 'var(--primary)' }}
-                      >
-                        {i + 1}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap mb-1">
-                          <Badge variant="outline" className="text-xs">{law.yearEnacted}</Badge>
-                          <Badge variant="secondary" className="text-xs" style={law.category.color ? { color: law.category.color } : {}}>
-                            {lang === 'ur' && law.category.nameUrdu ? law.category.nameUrdu : law.category.name}
-                          </Badge>
-                        </div>
-                        <h3 className="font-semibold text-base leading-snug group-hover:text-primary transition-colors">
-                          {lang === 'ur' && law.titleUrdu ? law.titleUrdu : law.title}
-                        </h3>
-                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
-                          {lang === 'ur' && law.summaryUrdu ? law.summaryUrdu : law.summary ?? ''}
-                        </p>
-                      </div>
-                      <ArrowRight className={cn('h-5 w-5 text-muted-foreground shrink-0 group-hover:text-primary group-hover:translate-x-1 transition-all mt-2', lang === 'ur' && 'rotate-180')} />
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        )}
-
-        <div className="mt-8 flex items-center gap-3 flex-wrap justify-center">
-          <Button onClick={restart} variant="outline">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            {t('Start Over', 'دوبارہ شروع کریں')}
-          </Button>
-          <Button asChild variant="ghost">
-            <Link href="/laws"><BookOpen className="h-4 w-4 mr-2" />{t('Browse all laws', 'تمام قوانین دیکھیں')}</Link>
-          </Button>
-        </div>
-      </div>
-    )
-  }
-
-  if (loading) {
-    return (
-      <div className="container mx-auto max-w-3xl px-4 py-12">
-        <Skeleton className="h-10 w-1/2 mx-auto mb-4" />
-        <Skeleton className="h-4 w-1/3 mx-auto mb-8" />
-        <Skeleton className="h-64 w-full" />
-      </div>
-    )
-  }
-
-  if (!currentQuestion) {
-    return (
-      <div className="container mx-auto max-w-3xl px-4 py-16 text-center">
-        <p className="text-muted-foreground">{t('No questions available.', 'کوئی سوال دستیاب نہیں۔')}</p>
-      </div>
-    )
-  }
-
-  const progress = ((currentIdx + 1) / questions.length) * 100
-  const selectedAnswer = answers[currentQuestion.id]
-
   return (
-    <div className="container mx-auto max-w-3xl px-4 py-8 md:py-12">
+    <div className="container mx-auto max-w-5xl px-4 py-8 md:py-12">
       {/* Header */}
       <div className="text-center mb-8">
-        <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-4">
-          <Compass className="h-8 w-8" />
+        <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-3">
+          <Compass className="h-7 w-7" />
         </div>
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-          {t('Which Law Applies to Me?', 'میرے مسئلے پر کون سا قانون لاگو ہوتا ہے؟')}
+          {t('Which Law Applies to You?', 'آپ کے مسئلے پر کون سا قانون لاگو ہوتا ہے؟')}
         </h1>
         <p className="text-muted-foreground mt-2 text-sm max-w-xl mx-auto">
-          {t('Answer a few simple questions and we\'ll point you to the most relevant laws.', 'چند آسان سوالات کا جواب دیں اور ہم آپ کو متعلقہ قوانین تک پہنچائیں گے۔')}
+          {t(
+            'Interactive legal guide — take the step-by-step questionnaire or explore instant roadmaps for common Pakistani legal problems.',
+            'انٹرایکٹو قانونی رہنمائی — مرحلہ وار سوال نامے کے ذریعے یا عام قانونی مسائل کے فوری روڈ میپ کے ذریعے حل تلاش کریں۔'
+          )}
         </p>
       </div>
 
-      {/* Progress */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
-          <span>{t('Question', 'سوال')} {currentIdx + 1} {t('of', 'از')} {questions.length}</span>
-          <span>{Math.round(progress)}%</span>
+      {/* Emergency Helpline Bar */}
+      <div className="mb-8 p-3 rounded-xl border border-primary/20 bg-primary/5 flex items-center justify-between gap-3 flex-wrap text-xs">
+        <div className="flex items-center gap-2">
+          <ShieldAlert className="h-4 w-4 text-primary shrink-0" />
+          <span className="font-semibold text-foreground">{t('Emergency Official Helplines:', 'سرکاری ہنگامی ہیلپ لائنز:')}</span>
         </div>
-        <div className="h-2 rounded-full bg-muted overflow-hidden">
-          <div
-            className="h-full bg-primary transition-all duration-500 ease-out"
-            style={{ width: `${progress}%` }}
-          />
+        <div className="flex items-center gap-3 flex-wrap font-medium">
+          <span className="inline-flex items-center gap-1">🚨 Police: <strong className="text-primary font-bold">15</strong></span>
+          <span className="inline-flex items-center gap-1">💻 Cyber Crime FIA: <strong className="text-primary font-bold">1991</strong></span>
+          <span className="inline-flex items-center gap-1">👩 Women Helpline: <strong className="text-primary font-bold">1043</strong></span>
+          <span className="inline-flex items-center gap-1">👶 Child Protection: <strong className="text-primary font-bold">1121</strong></span>
         </div>
       </div>
 
-      {/* Question card */}
-      <Card className="border-border/60 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-xl md:text-2xl leading-tight">
-            {lang === 'ur' && currentQuestion.questionUrdu ? currentQuestion.questionUrdu : currentQuestion.question}
-          </CardTitle>
+      <Tabs defaultValue="roadmaps" className="space-y-6">
+        <div className="flex justify-center">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="roadmaps" className="text-xs sm:text-sm">
+              <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+              {t('Popular Roadmaps', 'فوری قانونی روڈ میپ')}
+            </TabsTrigger>
+            <TabsTrigger value="wizard" className="text-xs sm:text-sm">
+              <Compass className="h-3.5 w-3.5 mr-1.5" />
+              {t('Interactive Wizard', 'مرحلہ وار سوال نامہ')}
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
+        {/* Tab 1: Instant Roadmaps */}
+        <TabsContent value="roadmaps" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {COMMON_ROADMAPS.map((rm) => (
+              <Card key={rm.id} className="border-border/70 hover:border-primary/40 hover:shadow-md transition-all flex flex-col justify-between">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-2xl">{rm.icon}</span>
+                      <div>
+                        <CardTitle className="text-base font-bold">
+                          {lang === 'ur' ? rm.titleUrdu : rm.title}
+                        </CardTitle>
+                        <p className="text-[11px] text-primary font-medium mt-0.5">
+                          {lang === 'ur' ? rm.statuteUrdu : rm.statute}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3 pt-0 text-xs">
+                  <div className="p-2.5 rounded-lg bg-muted/40 border border-border/40 space-y-1">
+                    <span className="font-semibold text-[10px] text-muted-foreground uppercase tracking-wider block">
+                      {t('Immediate First Step:', 'پہلا فوری اقدام:')}
+                    </span>
+                    <p className="leading-relaxed text-foreground/90">
+                      {lang === 'ur' ? rm.firstStepUrdu : rm.firstStep}
+                    </p>
+                  </div>
 
-        </CardHeader>
-        <CardContent className="space-y-2.5">
-          {currentQuestion.options.map((opt) => {
-            const isSelected = selectedAnswer?.id === opt.id
-            return (
-              <button
-                key={opt.id}
-                onClick={() => handleAnswer(opt)}
-                className={cn(
-                  'w-full text-left rounded-xl border p-4 transition-all duration-200 flex items-center justify-between gap-3 group',
-                  isSelected
-                    ? 'border-primary bg-primary/5 ring-1 ring-primary'
-                    : 'border-border hover:border-primary/40 hover:bg-accent/50'
-                )}
-              >
-                <span className="flex items-center gap-3 flex-1">
-                  <span
-                    className={cn(
-                      'flex h-7 w-7 items-center justify-center rounded-full border text-xs font-bold shrink-0 transition-colors',
-                      isSelected
-                        ? 'border-primary bg-primary text-primary-foreground'
-                        : 'border-border text-muted-foreground group-hover:border-primary/40'
+                  <div className="flex items-start gap-1.5 text-muted-foreground text-[11px]">
+                    <Building2 className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+                    <span><strong>{t('Court / Forum:', 'مجاز فورم:')}</strong> {lang === 'ur' ? rm.forumUrdu : rm.forum}</span>
+                  </div>
+
+                  <div className="pt-2 border-t border-border/40 flex items-center justify-between gap-2 flex-wrap">
+                    <Button asChild variant="outline" size="sm" className="h-7 text-xs">
+                      <Link href={`/laws/${rm.statuteSlug}`}>
+                        <BookOpen className="h-3 w-3 mr-1" />
+                        {t('Read Law', 'قانون پڑھیں')}
+                      </Link>
+                    </Button>
+                    {rm.templateSlug && (
+                      <Button asChild variant="secondary" size="sm" className="h-7 text-xs">
+                        <Link href={`/templates/${rm.templateSlug}`}>
+                          <FileText className="h-3 w-3 mr-1" />
+                          {t('Get Template', 'ٹیمپلیٹ حاصل کریں')}
+                        </Link>
+                      </Button>
                     )}
-                  >
-                    {opt.id.toUpperCase()}
-                  </span>
-                  <span className="text-sm md:text-base font-medium">
-                    {lang === 'ur' && opt.labelUrdu ? opt.labelUrdu : opt.label}
-                  </span>
-                </span>
-                <ArrowRight className={cn('h-4 w-4 text-muted-foreground group-hover:text-primary transition-transform group-hover:translate-x-1 shrink-0', lang === 'ur' && 'rotate-180')} />
-              </button>
-            )
-          })}
-        </CardContent>
-      </Card>
+                    {rm.helpline && (
+                      <Badge variant="destructive" className="text-[10px] font-bold">
+                        Helpline: {rm.helpline}
+                      </Badge>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
 
-      {/* Nav */}
-      <div className="mt-6 flex items-center justify-between">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => (currentIdx === 0 ? window.history.back() : back())}
-          className="text-muted-foreground"
-        >
-          {lang === 'ur' ? <ChevronRight className="h-4 w-4 mr-1" /> : <ChevronLeft className="h-4 w-4 mr-1" />}
-          {t('Back', 'واپس')}
-        </Button>
-        <Button variant="ghost" size="sm" onClick={restart} className="text-muted-foreground">
-          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-          {t('Restart', 'دوبارہ')}
-        </Button>
-      </div>
+        {/* Tab 2: Interactive Wizard */}
+        <TabsContent value="wizard">
+          {results ? (
+            <div className="space-y-6">
+              <div className="text-center">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-950/40 mb-2">
+                  <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+                </div>
+                <h2 className="text-xl md:text-2xl font-bold">
+                  {t('Recommended Laws for Your Situation', 'آپ کے مسئلے کے لیے تجویز کردہ قوانین')}
+                </h2>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {t('Based on your answers, here are the most relevant Pakistani statutes.', 'آپ کے جوابات کی بنیاد پر یہ متعلقہ قوانین ہیں۔')}
+                </p>
+              </div>
+
+              {results.length === 0 ? (
+                <Card className="border-dashed">
+                  <CardContent className="py-10 text-center">
+                    <FileText className="h-10 w-10 mx-auto text-muted-foreground/50 mb-3" />
+                    <p className="text-muted-foreground text-sm">
+                      {t('No specific match found. Please browse all laws or consult a lawyer.', 'کوئی مخصوص-match نہیں ملا۔ تمام قوانین دیکھیں یا وکیل سے رجوع کریں۔')}
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-3">
+                  {results.map((law, i) => (
+                    <Link key={law.slug} href={`/laws/${law.slug}`} className="block">
+                      <Card className="group hover:shadow-md hover:border-primary/40 transition-all border-border/60">
+                        <CardContent className="p-4 sm:p-5">
+                          <div className="flex items-start gap-3.5">
+                            <div
+                              className="flex h-9 w-9 items-center justify-center rounded-full text-white shrink-0 text-xs font-bold"
+                              style={{ backgroundColor: law.category.color ?? 'var(--primary)' }}
+                            >
+                              {i + 1}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap mb-1">
+                                <Badge variant="outline" className="text-[10px]">{law.yearEnacted}</Badge>
+                                <Badge variant="secondary" className="text-[10px]" style={law.category.color ? { color: law.category.color } : {}}>
+                                  {lang === 'ur' && law.category.nameUrdu ? law.category.nameUrdu : law.category.name}
+                                </Badge>
+                              </div>
+                              <h3 className="font-bold text-sm sm:text-base leading-snug group-hover:text-primary transition-colors">
+                                {lang === 'ur' && law.titleUrdu ? law.titleUrdu : law.title}
+                              </h3>
+                              <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
+                                {lang === 'ur' && law.summaryUrdu ? law.summaryUrdu : law.summary ?? ''}
+                              </p>
+                            </div>
+                            <ArrowRight className={cn('h-4 w-4 text-muted-foreground shrink-0 group-hover:text-primary group-hover:translate-x-1 transition-all mt-1', lang === 'ur' && 'rotate-180')} />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex items-center gap-3 justify-center pt-4">
+                <Button onClick={restart} variant="outline" size="sm">
+                  <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                  {t('Start Over', 'دوبارہ سوال جواب کریں')}
+                </Button>
+                <Button asChild variant="default" size="sm">
+                  <Link href="/laws">
+                    <BookOpen className="h-3.5 w-3.5 mr-1.5" />
+                    {t('Browse all laws', 'تمام قوانین دیکھیں')}
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          ) : loading ? (
+            <div className="py-12 space-y-4">
+              <Skeleton className="h-8 w-1/2 mx-auto" />
+              <Skeleton className="h-48 w-full" />
+            </div>
+          ) : !currentQuestion ? (
+            <div className="py-16 text-center text-muted-foreground">
+              {t('No questions currently available.', 'کوئی سوال دستیاب نہیں۔')}
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Progress */}
+              <div>
+                <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
+                  <span>{t('Question', 'سوال')} {currentIdx + 1} {t('of', 'از')} {questions.length}</span>
+                  <span>{Math.round(((currentIdx + 1) / questions.length) * 100)}%</span>
+                </div>
+                <div className="h-2 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full bg-primary transition-all duration-500 ease-out"
+                    style={{ width: `${((currentIdx + 1) / questions.length) * 100}%` }}
+                  />
+                </div>
+              </div>
+
+              <Card className="border-border/60 shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg md:text-xl leading-tight font-bold">
+                    {lang === 'ur' && currentQuestion.questionUrdu ? currentQuestion.questionUrdu : currentQuestion.question}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2.5 pt-1">
+                  {currentQuestion.options.map((opt) => {
+                    const isSelected = answers[currentQuestion.id]?.id === opt.id
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => handleAnswer(opt)}
+                        className={cn(
+                          'w-full text-left p-3.5 rounded-xl border transition-all flex items-center justify-between gap-3 text-xs sm:text-sm cursor-pointer',
+                          isSelected
+                            ? 'bg-primary/10 border-primary text-primary font-semibold shadow-xs'
+                            : 'bg-card border-border/70 hover:bg-accent hover:border-border text-foreground'
+                        )}
+                      >
+                        <span>{lang === 'ur' && opt.labelUrdu ? opt.labelUrdu : opt.label}</span>
+                        <ArrowRight className={cn('h-3.5 w-3.5 shrink-0 opacity-60', lang === 'ur' && 'rotate-180')} />
+                      </button>
+                    )
+                  })}
+
+                  <div className="flex items-center justify-between pt-4 border-t border-border/40">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={currentIdx === 0}
+                      onClick={() => setCurrentIdx((i) => Math.max(0, i - 1))}
+                      className="text-xs"
+                    >
+                      <ChevronLeft className="h-3.5 w-3.5 mr-1" />
+                      {t('Previous', 'پچھلا سوال')}
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={restart} className="text-xs">
+                      <RefreshCw className="h-3 w-3 mr-1" />
+                      {t('Reset', 'ری سیٹ')}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

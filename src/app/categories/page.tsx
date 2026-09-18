@@ -7,10 +7,11 @@ import {
   Landmark, Scale, Home, ShoppingCart, HeartHandshake, Leaf, Building2, Vote, Lightbulb,
   Plane, HeartPulse, GraduationCap, Car,
   Shield, ShieldAlert, Handshake, Newspaper,
-  Map, Building, Wheat,
+  Map, Building, Wheat, Search, X, ArrowUpDown,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useLanguage } from '@/components/language-provider'
@@ -40,12 +41,38 @@ export default function CategoriesPage() {
   const { t, lang } = useLanguage()
   const [categories, setCategories] = React.useState<Category[]>([])
   const [loading, setLoading] = React.useState(true)
+  const [search, setSearch] = React.useState('')
+  const [sortBy, setSortBy] = React.useState<'laws' | 'name'>('laws')
   const [page, setPage] = React.useState(1)
   const itemsPerPage = 20
   const topRef = React.useRef<HTMLDivElement>(null)
 
-  const totalPages = Math.max(1, Math.ceil(categories.length / itemsPerPage))
-  const paginatedCategories = categories.slice((page - 1) * itemsPerPage, page * itemsPerPage)
+  React.useEffect(() => {
+    setPage(1)
+  }, [search, sortBy])
+
+  const filteredCategories = React.useMemo(() => {
+    let result = [...categories]
+    if (search.trim()) {
+      const q = search.toLowerCase().trim()
+      result = result.filter(
+        (c) =>
+          c.name.toLowerCase().includes(q) ||
+          c.nameUrdu?.includes(search) ||
+          c.description?.toLowerCase().includes(q) ||
+          c.descriptionUrdu?.includes(search)
+      )
+    }
+    if (sortBy === 'laws') {
+      result.sort((a, b) => (b._count?.laws ?? 0) - (a._count?.laws ?? 0))
+    } else {
+      result.sort((a, b) => a.name.localeCompare(b.name))
+    }
+    return result
+  }, [categories, search, sortBy])
+
+  const totalPages = Math.max(1, Math.ceil(filteredCategories.length / itemsPerPage))
+  const paginatedCategories = filteredCategories.slice((page - 1) * itemsPerPage, page * itemsPerPage)
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -88,11 +115,53 @@ export default function CategoriesPage() {
         {categories.length > 0 && (
           <span className="text-xs text-muted-foreground shrink-0 font-medium">
             {t(
-              `Showing ${(page - 1) * itemsPerPage + 1}–${Math.min(page * itemsPerPage, categories.length)} of ${categories.length}`,
-              `${categories.length} میں سے ${(page - 1) * itemsPerPage + 1}–${Math.min(page * itemsPerPage, categories.length)} اقسام`
+              `Showing ${(page - 1) * itemsPerPage + 1}–${Math.min(page * itemsPerPage, filteredCategories.length)} of ${filteredCategories.length}`,
+              `${filteredCategories.length} میں سے ${(page - 1) * itemsPerPage + 1}–${Math.min(page * itemsPerPage, filteredCategories.length)} اقسام`
             )}
           </span>
         )}
+      </div>
+
+      {/* Search & Sort Controls */}
+      <div className="mb-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={t('Search categories (e.g. Criminal, Tax, Family, Banking)...', 'اقسام تلاش کریں...')}
+            className="pl-9 h-10 text-sm"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground font-medium">{t('Sort by:', 'ترتیب:')}</span>
+          <Button
+            size="sm"
+            variant={sortBy === 'laws' ? 'default' : 'outline'}
+            onClick={() => setSortBy('laws')}
+            className="h-8 text-xs cursor-pointer"
+          >
+            {t('Most Laws', 'زیادہ قوانین')}
+          </Button>
+          <Button
+            size="sm"
+            variant={sortBy === 'name' ? 'default' : 'outline'}
+            onClick={() => setSortBy('name')}
+            className="h-8 text-xs cursor-pointer"
+          >
+            {t('Name (A-Z)', 'نام (الف تا ے)')}
+          </Button>
+        </div>
       </div>
 
       {loading ? (
@@ -108,6 +177,20 @@ export default function CategoriesPage() {
             </Card>
           ))}
         </div>
+      ) : filteredCategories.length === 0 ? (
+        <Card className="border-dashed p-10 text-center space-y-3">
+          <BookOpen className="h-10 w-10 text-muted-foreground/40 mx-auto" />
+          <h3 className="font-semibold text-lg">{t('No categories found', 'کوئی قسم نہیں ملی')}</h3>
+          <p className="text-xs text-muted-foreground">
+            {t(
+              `No category matched "${search}". Try searching for another subject like Criminal, Civil, or Cyber.`,
+              `"${search}" سے مماثل کوئی قانونی قسم نہیں ملی۔`
+            )}
+          </p>
+          <Button variant="outline" size="sm" onClick={() => setSearch('')} className="mt-2">
+            {t('Clear search', 'تلاش صاف کریں')}
+          </Button>
+        </Card>
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -162,8 +245,8 @@ export default function CategoriesPage() {
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-border/60">
               <div className="text-xs text-muted-foreground font-medium order-2 sm:order-1">
                 {t(
-                  `Page ${page} of ${totalPages} (${categories.length} total categories)`,
-                  `صفحہ ${page} از ${totalPages} (کل ${categories.length} اقسام)`
+                  `Page ${page} of ${totalPages} (${filteredCategories.length} categories)`,
+                  `صفحہ ${page} از ${totalPages} (کل ${filteredCategories.length} اقسام)`
                 )}
               </div>
 

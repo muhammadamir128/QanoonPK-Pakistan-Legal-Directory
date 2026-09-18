@@ -119,14 +119,45 @@ export default function TemplatesPage() {
       {/* Info banner */}
       <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 mb-6 flex items-start gap-3">
         <ShieldCheck className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-        <div>
+        <div className="flex-1">
           <p className="text-sm font-semibold text-primary">{t('How to use these templates', 'ان ٹیمپلیٹس کا استعمال کیسے کریں')}</p>
           <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
             {t(
-              '1) Pick a template • 2) Fill in the required fields • 3) Preview • 4) Download as text or printable HTML. Always have a lawyer review before signing.',
-              '1) ٹیمپلیٹ منتخب کریں • 2) ضروری خانے بھریں • 3) پیش نظارہ • 4) ٹیکسٹ یا printable HTML کے طور پر ڈاؤن لوڈ کریں۔ دستخط سے پہلے ہمیشہ وکیل سے جائزہ لیں۔'
+              '1) Pick a template • 2) Fill in the required fields • 3) Preview • 4) Download as printable text or PDF. Always consult an advocate before signing.',
+              '1) ٹیمپلیٹ منتخب کریں • 2) ضروری خانے بھریں • 3) پیش نظارہ • 4) پرنٹ ایبل ٹیکسٹ یا پی ڈی ایف ڈاؤن لوڈ کریں۔ دستخط سے پہلے ہمیشہ وکیل سے مشورہ لیں۔'
             )}
           </p>
+        </div>
+      </div>
+
+      {/* Popular Templates Quick Selector */}
+      <div className="mb-6 p-4 rounded-xl border bg-card/60 backdrop-blur-sm shadow-sm">
+        <div className="flex items-center gap-2 mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <span>🔥</span>
+          <span>{t('Frequently Used Pakistani Legal Drafts', 'اکثر استعمال ہونے والے پاکستانی قانونی ڈرافٹس')}</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {[
+            { en: 'Rent Agreement', ur: 'کرایہ نامہ', q: 'Rent' },
+            { en: 'Affidavit (Bayan-e-Halfi)', ur: 'بیان حلفی', q: 'Affidavit' },
+            { en: 'Legal Notice (Cheque 489-F)', ur: 'قانونی نوٹس (چیک باؤنس)', q: 'Notice' },
+            { en: 'Power of Attorney (Mukhtarnama)', ur: 'مختار نامہ', q: 'Power of Attorney' },
+            { en: 'Talaq Notice', ur: 'طلاق نوٹس', q: 'Talaq' },
+            { en: 'Employment Contract', ur: 'ملازمت کا معاہدہ', q: 'Employment' },
+            { en: 'Vehicle Sale Receipt', ur: 'گاڑی فروخت رسید', q: 'Vehicle' },
+          ].map((item) => (
+            <button
+              key={item.en}
+              onClick={() => {
+                setQ(item.q)
+                setCategory('all')
+              }}
+              className="px-3 py-1 text-xs rounded-lg border bg-background hover:bg-primary/10 hover:border-primary/40 hover:text-primary transition-all flex items-center gap-1.5 shadow-xs"
+            >
+              <span>📄</span>
+              <span>{lang === 'ur' ? item.ur : item.en}</span>
+            </button>
+          ))}
         </div>
       </div>
 
@@ -136,7 +167,7 @@ export default function TemplatesPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder={t('Search templates...', 'ٹیمپلیٹس تلاش کریں...')}
+            placeholder={t('Search templates by title, description or category...', 'ٹیمپلیٹس تلاش کریں...')}
             value={q}
             onChange={(e) => setQ(e.target.value)}
             className="pl-9 h-10"
@@ -296,6 +327,64 @@ export default function TemplatesPage() {
           )}
         </>
       )}
+
+      {/* Pakistani Stamp Duty & Legal Execution Guide */}
+      <div className="mt-12 rounded-2xl border bg-gradient-to-br from-card via-card to-primary/5 p-6 md:p-8 shadow-sm">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <ShieldCheck className="h-5 w-5" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold">
+              {t('Pakistani Stamp Paper & Legal Execution Guide', 'پاکستانی اسٹامپ پیپر اور قانونی تصدیق کی رہنمائی')}
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {t('Important statutory rules under the Stamp Act, 1899 & Qanun-e-Shahadat Order, 1984', 'اسٹامپ ایکٹ 1899 اور قانون شہادت آرڈر 1984 کے اہم قواعد')}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs mt-4">
+          <div className="rounded-xl border bg-background/80 p-4 space-y-2">
+            <p className="font-semibold text-sm text-primary flex items-center gap-1.5">
+              <span>📜</span>
+              <span>{t('1. Stamp Paper Requirement', '1. اسٹامپ پیپر کی ضرورت')}</span>
+            </p>
+            <p className="text-muted-foreground leading-relaxed">
+              {t(
+                'Affidavits, rental deeds, and sale agreements must be printed on official Non-Judicial E-Stamp Paper (e-Stamping is now mandatory across Punjab, Sindh, and KP). Standard affidavits typically require Rs. 100 or Rs. 1,200 stamp paper depending on provincial schedules.',
+                'بیان حلفی، کرایہ نامہ، اور فروخت کے معاہدے سرکاری نان جوڈیشل ای اسٹامپ پیپر پر پرنٹ ہونے چاہئیں۔ عام بیان حلفی کے لیے صوبائی شیڈول کے مطابق 100 یا 1200 روپے کا اسٹامپ درکار ہوتا ہے۔'
+              )}
+            </p>
+          </div>
+
+          <div className="rounded-xl border bg-background/80 p-4 space-y-2">
+            <p className="font-semibold text-sm text-primary flex items-center gap-1.5">
+              <span>✒️</span>
+              <span>{t('2. Attestation & Notarization', '2. تصدیق اور نوٹرائزیشن')}</span>
+            </p>
+            <p className="text-muted-foreground leading-relaxed">
+              {t(
+                'Affidavits must be attested by an authorized Oath Commissioner (for court submissions) or a Notary Public. The deponent must physically appear with their original CNIC to sign in front of the attesting authority.',
+                'بیان حلفی کی تصدیق اوتھ کمشنر (عدالتی کارروائی کے لیے) یا نوٹری پبلک سے ضروری ہے۔ حلف دینے والے کو اپنے اصل شناختی کارڈ کے ساتھ خود حاضر ہو کر دستخط کرنے ہوتے ہیں۔'
+              )}
+            </p>
+          </div>
+
+          <div className="rounded-xl border bg-background/80 p-4 space-y-2">
+            <p className="font-semibold text-sm text-primary flex items-center gap-1.5">
+              <span>👥</span>
+              <span>{t('3. Two CNIC Witnesses', '3. دو گواہان مع شناختی کارڈ')}</span>
+            </p>
+            <p className="text-muted-foreground leading-relaxed">
+              {t(
+                'Under Article 17 of Qanun-e-Shahadat Order 1984, financial contracts, tenancy agreements, and power of attorney documents require minimum 2 competent male witnesses (or 1 male and 2 female witnesses) with signatures and verified CNIC numbers.',
+                'قانون شہادت آرڈر 1984 کے آرٹیکل 17 کے تحت مالی معاہدوں، کرایہ داری اور مختار نامہ کے لیے کم از کم 2 مرد گواہ (یا 1 مرد اور 2 خواتین) بمع دستخط اور تصدیق شدہ شناختی کارڈ نمبر لازمی ہیں۔'
+              )}
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

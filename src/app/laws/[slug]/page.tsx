@@ -6,7 +6,7 @@ import { useParams } from 'next/navigation'
 import {
   ChevronRight, ChevronLeft, Calendar, Building2, FileText, Gavel, ScrollText,
   Search, Bookmark, BookmarkCheck, Printer, ArrowRight, Tag,
-  History, Eye, BookOpen, Quote, Layers, Sparkles,
+  History, Eye, BookOpen, Quote, Layers, Sparkles, Copy, Check, GitCompare,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -89,6 +89,7 @@ export default function LawDetailPage() {
   const [loading, setLoading] = React.useState(true)
   const [sectionSearch, setSectionSearch] = React.useState('')
   const [bookmarked, setBookmarked] = React.useState(false)
+  const [fontSize, setFontSize] = React.useState<'sm' | 'base' | 'lg'>('base')
   const [recommendations, setRecommendations] = React.useState<Array<{
     slug: string
     title: string
@@ -152,6 +153,19 @@ export default function LawDetailPage() {
       }
       localStorage.setItem('qpk-bookmarks', JSON.stringify(next))
     } catch {}
+  }
+
+  const copyCitation = () => {
+    if (!law) return
+    const citation = `${law.title}, ${law.yearEnacted}${law.gazetteReference ? ` (${law.gazetteReference})` : ''} — QanoonPK Legal Directory [Accessed on ${new Date().toLocaleDateString('en-GB')}]`
+    navigator.clipboard.writeText(citation)
+    toast.success(t('Legal citation copied to clipboard', 'قانونی حوالہ کلپ بورڈ میں کاپی ہو گیا'))
+  }
+
+  const copySection = (sec: Section) => {
+    const text = `${law?.title}\nSection ${sec.sectionNumber}${sec.title ? ` - ${sec.title}` : ''}\n\n${sec.content}\n${sec.contentUrdu ? `\n${sec.contentUrdu}` : ''}\n\n— Via QanoonPK (Pakistan Legal Directory)`
+    navigator.clipboard.writeText(text)
+    toast.success(t(`Section ${sec.sectionNumber} copied!`, `شق ${sec.sectionNumber} کاپی ہو گئی!`))
   }
 
   if (loading) {
@@ -266,6 +280,12 @@ export default function LawDetailPage() {
 
             {/* Actions */}
             <div className="flex items-center gap-1.5 shrink-0">
+              <Button asChild variant="outline" size="sm" className="h-8 px-2.5 text-xs">
+                <Link href={`/compare?lawA=${params.slug}`}>
+                  <GitCompare className="h-3.5 w-3.5 sm:mr-1.5 text-primary" />
+                  <span className="hidden sm:inline">{t('Compare', 'موازنہ')}</span>
+                </Link>
+              </Button>
               <Button
                 variant={bookmarked ? 'default' : 'outline'}
                 size="sm"
@@ -330,6 +350,28 @@ export default function LawDetailPage() {
               )}
             </div>
           )}
+
+          {/* Official Legal Citation Box (NEW FEATURE) */}
+          <div className="p-3 rounded-xl bg-background/90 border border-border/70 flex items-center justify-between gap-3 text-xs shadow-xs mt-2">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Quote className="h-4 w-4 text-primary shrink-0" />
+              <div className="truncate">
+                <span className="text-muted-foreground mr-1.5 font-medium">{t('Official Legal Citation:', 'قانونی حوالہ برائے عدالتی کارروائی:')}</span>
+                <span className="font-mono font-semibold text-foreground select-all text-[11px]">
+                  {law.title}, {law.yearEnacted} {law.gazetteReference ? `(${law.gazetteReference})` : ''}
+                </span>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={copyCitation}
+              className="h-7 px-2.5 text-xs shrink-0 cursor-pointer"
+            >
+              <Copy className="h-3.5 w-3.5 mr-1" />
+              <span>{t('Copy Citation', 'حوالہ کاپی کریں')}</span>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -367,18 +409,48 @@ export default function LawDetailPage() {
                       {sectionSearch && ` • ${filteredSections.length} ${t('matching', 'مطابق')}`}
                     </CardDescription>
                   </div>
-                  {law.sections.length > 4 && (
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-                      <Input
-                        type="search"
-                        placeholder={t('Search within law...', 'قانون میں تلاش...')}
-                        value={sectionSearch}
-                        onChange={(e) => setSectionSearch(e.target.value)}
-                        className="h-9 pl-8 w-64 text-sm"
-                      />
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {/* Text Size Control */}
+                    <div className="flex items-center border border-border/70 rounded-lg p-0.5 bg-muted/40">
+                      <button
+                        type="button"
+                        onClick={() => setFontSize('sm')}
+                        className={cn('px-2 py-1 rounded text-[10px] font-semibold transition-colors cursor-pointer', fontSize === 'sm' ? 'bg-background shadow-xs text-primary' : 'text-muted-foreground hover:text-foreground')}
+                        title="Small font"
+                      >
+                        A-
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFontSize('base')}
+                        className={cn('px-2 py-1 rounded text-xs font-semibold transition-colors cursor-pointer', fontSize === 'base' ? 'bg-background shadow-xs text-primary' : 'text-muted-foreground hover:text-foreground')}
+                        title="Standard font"
+                      >
+                        A
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFontSize('lg')}
+                        className={cn('px-2 py-1 rounded text-sm font-semibold transition-colors cursor-pointer', fontSize === 'lg' ? 'bg-background shadow-xs text-primary' : 'text-muted-foreground hover:text-foreground')}
+                        title="Large font"
+                      >
+                        A+
+                      </button>
                     </div>
-                  )}
+
+                    {law.sections.length > 3 && (
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                        <Input
+                          type="search"
+                          placeholder={t('Search within law...', 'قانون میں تلاش...')}
+                          value={sectionSearch}
+                          onChange={(e) => setSectionSearch(e.target.value)}
+                          className="h-8 pl-8 w-44 sm:w-56 text-xs"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -392,15 +464,29 @@ export default function LawDetailPage() {
                       key={section.id}
                       className="rounded-lg border border-border/60 p-4 hover:border-primary/30 hover:shadow-sm transition-all"
                     >
-                      <div className="flex items-baseline gap-3 mb-2">
-                        <Badge variant="secondary" className="font-mono text-xs px-2 py-0.5">
-                          {t('Sec.', 'شق')} {section.sectionNumber}
-                        </Badge>
-                        {section.title && (
-                          <h3 className="font-semibold text-sm">{section.title}</h3>
-                        )}
+                      <div className="flex items-center justify-between gap-3 mb-2">
+                        <div className="flex items-baseline gap-2.5">
+                          <Badge variant="secondary" className="font-mono text-xs px-2 py-0.5">
+                            {t('Sec.', 'شق')} {section.sectionNumber}
+                          </Badge>
+                          {section.title && (
+                            <h3 className="font-semibold text-sm">{section.title}</h3>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => copySection(section)}
+                          className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                          title={t('Copy section text', 'شق کا متن کاپی کریں')}
+                          aria-label="Copy Section"
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                        </button>
                       </div>
-                      <p className="text-sm leading-relaxed text-foreground/85 whitespace-pre-line">
+                      <p className={cn(
+                        'leading-relaxed text-foreground/85 whitespace-pre-line',
+                        fontSize === 'sm' ? 'text-xs' : fontSize === 'lg' ? 'text-base sm:text-lg' : 'text-sm'
+                      )}>
                         {highlightSearch(lang === 'ur' && section.contentUrdu ? section.contentUrdu : section.content, sectionSearch)}
                       </p>
                     </div>

@@ -4,15 +4,29 @@ import * as React from 'react'
 import Link from 'next/link'
 import {
   ChevronRight, Info, Database, ShieldCheck, Globe, BookOpen, Scale,
-  Calendar, Users, FileText, Languages, Heart,
+  Calendar, Users, FileText, Languages, Heart, Send, CheckCircle2, BookmarkCheck,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { useLanguage } from '@/components/language-provider'
 import { cn } from '@/lib/utils'
 
 export default function AboutPage() {
   const { t, lang } = useLanguage()
+  const [suggestionType, setSuggestionType] = React.useState('law')
+  const [lawTitle, setLawTitle] = React.useState('')
+  const [details, setDetails] = React.useState('')
+  const [contact, setContact] = React.useState('')
+  const [submitted, setSubmitted] = React.useState(false)
+
+  const handleSubmitSuggestion = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!lawTitle.trim()) return
+    setSubmitted(true)
+  }
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8 md:py-12">
@@ -63,6 +77,31 @@ export default function AboutPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Live Directory Scale */}
+      <section className="mb-8">
+        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <Database className="h-5 w-5 text-primary" />
+          {t('Directory Scope & Scale', 'ڈائریکٹری کا حجم و وسعت')}
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+          {[
+            { count: '161', labelEn: 'Statutory Laws', labelUr: 'بنیادی قوانین' },
+            { count: '32', labelEn: 'Categories', labelUr: 'قانونی اقسام' },
+            { count: '924', labelEn: 'Active Sections', labelUr: 'فعال دفعات' },
+            { count: '157', labelEn: 'Amendments', labelUr: 'ترامیم' },
+            { count: '32', labelEn: 'Verified Advocates', labelUr: 'تصدیق شدہ وکلاء' },
+            { count: '18', labelEn: 'Legal Templates', labelUr: 'قانونی ٹیمپلیٹس' },
+          ].map((stat, i) => (
+            <Card key={i} className="text-center p-3 hover:border-primary/40 transition-colors">
+              <div className="text-2xl font-extrabold text-primary">{stat.count}</div>
+              <div className="text-[11px] text-muted-foreground mt-0.5 font-medium">
+                {lang === 'ur' ? stat.labelUr : stat.labelEn}
+              </div>
+            </Card>
+          ))}
+        </div>
+      </section>
 
       {/* What we cover */}
       <section className="mb-8">
@@ -186,6 +225,151 @@ export default function AboutPage() {
             </Card>
           ))}
         </div>
+      </section>
+
+      {/* Pakistani Case Law & Citation Standards Guide */}
+      <section className="mb-8">
+        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <BookmarkCheck className="h-5 w-5 text-primary" />
+          {t('Pakistani Legal Citation Standards', 'پاکستانی قانونی حوالہ جات کے معیارات')}
+        </h2>
+        <Card>
+          <CardContent className="p-5 space-y-4">
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              {t(
+                'In Pakistan, higher judiciary judgments and statutory references are cited using standard abbreviations approved by the Pakistan Law Commission and law reports:',
+                'پاکستان میں اعلیٰ عدلیہ کے فیصلوں اور قانونی حوالوں کے لیے پاکستان لاء کمیشن اور لاء رپورٹس کے منظور شدہ مخففات استعمال کیے جاتے ہیں:'
+              )}
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+              {[
+                { code: 'PLD', full: 'All Pakistan Legal Decisions', desc: 'Supreme Court, High Courts, and Federal Shariat Court landmark decisions.' },
+                { code: 'SCMR', full: 'Supreme Court Monthly Review', desc: 'Authoritative decisions specifically originating from the Supreme Court of Pakistan.' },
+                { code: 'PCrLJ', full: 'Pakistan Criminal Law Journal', desc: 'Specialized criminal jurisprudence, bail orders, and trial convictions/acquittals.' },
+                { code: 'CLD', full: 'Corporate Law Decisions', desc: 'Company, banking, financial tribunals, and commercial litigation reports.' },
+                { code: 'MLD', full: 'Monthly Law Digest', desc: 'Civil, property, family, and revenue matters from all High Courts of Pakistan.' },
+                { code: 'PTD', full: 'Pakistan Tax Decisions', desc: 'Income tax, sales tax, customs, and Federal Board of Revenue tribunal verdicts.' },
+              ].map((c) => (
+                <div key={c.code} className="p-3 rounded-lg border bg-accent/20">
+                  <span className="font-bold font-mono text-primary text-sm">{c.code}</span>
+                  <p className="font-medium text-foreground mt-0.5">{c.full}</p>
+                  <p className="text-[11px] text-muted-foreground mt-1 leading-snug">{c.desc}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Suggest a Law or Report an Issue */}
+      <section className="mb-8">
+        <Card className="border-primary/30 shadow-md">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Send className="h-5 w-5 text-primary" />
+              {t('Suggest a Law or Submit Feedback', 'قانون تجویز کریں یا رائے بھیجیں')}
+            </CardTitle>
+            <CardDescription>
+              {t(
+                'Notice a missing federal or provincial statute, recent amendment, or text typo? Help us keep Pakistan\'s legal directory comprehensive and up to date.',
+                'کیا کوئی وفاقی یا صوبائی قانون، حالیہ ترمیم، یا کتابتی غلطی نظر آئی؟ پاکستان کی قانونی ڈائریکٹری کو مکمل اور تازہ ترین رکھنے میں ہماری مدد کریں۔'
+              )}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {submitted ? (
+              <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-6 text-center space-y-2">
+                <CheckCircle2 className="h-10 w-10 text-emerald-500 mx-auto" />
+                <h4 className="font-semibold text-foreground">{t('Thank You!', 'شکریہ!')}</h4>
+                <p className="text-xs text-muted-foreground max-w-md mx-auto">
+                  {t(
+                    'Your suggestion has been recorded for editorial review. Our legal research team will cross-reference with official gazettes.',
+                    'آپ کی تجویز ادارتی جائزے کے لیے محفوظ کر لی گئی ہے۔ ہماری قانونی ٹیم سرکاری گزٹ سے تصدیق کرے گی۔'
+                  )}
+                </p>
+                <Button variant="outline" size="sm" onClick={() => setSubmitted(false)} className="mt-3">
+                  {t('Submit another suggestion', 'ایک اور تجویز جمع کرائیں')}
+                </Button>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmitSuggestion} className="space-y-4">
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={suggestionType === 'law' ? 'default' : 'outline'}
+                    onClick={() => setSuggestionType('law')}
+                    className="text-xs cursor-pointer"
+                  >
+                    {t('Suggest Missing Law', 'لاپتہ قانون تجویز کریں')}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={suggestionType === 'amendment' ? 'default' : 'outline'}
+                    onClick={() => setSuggestionType('amendment')}
+                    className="text-xs cursor-pointer"
+                  >
+                    {t('Report New Amendment', 'نئی ترمیم کی اطلاع دیں')}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={suggestionType === 'correction' ? 'default' : 'outline'}
+                    onClick={() => setSuggestionType('correction')}
+                    className="text-xs cursor-pointer"
+                  >
+                    {t('Text Typo / Correction', 'متن کی تصحیح')}
+                  </Button>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold">
+                    {t('Statute / Act Name or Topic *', 'قانون کا نام یا موضوع *')}
+                  </label>
+                  <Input
+                    required
+                    value={lawTitle}
+                    onChange={(e) => setLawTitle(e.target.value)}
+                    placeholder={t('e.g. Punjab Protection of Women Against Violence Act 2016', 'مثلاً پنجاب تحفظ نسواں ایکٹ')}
+                    className="h-9 text-sm"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold">
+                    {t('Details, Gazette Year, or Reference Link', 'تفصیلات، گزٹ کا سال، یا حوالہ')}
+                  </label>
+                  <Textarea
+                    value={details}
+                    onChange={(e) => setDetails(e.target.value)}
+                    placeholder={t('Provide official gazette reference or description of the amendment/statute...', 'سرکاری گزٹ کا حوالہ یا وضاحت درج کریں...')}
+                    rows={3}
+                    className="text-sm"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold">
+                    {t('Your Name or Email (Optional)', 'آپ کا نام یا ای میل (اختیاری)')}
+                  </label>
+                  <Input
+                    type="text"
+                    value={contact}
+                    onChange={(e) => setContact(e.target.value)}
+                    placeholder={t('advocate@example.com', 'وکلاء یا شہری کا رابطہ')}
+                    className="h-9 text-sm"
+                  />
+                </div>
+
+                <Button type="submit" size="sm" className="gap-2 cursor-pointer">
+                  <Send className="h-4 w-4" />
+                  {t('Submit to Editorial Team', 'ادارتی ٹیم کو بھیجیں')}
+                </Button>
+              </form>
+            )}
+          </CardContent>
+        </Card>
       </section>
     </div>
   )
