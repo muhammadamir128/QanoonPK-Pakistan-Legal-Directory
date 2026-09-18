@@ -87,19 +87,5 @@ export const authOptions: NextAuthOptions = {
       return session
     },
   },
-  // Proper cookie configuration for Vercel (HTTPS) to ensure session cookies work correctly
   useSecureCookies: isProduction,
-  cookies: {
-    sessionToken: {
-      name: isProduction
-        ? '__Secure-next-auth.session-token'
-        : 'next-auth.session-token',
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: isProduction,
-      },
-    },
-  },
 }
