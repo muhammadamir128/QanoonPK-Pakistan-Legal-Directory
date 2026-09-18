@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { db, ensureDatabaseReady } from '@/lib/db'
 
 // POST /api/newsletter — subscribe to newsletter
 export async function POST(req: NextRequest) {
   try {
+    ensureDatabaseReady()
     const body = await req.json()
     const { email, name, preferences } = body
 

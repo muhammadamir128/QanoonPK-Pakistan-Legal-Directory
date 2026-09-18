@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
-import { db } from '@/lib/db'
+import { db, ensureDatabaseReady } from '@/lib/db'
 
 export async function POST(req: NextRequest) {
   try {
+    ensureDatabaseReady()
     const body = await req.json()
     const { name, email, password } = body
 
@@ -62,9 +63,14 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     )
   } catch (error: any) {
-    console.error('Registration error:', error)
+    console.error('[Register API Error]:', error)
     return NextResponse.json(
-      { ok: false, error: 'Failed to create account. Please try again.' },
+      {
+        ok: false,
+        error: error?.message?.includes('Unique constraint')
+          ? 'An account with this email already exists.'
+          : 'Failed to create account. Please try again.',
+      },
       { status: 500 }
     )
   }

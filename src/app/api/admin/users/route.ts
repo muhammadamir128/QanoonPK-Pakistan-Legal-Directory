@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { db } from '@/lib/db'
+import { db, ensureDatabaseReady } from '@/lib/db'
 
 // GET /api/admin/users — fetch all users for admin management
 export async function GET() {
   try {
+    ensureDatabaseReady()
     const session = await getServerSession(authOptions)
     if (!session?.user || (session.user as any).role !== 'admin') {
       return NextResponse.json({ ok: false, error: 'Unauthorized: Admin privileges required' }, { status: 403 })
