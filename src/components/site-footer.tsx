@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  Scale, Mail, Github, ShieldCheck, BookText, Compass,
+  Scale, Mail, Github, BookText, Compass,
   Briefcase, FileText, GitCompare, Bot, Landmark,
   HelpCircle, ExternalLink, MapPin, Sparkles,
   Layers, ArrowUpRight, CheckCircle
@@ -189,12 +189,6 @@ export function SiteFooter() {
                 <Link href="/faq" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group">
                   <HelpCircle className="h-3.5 w-3.5 text-muted-foreground/70 group-hover:text-primary transition-colors" />
                   <span>{t('FAQ & Guide', 'عام سوالات و گائیڈ')}</span>
-                </Link>
-              </li>
-              <li>
-                <Link href="/admin" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group">
-                  <ShieldCheck className="h-3.5 w-3.5 text-muted-foreground/70 group-hover:text-primary transition-colors" />
-                  <span>{t('Admin Portal', 'ایڈمن پورٹل')}</span>
                 </Link>
               </li>
             </ul>

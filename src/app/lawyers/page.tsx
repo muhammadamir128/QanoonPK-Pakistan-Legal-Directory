@@ -3,7 +3,7 @@
 import * as React from 'react'
 import Link from 'next/link'
 import {
-  ChevronRight, Search, MapPin, Star, ShieldCheck, Award, Languages,
+  ChevronRight, ChevronLeft, Search, MapPin, Star, ShieldCheck, Award, Languages,
   Briefcase, Phone, Mail, Globe, ArrowRight, Building2, Filter,
   CheckCircle2, X,
 } from 'lucide-react'
