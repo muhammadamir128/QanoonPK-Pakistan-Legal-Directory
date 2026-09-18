@@ -3,7 +3,7 @@
 import * as React from 'react'
 import Link from 'next/link'
 import {
-  ChevronRight, Search, HelpCircle, ChevronDown, ArrowRight, AlertTriangle,
+  ChevronRight, Search, HelpCircle, ChevronDown, ArrowRight,
   Lightbulb, BookOpen, ExternalLink, FileText, ThumbsUp,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -238,21 +238,6 @@ export default function FAQPage() {
                 <ArrowRight className={cn('h-4 w-4 ml-2', lang === 'ur' && 'rotate-180')} />
               </Link>
             </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Disclaimer */}
-      <Card className="mt-6 bg-amber-50 dark:bg-amber-950/20 border-amber-300/50">
-        <CardContent className="p-4">
-          <div className="flex items-start gap-2 text-xs text-amber-900 dark:text-amber-200">
-            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
-            <p className="leading-relaxed">
-              {t(
-                'These answers are for general educational purposes only and may not apply to your specific situation. Always consult a licensed lawyer for legal advice.',
-                'یہ جوابات صرف عام تعلیمی مقاصد کے لیے ہیں اور آپ کی مخصوص صورتِ حال پر لاگو نہیں ہو سکتے۔ قانونی مشورے کے لیے ہمیشہ لائسنس یافتہ وکیل سے رجوع کریں۔'
-              )}
-            </p>
           </div>
         </CardContent>
       </Card>

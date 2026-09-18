@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import {
   Gavel, Users, ShieldCheck, HardHat, Receipt, ChevronRight, ChevronLeft,
-  BookOpen, Building2, Calendar, FileText, ArrowRight, AlertTriangle,
+  BookOpen, Building2, Calendar, FileText, ArrowRight,
   Landmark, Scale, Home, ShoppingCart, HeartHandshake, Leaf, Vote, Lightbulb,
   Plane, HeartPulse, GraduationCap, Car,
   Shield, ShieldAlert, Handshake, Newspaper,
@@ -207,18 +207,6 @@ export default function CategoryDetailPage() {
           })}
         </div>
       )}
-
-      {/* Disclaimer */}
-      <Card className="mt-8 bg-amber-50 dark:bg-amber-950/20 border-amber-300/50">
-        <CardContent className="p-4">
-          <div className="flex items-start gap-2 text-xs text-amber-900 dark:text-amber-200">
-            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
-            <p className="leading-relaxed">
-              {t('These summaries are for educational purposes only. For specific legal advice, consult a licensed lawyer.', 'یہ خلاصے صرف تعلیمی مقاصد کے لیے ہیں۔ مخصوص قانونی مشورے کے لیے لائسنس یافتہ وکیل سے رجوع کریں۔')}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }

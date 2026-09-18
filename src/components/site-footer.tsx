@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import {
   Scale, Mail, Github, ShieldCheck, BookText, Compass,
   Briefcase, FileText, GitCompare, Bot, Landmark,
-  HelpCircle, Code, ExternalLink, MapPin, Sparkles,
+  HelpCircle, ExternalLink, MapPin, Sparkles,
   Layers, ArrowUpRight, CheckCircle
 } from 'lucide-react'
 import { useLanguage } from '@/components/language-provider'
@@ -189,12 +189,6 @@ export function SiteFooter() {
                 <Link href="/faq" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group">
                   <HelpCircle className="h-3.5 w-3.5 text-muted-foreground/70 group-hover:text-primary transition-colors" />
                   <span>{t('FAQ & Guide', 'عام سوالات و گائیڈ')}</span>
-                </Link>
-              </li>
-              <li>
-                <Link href="/help" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group">
-                  <Code className="h-3.5 w-3.5 text-muted-foreground/70 group-hover:text-primary transition-colors" />
-                  <span>{t('Developer API', 'ڈویلپر API')}</span>
                 </Link>
               </li>
               <li>

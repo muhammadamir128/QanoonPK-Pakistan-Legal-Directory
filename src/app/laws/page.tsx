@@ -165,93 +165,118 @@ function LawsPageInner() {
       {/* Search & Filters */}
       <Card className="mb-6 border-border/60">
         <CardContent className="p-3.5 sm:p-5 space-y-3 sm:space-y-4">
-          {/* Search row */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            <Input
-              type="search"
-              placeholder={t('Search by name, section, keyword...', 'نام، شق، کلیدی لفظ سے تلاش...')}
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              className="pl-9 h-11"
-            />
-          </div>
+          {/* Search & Filters in 1 row */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:flex lg:items-center gap-2 sm:gap-2.5">
+            {/* Search row */}
+            <div className="relative flex-1 min-w-[180px] lg:min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Input
+                type="search"
+                placeholder={t('Search by name, section, keyword...', 'نام، شق، کلیدی لفظ سے تلاش...')}
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                className="pl-9 h-10 w-full"
+              />
+              {q && (
+                <button
+                  type="button"
+                  onClick={() => setQ('')}
+                  aria-label="Clear search"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-full"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
 
-          {/* Filter grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-2.5">
-            <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger className="h-10 w-full min-w-0">
-                <span className="flex items-center gap-1.5 min-w-0 truncate">
-                  <Filter className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                  <span className="truncate"><SelectValue placeholder={t('Category', 'قسم')} /></span>
-                </span>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('All categories', 'تمام اقسام')}</SelectItem>
-                {categories.map((c) => (
-                  <SelectItem key={c.slug} value={c.slug}>{lang === 'ur' && c.nameUrdu ? c.nameUrdu : c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {/* Category */}
+            <div className="w-full lg:w-[155px] xl:w-[170px] shrink-0">
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger className="h-10 w-full min-w-0">
+                  <span className="flex items-center gap-1.5 min-w-0 truncate">
+                    <Filter className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <span className="truncate"><SelectValue placeholder={t('Category', 'قسم')} /></span>
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('All categories', 'تمام اقسام')}</SelectItem>
+                  {categories.map((c) => (
+                    <SelectItem key={c.slug} value={c.slug}>{lang === 'ur' && c.nameUrdu ? c.nameUrdu : c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Select value={jurisdiction} onValueChange={setJurisdiction}>
-              <SelectTrigger className="h-10 w-full min-w-0">
-                <span className="flex items-center gap-1.5 min-w-0 truncate">
-                  <Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                  <span className="truncate"><SelectValue placeholder={t('Jurisdiction', 'عدلیہ')} /></span>
-                </span>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('All jurisdictions', 'تمام عدلیہ')}</SelectItem>
-                {Object.entries(JURISDICTION_LABELS).map(([k, v]) => (
-                  <SelectItem key={k} value={k}>{lang === 'ur' ? v.ur : v.en}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {/* Jurisdiction */}
+            <div className="w-full lg:w-[150px] xl:w-[165px] shrink-0">
+              <Select value={jurisdiction} onValueChange={setJurisdiction}>
+                <SelectTrigger className="h-10 w-full min-w-0">
+                  <span className="flex items-center gap-1.5 min-w-0 truncate">
+                    <Building2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <span className="truncate"><SelectValue placeholder={t('Jurisdiction', 'عدلیہ')} /></span>
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('All jurisdictions', 'تمام عدلیہ')}</SelectItem>
+                  {Object.entries(JURISDICTION_LABELS).map(([k, v]) => (
+                    <SelectItem key={k} value={k}>{lang === 'ur' ? v.ur : v.en}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="h-10 w-full min-w-0">
-                <span className="flex items-center gap-1.5 min-w-0 truncate">
-                  <Gavel className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                  <span className="truncate"><SelectValue placeholder={t('Status', 'صورتحرال')} /></span>
-                </span>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('All statuses', 'تمام صورتحرال')}</SelectItem>
-                {Object.entries(STATUS_LABELS).map(([k, v]) => (
-                  <SelectItem key={k} value={k}>{lang === 'ur' ? v.ur : v.en}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {/* Status */}
+            <div className="w-full lg:w-[135px] xl:w-[145px] shrink-0">
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger className="h-10 w-full min-w-0">
+                  <span className="flex items-center gap-1.5 min-w-0 truncate">
+                    <Gavel className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <span className="truncate"><SelectValue placeholder={t('Status', 'صورتحرال')} /></span>
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('All statuses', 'تمام صورتحرال')}</SelectItem>
+                  {Object.entries(STATUS_LABELS).map(([k, v]) => (
+                    <SelectItem key={k} value={k}>{lang === 'ur' ? v.ur : v.en}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Select value={year} onValueChange={setYear}>
-              <SelectTrigger className="h-10 w-full min-w-0">
-                <span className="flex items-center gap-1.5 min-w-0 truncate">
-                  <Calendar className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                  <span className="truncate"><SelectValue placeholder={t('Year', 'سال')} /></span>
-                </span>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('All years', 'تمام سال')}</SelectItem>
-                {years.map((y) => (<SelectItem key={y} value={String(y)}>{y}</SelectItem>))}
-              </SelectContent>
-            </Select>
+            {/* Year */}
+            <div className="w-full lg:w-[115px] xl:w-[125px] shrink-0">
+              <Select value={year} onValueChange={setYear}>
+                <SelectTrigger className="h-10 w-full min-w-0">
+                  <span className="flex items-center gap-1.5 min-w-0 truncate">
+                    <Calendar className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <span className="truncate"><SelectValue placeholder={t('Year', 'سال')} /></span>
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('All years', 'تمام سال')}</SelectItem>
+                  {years.map((y) => (<SelectItem key={y} value={String(y)}>{y}</SelectItem>))}
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Select value={sort} onValueChange={setSort}>
-              <SelectTrigger className="h-10 w-full min-w-0">
-                <span className="flex items-center gap-1.5 min-w-0 truncate">
-                  <SlidersHorizontal className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                  <span className="truncate"><SelectValue /></span>
-                </span>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="popular">{t('Most viewed', 'سب سے زیادہ دیکھے گئے')}</SelectItem>
-                <SelectItem value="newest">{t('Newest', 'تازہ ترین')}</SelectItem>
-                <SelectItem value="oldest">{t('Oldest', 'قدیم ترین')}</SelectItem>
-                <SelectItem value="az">A → Z</SelectItem>
-                <SelectItem value="za">Z → A</SelectItem>
-              </SelectContent>
-            </Select>
+            {/* Sort */}
+            <div className="w-full lg:w-[140px] xl:w-[155px] shrink-0">
+              <Select value={sort} onValueChange={setSort}>
+                <SelectTrigger className="h-10 w-full min-w-0">
+                  <span className="flex items-center gap-1.5 min-w-0 truncate">
+                    <SlidersHorizontal className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <span className="truncate"><SelectValue /></span>
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="popular">{t('Most viewed', 'سب سے زیادہ دیکھے گئے')}</SelectItem>
+                  <SelectItem value="newest">{t('Newest', 'تازہ ترین')}</SelectItem>
+                  <SelectItem value="oldest">{t('Oldest', 'قدیم ترین')}</SelectItem>
+                  <SelectItem value="az">A → Z</SelectItem>
+                  <SelectItem value="za">Z → A</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Active filters summary */}

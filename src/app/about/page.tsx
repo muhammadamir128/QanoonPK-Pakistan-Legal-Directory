@@ -4,7 +4,7 @@ import * as React from 'react'
 import Link from 'next/link'
 import {
   ChevronRight, Info, Database, ShieldCheck, Globe, BookOpen, Scale,
-  AlertTriangle, Calendar, Users, FileText, Languages, Heart,
+  Calendar, Users, FileText, Languages, Heart,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -187,26 +187,6 @@ export default function AboutPage() {
           ))}
         </div>
       </section>
-
-      {/* Disclaimer */}
-      <Card className="bg-amber-50 dark:bg-amber-950/20 border-amber-300/50">
-        <CardContent className="p-5">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
-            <div>
-              <h3 className="font-semibold text-sm text-amber-900 dark:text-amber-200">
-                {t('Important Disclaimer', 'اہم تنبیہ')}
-              </h3>
-              <p className="text-xs text-amber-800 dark:text-amber-300 mt-2 leading-relaxed">
-                {t(
-                  'This platform is for informational and educational purposes only. It is NOT a substitute for legal advice. While we strive for accuracy, laws are frequently amended and repealed. For any legal matter, please consult a qualified licensed lawyer in Pakistan. QanoonPK is not liable for any decisions made based on the information provided here.',
-                  'یہ پلیٹ فارم صرف معلوماتی اور تعلیمی مقاصد کے لیے ہے۔ یہ قانونی مشورے کا متبادل نہیں ہے۔ اگرچہ ہم درستگی کی کوشش کرتے ہیں، قوانین اکثر ترمیم اور منسوخ کیے جاتے ہیں۔ کسی بھی قانونی معاملے کے لیے، پاکستان میں لائسنس یافتہ وکیل سے رجوع کریں۔ قانون پی کے یہاں فراہم کردہ معلومات پر مبنی کسی بھی فیصلے کا ذمہ دار نہیں۔'
-                )}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }

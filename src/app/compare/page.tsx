@@ -4,7 +4,7 @@ import * as React from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import {
-  ChevronRight, GitCompare, Search, ArrowRight, AlertTriangle, Calendar,
+  ChevronRight, GitCompare, Search, ArrowRight, Calendar,
   Building2, Gavel, FileText, ScrollText, History, Eye, X, Lightbulb,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -298,21 +298,6 @@ function ComparePageInner() {
           </div>
         </>
       )}
-
-      {/* Disclaimer */}
-      <Card className="mt-8 bg-amber-50 dark:bg-amber-950/20 border-amber-300/50">
-        <CardContent className="p-4">
-          <div className="flex items-start gap-2 text-xs text-amber-900 dark:text-amber-200">
-            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
-            <p className="leading-relaxed">
-              {t(
-                'This comparison is for educational purposes. Differences in scope, amendments, and context may affect applicability. Always consult a licensed lawyer for your specific situation.',
-                'یہ موازنہ صرف تعلیمی مقاصد کے لیے ہے۔ دائرہ کار، ترامیم، اور تناظر میں فرق لاگو پذیری کو متاثر کر سکتے ہیں۔ مخصوص صورتِ حال کے لیے ہمیشہ لائسنس یافتہ وکیل سے رجوع کریں۔'
-              )}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }

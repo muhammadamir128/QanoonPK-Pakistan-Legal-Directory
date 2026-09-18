@@ -3,7 +3,7 @@
 import * as React from 'react'
 import Link from 'next/link'
 import {
-  ChevronRight, Search, FileText, Download, ArrowRight, AlertTriangle,
+  ChevronRight, Search, FileText, Download, ArrowRight,
   FilePlus, ShieldCheck, Filter, X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -296,21 +296,6 @@ export default function TemplatesPage() {
           )}
         </>
       )}
-
-      {/* Disclaimer */}
-      <Card className="mt-8 bg-amber-50 dark:bg-amber-950/20 border-amber-300/50">
-        <CardContent className="p-4">
-          <div className="flex items-start gap-2 text-xs text-amber-900 dark:text-amber-200">
-            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
-            <p className="leading-relaxed">
-              {t(
-                'These templates are general and may not suit your specific situation. Always have a qualified lawyer review before signing. QanoonPK is not liable for any consequences of using these templates.',
-                'یہ ٹیمپلیٹس عام ہیں اور آپ کی مخصوص صورتِ حال کے لیے موزوں نہیں ہو سکتے۔ دستخط سے پہلے ہمیشہ لائسنس یافتہ وکیل سے جائزہ لیں۔ قانون پی کے ان ٹیمپلیٹس کے استعمال کے کسی بھی نتائج کا ذمہ دار نہیں۔'
-              )}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }

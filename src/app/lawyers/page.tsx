@@ -4,7 +4,7 @@ import * as React from 'react'
 import Link from 'next/link'
 import {
   ChevronRight, Search, MapPin, Star, ShieldCheck, Award, Languages,
-  Briefcase, Phone, Mail, Globe, ArrowRight, Building2, Filter, AlertTriangle,
+  Briefcase, Phone, Mail, Globe, ArrowRight, Building2, Filter,
   CheckCircle2, X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -141,66 +141,93 @@ export default function LawyersPage() {
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Filters in 1 row */}
       <Card className="mb-6 border-border/60">
-        <CardContent className="p-4 space-y-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            <Input
-              type="search"
-              placeholder={t('Search by name, bio, or city...', 'نام، بائیو، یا شہر سے تلاش...')}
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              className="pl-9 h-11"
-            />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-            <Select value={city} onValueChange={setCity}>
-              <SelectTrigger className="h-10 w-full min-w-0">
-                <span className="flex items-center gap-1.5 min-w-0 truncate">
-                  <MapPin className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                  <span className="truncate"><SelectValue /></span>
-                </span>
-              </SelectTrigger>
-              <SelectContent>
-                {CITIES.map((c) => (
-                  <SelectItem key={c.value} value={c.value}>{lang === 'ur' ? c.ur : c.en}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={specialization} onValueChange={setSpecialization}>
-              <SelectTrigger className="h-10 w-full min-w-0">
-                <span className="flex items-center gap-1.5 min-w-0 truncate">
-                  <Briefcase className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                  <span className="truncate"><SelectValue /></span>
-                </span>
-              </SelectTrigger>
-              <SelectContent>
-                {SPECIALIZATIONS.map((s) => (
-                  <SelectItem key={s.value} value={s.value}>{lang === 'ur' ? s.ur : s.en}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={sort} onValueChange={setSort}>
-              <SelectTrigger className="h-10 w-full min-w-0">
-                <span className="flex items-center gap-1.5 min-w-0 truncate">
-                  <Filter className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                  <span className="truncate"><SelectValue /></span>
-                </span>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="featured">{t('Featured first', 'نمایاں پہلے')}</SelectItem>
-                <SelectItem value="rating">{t('Highest rated', 'اعلیٰ درجہ بندی')}</SelectItem>
-                <SelectItem value="experience">{t('Most experienced', 'زیادہ تجربہ کار')}</SelectItem>
-              </SelectContent>
-            </Select>
+        <CardContent className="p-3.5 sm:p-4 space-y-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:flex lg:items-center gap-2 sm:gap-2.5">
+            {/* Search */}
+            <div className="relative flex-1 min-w-[180px] lg:min-w-[220px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Input
+                type="search"
+                placeholder={t('Search by name, bio, or city...', 'نام، بائیو، یا شہر سے تلاش...')}
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                className="pl-9 h-10 w-full"
+              />
+              {q && (
+                <button
+                  type="button"
+                  onClick={() => setQ('')}
+                  aria-label="Clear search"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-full"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* City */}
+            <div className="w-full lg:w-[170px] xl:w-[190px] shrink-0">
+              <Select value={city} onValueChange={setCity}>
+                <SelectTrigger className="h-10 w-full min-w-0">
+                  <span className="flex items-center gap-1.5 min-w-0 truncate">
+                    <MapPin className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <span className="truncate"><SelectValue /></span>
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  {CITIES.map((c) => (
+                    <SelectItem key={c.value} value={c.value}>{lang === 'ur' ? c.ur : c.en}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Specialization */}
+            <div className="w-full lg:w-[195px] xl:w-[220px] shrink-0">
+              <Select value={specialization} onValueChange={setSpecialization}>
+                <SelectTrigger className="h-10 w-full min-w-0">
+                  <span className="flex items-center gap-1.5 min-w-0 truncate">
+                    <Briefcase className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <span className="truncate"><SelectValue /></span>
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  {SPECIALIZATIONS.map((s) => (
+                    <SelectItem key={s.value} value={s.value}>{lang === 'ur' ? s.ur : s.en}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Sort */}
+            <div className="w-full lg:w-[160px] xl:w-[175px] shrink-0">
+              <Select value={sort} onValueChange={setSort}>
+                <SelectTrigger className="h-10 w-full min-w-0">
+                  <span className="flex items-center gap-1.5 min-w-0 truncate">
+                    <Filter className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <span className="truncate"><SelectValue /></span>
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="featured">{t('Featured first', 'نمایاں پہلے')}</SelectItem>
+                  <SelectItem value="rating">{t('Highest rated', 'اعلیٰ درجہ بندی')}</SelectItem>
+                  <SelectItem value="experience">{t('Most experienced', 'زیادہ تجربہ کار')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {hasFilters && (
-              <Button variant="outline" size="sm" onClick={clearFilters} className="h-10">
+              <Button variant="outline" size="sm" onClick={clearFilters} className="h-10 shrink-0">
                 <X className="h-3.5 w-3.5 mr-1" /> {t('Clear', 'صاف')}
               </Button>
             )}
           </div>
-          <div className="text-xs text-muted-foreground">{total} {t('lawyers found', 'وکلاء ملے')}</div>
+
+          <div className="text-xs text-muted-foreground pt-0.5">
+            {total} {t('lawyers found', 'وکلاء ملے')}
+          </div>
         </CardContent>
       </Card>
 
@@ -289,21 +316,6 @@ export default function LawyersPage() {
           )}
         </>
       )}
-
-      {/* Disclaimer */}
-      <Card className="mt-8 bg-amber-50 dark:bg-amber-950/20 border-amber-300/50">
-        <CardContent className="p-4">
-          <div className="flex items-start gap-2 text-xs text-amber-900 dark:text-amber-200">
-            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
-            <p className="leading-relaxed">
-              {t(
-                'QanoonPK does not endorse any particular lawyer. Listings are provided for informational purposes. Always verify credentials with the Pakistan Bar Council before hiring.',
-                'قانون پی کے کسی خاص وکیل کی توثیق نہیں کرتا۔ فہرستیں صرف معلوماتی مقاصد کے لیے ہیں۔ بھرتی سے پہلے ہمیشہ پاکستان بار کونسل سے تصدیق کریں۔'
-              )}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }

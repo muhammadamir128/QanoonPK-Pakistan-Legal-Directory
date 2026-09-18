@@ -3,7 +3,7 @@
 import * as React from 'react'
 import Link from 'next/link'
 import {
-  Compass, ChevronRight, ChevronLeft, ArrowRight, RefreshCw, AlertTriangle,
+  Compass, ChevronRight, ChevronLeft, ArrowRight, RefreshCw,
   FileText, ArrowLeft, BookOpen, Scale, CheckCircle2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -185,22 +185,6 @@ export default function FinderPage() {
             <Link href="/laws"><BookOpen className="h-4 w-4 mr-2" />{t('Browse all laws', 'تمام قوانین دیکھیں')}</Link>
           </Button>
         </div>
-
-        <Card className="mt-8 bg-amber-50 dark:bg-amber-950/20 border-amber-300/50">
-          <CardContent className="p-5">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
-              <div>
-                <p className="font-semibold text-sm text-amber-900 dark:text-amber-200">
-                  {t('Important: This is not legal advice', 'اہم: یہ قانونی مشورہ نہیں ہے')}
-                </p>
-                <p className="text-xs text-amber-800 dark:text-amber-300 mt-1 leading-relaxed">
-                  {t('This finder is a directory tool to point you to relevant laws. Your specific situation may require additional laws or interpretation. For any legal matter, please consult a qualified, licensed lawyer in Pakistan.', 'یہ فائنڈر صرف ایک ڈائریکٹری ٹول ہے جو آپ کو متعلقہ قوانین تک پہنچاتا ہے۔ آپ کے مخصوص مسئلے پر اور قوانین یا تشریح کی ضرورت ہو سکتی ہے۔ کسی بھی قانونی معاملے کے لیے پاکستان میں لائسنس یافتہ وکیل سے رجوع کریں۔')}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     )
   }
@@ -315,14 +299,6 @@ export default function FinderPage() {
           <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
           {t('Restart', 'دوبارہ')}
         </Button>
-      </div>
-
-      {/* Disclaimer */}
-      <div className="mt-8 rounded-xl border border-amber-300/40 bg-amber-50 dark:bg-amber-950/20 p-4 flex items-start gap-3">
-        <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
-        <p className="text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
-          {t('This tool is informational and points to relevant laws only. It is NOT legal advice. Always consult a licensed lawyer for your specific situation.', 'یہ ٹول معلوماتی ہے اور صرف متعلقہ قوانین تک پہنچاتا ہے۔ یہ قانونی مشورہ نہیں ہے۔ مخصوص صورتِ حال کے لیے ہمیشہ لائسنس یافتہ وکیل سے رجوع کریں۔')}
-        </p>
       </div>
     </div>
   )

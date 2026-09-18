@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import {
   ChevronRight, ChevronLeft, Calendar, Building2, FileText, Gavel, ScrollText,
-  Search, AlertTriangle, Bookmark, BookmarkCheck, Printer, ArrowRight, Tag,
+  Search, Bookmark, BookmarkCheck, Printer, ArrowRight, Tag,
   History, Eye, BookOpen, Quote, Layers, Sparkles,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -566,21 +566,6 @@ export default function LawDetailPage() {
               </CardContent>
             </Card>
           )}
-
-          {/* Mini disclaimer */}
-          <Card className="bg-amber-50 dark:bg-amber-950/20 border-amber-300/50 dark:border-amber-700/40">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-2 text-xs text-amber-900 dark:text-amber-200">
-                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
-                <p className="leading-relaxed">
-                  {t(
-                    'This is a directory, not legal advice. Always consult a licensed lawyer for your specific situation.',
-                    'یہ ڈائریکٹری ہے، قانونی مشورہ نہیں۔ اپنے مخصوص مسئلے کے لیے ہمیشہ لائسنس یافتہ وکیل سے رجوع کریں۔'
-                  )}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>

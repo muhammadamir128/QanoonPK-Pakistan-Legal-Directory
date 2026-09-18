@@ -4,7 +4,7 @@ import * as React from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import {
-  ChevronRight, FileText, Download, AlertTriangle, ArrowRight, ArrowLeft,
+  ChevronRight, FileText, Download, ArrowRight, ArrowLeft,
   Eye, Copy, Printer, RefreshCw, Loader2, FilePlus, CheckCircle2, FileDown,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -459,21 +459,6 @@ export default function TemplateDetailPage() {
           </div>
         </section>
       )}
-
-      {/* Disclaimer */}
-      <Card className="mt-8 bg-amber-50 dark:bg-amber-950/20 border-amber-300/50">
-        <CardContent className="p-4">
-          <div className="flex items-start gap-2 text-xs text-amber-900 dark:text-amber-200">
-            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
-            <p className="leading-relaxed">
-              {t(
-                'This template is for educational purposes only. Have a licensed lawyer review your final document before signing. QanoonPK is not liable for any legal consequences of using this template.',
-                'یہ ٹیمپلیٹ صرف تعلیمی مقاصد کے لیے ہے۔ دستخط سے پہلے اپنی حتمی دستاویز لائسنس یافتہ وکیل سے جائزہ لوانیں۔ قانون پی کے اس ٹیمپلیٹ کے استعمال کے کسی بھی قانونی نتائج کا ذمہ دار نہیں۔'
-              )}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }

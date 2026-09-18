@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   Search, Languages, Sun, Moon, Menu, Scale, BookText, Compass, LayoutDashboard, X,
-  Bot, Landmark, BookOpen, ChevronDown, Briefcase, FilePlus, HelpCircle, Code, GitCompare, Check,
+  Bot, Landmark, BookOpen, ChevronDown, Briefcase, FilePlus, HelpCircle, GitCompare, Check,
   LogIn, UserPlus, LogOut, Bookmark, User,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -38,7 +38,6 @@ const toolsItems = [
   { href: '/courts', labelEn: 'Court Hierarchy', labelUr: 'عدالتی درجہ بندی', icon: 'Landmark', descEn: 'Court system', descUr: 'عدالتی نظام' },
   { href: '/glossary', labelEn: 'Glossary', labelUr: 'فرہنگ', icon: 'BookOpen', descEn: 'Legal terms', descUr: 'قانونی اصطلاحات' },
   { href: '/faq', labelEn: 'FAQ / Help', labelUr: 'سوالات و مدد', icon: 'HelpCircle', descEn: 'Common questions', descUr: 'عام سوالات' },
-  { href: '/help', labelEn: 'API Docs', labelUr: 'اے پی آئی دستاویز', icon: 'Code', descEn: 'For developers', descUr: 'ڈویلپرز کے لیے' },
 ]
 
 
@@ -502,7 +501,6 @@ function iconForTool(name: string) {
     case 'Landmark': return Landmark
     case 'BookOpen': return BookOpen
     case 'HelpCircle': return HelpCircle
-    case 'Code': return Code
     default: return Scale
   }
 }
