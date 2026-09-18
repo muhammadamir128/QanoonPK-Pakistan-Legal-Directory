@@ -23,18 +23,7 @@ const SHORTCUTS: Array<{
 ]
 
 function focusSearch() {
-  // Try header search first, then any search input
-  const headerSearch = document.querySelector('header input[type="search"]') as HTMLInputElement | null
-  if (headerSearch) {
-    headerSearch.focus()
-    headerSearch.select()
-    return
-  }
-  const anySearch = document.querySelector('input[type="search"]') as HTMLInputElement | null
-  if (anySearch) {
-    anySearch.focus()
-    anySearch.select()
-  }
+  window.dispatchEvent(new CustomEvent('qpk-open-search'))
 }
 
 function showHelp() {
@@ -48,6 +37,13 @@ export function useKeyboardShortcuts() {
 
   React.useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
+      // Cmd/Ctrl + K shortcut (can work even in some focus contexts or outside)
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault()
+        focusSearch()
+        return
+      }
+
       // Skip if user is typing in an input/textarea
       const target = e.target as HTMLElement
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {

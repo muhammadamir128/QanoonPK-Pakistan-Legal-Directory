@@ -366,53 +366,128 @@ export default function HomePage() {
         )}
       </section>
 
-      {/* Trending Laws */}
+      {/* Most Viewed Laws (Trending) */}
       {stats && stats.trending.length > 0 && (
-        <section className="container mx-auto max-w-7xl px-4 py-16 border-t border-border/40">
-          <div className="flex items-end justify-between mb-8">
+        <section className="container mx-auto max-w-7xl px-4 py-16 border-t border-border/50">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
             <div>
-              <h2 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-2">
-                <TrendingUp className="h-6 w-6 text-primary" />
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-semibold mb-2.5 border border-emerald-500/20">
+                <TrendingUp className="h-3.5 w-3.5" />
+                <span>{t('Leaderboard', 'لیڈر بورڈ')}</span>
+              </div>
+              <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-2.5">
                 {t('Most Viewed Laws', 'سب سے زیادہ دیکھے گئے قوانین')}
               </h2>
-              <p className="text-muted-foreground mt-1 text-sm">
-                {t('What other readers are looking up right now.', 'جو قارئین اس وقت دیکھ رہے ہیں۔')}
+              <p className="text-muted-foreground mt-1.5 text-sm max-w-lg">
+                {t('The most frequently consulted statutes and legal codes across Pakistan.', 'پاکستان بھر میں شہریوں اور وکلاء کے سب سے زیادہ زیر مطالعہ قوانین۔')}
               </p>
             </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {stats.trending.map((law, i) => (
-              <Link key={law.slug} href={`/laws/${law.slug}`}>
-                <Card className="hover:shadow-md hover:border-primary/30 transition-all duration-200 h-full">
-                  <CardContent className="p-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold">
-                        {i + 1}
-                      </span>
-                      <Badge variant="outline" className="text-[10px]">
-                        {law.yearEnacted}
-                      </Badge>
-                    </div>
-                    <h3 className="font-semibold text-base mt-3 leading-snug line-clamp-2">
-                      {lang === 'ur' && law.titleUrdu ? law.titleUrdu : law.title}
-                    </h3>
-                    <div className="mt-3 flex items-center gap-2 text-xs">
-                      {law.category?.color && (
-                        <span
-                          className="inline-flex h-2 w-2 rounded-full"
-                          style={{ backgroundColor: law.category.color }}
-                        />
-                      )}
-                      <span className="text-muted-foreground">{lang === 'ur' && law.category?.nameUrdu ? law.category.nameUrdu : law.category?.name}</span>
-                      <span className="text-muted-foreground">•</span>
-                      <span className="text-muted-foreground inline-flex items-center gap-1">
-                        <TrendingUp className="h-3 w-3" /> {law.viewCount}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
+            <Button asChild variant="outline" size="sm" className="shrink-0 h-9 rounded-lg gap-2 text-xs font-semibold shadow-2xs hover:bg-primary/10 hover:text-primary hover:border-primary/40 transition-all">
+              <Link href="/laws?sort=popular">
+                <span>{t('Explore All Laws', 'تمام قوانین ملاحظہ کریں')}</span>
+                <ArrowRight className={cn('h-3.5 w-3.5', lang === 'ur' && 'rotate-180')} />
               </Link>
-            ))}
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {stats.trending.map((law, i) => {
+              const rankColor =
+                i === 0
+                  ? 'from-amber-500/20 via-amber-500/5 to-transparent'
+                  : i === 1
+                  ? 'from-slate-400/20 via-slate-400/5 to-transparent'
+                  : i === 2
+                  ? 'from-orange-600/20 via-orange-600/5 to-transparent'
+                  : 'from-primary/10 via-primary/5 to-transparent'
+
+              return (
+                <Link key={law.slug} href={`/laws/${law.slug}`} className="group block">
+                  <div className={cn(
+                    'relative h-full flex flex-col justify-between rounded-2xl border p-5 transition-all duration-300',
+                    'bg-card/70 hover:bg-card shadow-xs hover:shadow-xl hover:-translate-y-1',
+                    'hover:border-primary/50 backdrop-blur-xs overflow-hidden border-border/80'
+                  )}>
+                    {/* Background subtle gradient glow for top ranks */}
+                    <div className={cn(
+                      'absolute -top-12 -right-12 w-28 h-28 rounded-full bg-gradient-to-br blur-xl opacity-40 group-hover:opacity-75 transition-opacity pointer-events-none',
+                      rankColor
+                    )} />
+
+                    <div>
+                      {/* Top Bar: Rank & Enactment Year */}
+                      <div className="flex items-center justify-between gap-3 relative z-10">
+                        {i === 0 ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 text-xs font-extrabold shadow-2xs">
+                            <span>🏆</span>
+                            <span>#01</span>
+                            <span className="text-[10px] font-medium opacity-80">{t('Top Ranked', 'سب سے مقبول')}</span>
+                          </span>
+                        ) : i === 1 ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-400/30 text-xs font-extrabold shadow-2xs">
+                            <span>🥈</span>
+                            <span>#02</span>
+                          </span>
+                        ) : i === 2 ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/15 text-orange-700 dark:text-orange-400 border border-orange-500/30 text-xs font-extrabold shadow-2xs">
+                            <span>🥉</span>
+                            <span>#03</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center justify-center h-7 px-2.5 rounded-full bg-muted/80 border border-border/60 text-muted-foreground text-xs font-bold font-mono">
+                            #{i + 1 < 10 ? `0${i + 1}` : i + 1}
+                          </span>
+                        )}
+
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-muted/60 text-muted-foreground text-xs font-mono font-semibold border border-border/40">
+                          <CalendarDays className="h-3 w-3 text-muted-foreground" />
+                          {law.yearEnacted}
+                        </span>
+                      </div>
+
+                      {/* Main Title */}
+                      <h3 className="font-bold text-base mt-4 text-foreground group-hover:text-primary transition-colors leading-snug line-clamp-2 relative z-10">
+                        {lang === 'ur' && law.titleUrdu ? law.titleUrdu : law.title}
+                      </h3>
+
+                      {/* Dual-language sub-label */}
+                      {lang === 'en' && law.titleUrdu ? (
+                        <p className="text-xs text-muted-foreground/80 mt-1.5 font-urdu line-clamp-1">
+                          {law.titleUrdu}
+                        </p>
+                      ) : lang === 'ur' && law.title ? (
+                        <p className="text-xs text-muted-foreground/80 mt-1.5 line-clamp-1">
+                          {law.title}
+                        </p>
+                      ) : null}
+                    </div>
+
+                    {/* Bottom Details Bar */}
+                    <div className="mt-5 pt-3.5 border-t border-border/50 flex items-center justify-between gap-2 relative z-10">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span
+                          className="h-2 w-2 rounded-full shrink-0"
+                          style={{ backgroundColor: law.category?.color || 'var(--primary)' }}
+                        />
+                        <span className="text-xs font-medium text-muted-foreground truncate">
+                          {lang === 'ur' && law.category?.nameUrdu ? law.category.nameUrdu : law.category?.name}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-semibold">
+                          <Eye className="h-3 w-3" />
+                          <span>{law.viewCount.toLocaleString()}</span>
+                        </span>
+                        <div className="h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all">
+                          <ArrowRight className={cn('h-3 w-3', lang === 'ur' && 'rotate-180')} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              )
+            })}
           </div>
         </section>
       )}
@@ -562,19 +637,29 @@ export default function HomePage() {
 
       {/* Popular This Week */}
       {stats && stats.popularThisWeek && stats.popularThisWeek.length > 0 && (
-        <section className="container mx-auto max-w-7xl px-4 py-16 border-t border-border/40">
-          <div className="flex items-end justify-between mb-8">
+        <section className="container mx-auto max-w-7xl px-4 py-16 border-t border-border/50">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
             <div>
-              <h2 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-2">
-                <Flame className="h-6 w-6 text-orange-500" />
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-400 text-xs font-semibold mb-2.5 border border-orange-500/20">
+                <Flame className="h-3.5 w-3.5" />
+                <span>{t('Trending Surge', 'ہفتہ وار رجحان')}</span>
+              </div>
+              <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-2.5">
                 {t('Popular This Week', 'اس ہفتے مقبول')}
               </h2>
-              <p className="text-muted-foreground mt-1 text-sm">
-                {t('Most viewed laws based on recent activity', 'حالیہ سرگرمی کی بنیاد پر سب سے زیادہ دیکھے گئے قوانین')}
+              <p className="text-muted-foreground mt-1.5 text-sm max-w-lg">
+                {t('Trending statutes seeing the highest increase in reader activity over the past 7 days.', 'پچھلے 7 دنوں میں سب سے زیادہ دیکھے جانے والے قوانین۔')}
               </p>
             </div>
+            <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-orange-600 dark:text-orange-400 hover:bg-orange-500/10 rounded-lg">
+              <Link href="/laws">
+                <span>{t('Browse Catalog', 'کیٹلاگ دیکھیں')}</span>
+                <ArrowRight className={cn('h-3.5 w-3.5', lang === 'ur' && 'rotate-180')} />
+              </Link>
+            </Button>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {stats.popularThisWeek.map((law, i) => (
               <Link
                 key={law.slug}
@@ -582,28 +667,61 @@ export default function HomePage() {
                 className="group block animate-fade-in-up"
                 style={{ animationDelay: `${i * 50}ms` }}
               >
-                <Card className="hover:shadow-md hover:border-primary/30 transition-all h-full">
-                  <CardContent className="p-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold text-muted-foreground tabular-nums">#{i + 7}</span>
-                      <Badge variant="secondary" className="text-[9px]">{law.yearEnacted}</Badge>
+                <div className="relative h-full flex flex-col justify-between rounded-2xl border border-border/80 bg-card/60 dark:bg-card/40 hover:bg-card p-5 shadow-2xs hover:shadow-xl hover:-translate-y-1 hover:border-orange-500/40 transition-all duration-300 overflow-hidden">
+                  <div>
+                    {/* Header: Flame Rank & Year */}
+                    <div className="flex items-center justify-between gap-2 mb-3.5">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-400 text-xs font-bold font-mono border border-orange-500/20 shadow-2xs">
+                        <Flame className="h-3.5 w-3.5 text-orange-500" />
+                        <span>#{i + 7}</span>
+                      </span>
+
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-muted/60 text-muted-foreground text-xs font-mono font-medium border border-border/40">
+                        <CalendarDays className="h-3 w-3 text-muted-foreground" />
+                        {law.yearEnacted}
+                      </span>
                     </div>
-                    <p className="text-xs font-medium leading-snug group-hover:text-primary transition-colors line-clamp-3">
+
+                    {/* Law Title */}
+                    <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug">
                       {lang === 'ur' && law.titleUrdu ? law.titleUrdu : law.title}
-                    </p>
-                    <div className="mt-2 flex items-center gap-1 text-[10px] text-muted-foreground">
+                    </h3>
+
+                    {/* Dual-language sub-label */}
+                    {lang === 'en' && law.titleUrdu ? (
+                      <p className="text-xs text-muted-foreground/80 mt-1.5 font-urdu line-clamp-1">
+                        {law.titleUrdu}
+                      </p>
+                    ) : lang === 'ur' && law.title ? (
+                      <p className="text-xs text-muted-foreground/80 mt-1.5 line-clamp-1">
+                        {law.title}
+                      </p>
+                    ) : null}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="mt-5 pt-3.5 border-t border-border/50 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
                       <span
-                        className="inline-flex h-1.5 w-1.5 rounded-full"
-                        style={{ backgroundColor: law.category.color ?? 'var(--primary)' }}
+                        className="h-2 w-2 rounded-full shrink-0"
+                        style={{ backgroundColor: law.category?.color ?? 'var(--primary)' }}
                       />
-                      <span className="truncate">{lang === 'ur' && law.category.nameUrdu ? law.category.nameUrdu : law.category.name}</span>
+                      <span className="text-muted-foreground text-xs font-medium truncate">
+                        {lang === 'ur' && law.category?.nameUrdu ? law.category.nameUrdu : law.category?.name}
+                      </span>
                     </div>
-                    <div className="mt-1 flex items-center gap-1 text-[10px] text-muted-foreground">
-                      <Eye className="h-2.5 w-2.5" />
-                      <span className="tabular-nums">{law.viewCount}</span>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground bg-muted/60 px-2.5 py-0.5 rounded-full border border-border/40">
+                        <Eye className="h-3 w-3 text-orange-500" />
+                        <span>{law.viewCount}</span>
+                      </span>
+                      <div className="h-6 w-6 rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all">
+                        <ArrowRight className={cn('h-3 w-3', lang === 'ur' && 'rotate-180')} />
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </Link>
             ))}
           </div>
