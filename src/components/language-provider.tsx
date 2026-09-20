@@ -41,7 +41,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const t = React.useCallback((en: string, ur?: string) => (lang === 'ur' && ur ? ur : en), [lang])
 
   const value = React.useMemo(
-    () => ({ lang, setLang, toggle, dir: lang === 'ur' ? 'rtl' : 'ltr', t }),
+    () => ({ lang, setLang, toggle, dir: (lang === 'ur' ? 'rtl' : 'ltr') as 'ltr' | 'rtl', t }),
     [lang, setLang, toggle, t]
   )
 

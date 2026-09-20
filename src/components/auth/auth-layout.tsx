@@ -3,10 +3,12 @@
 import * as React from 'react'
 import Link from 'next/link'
 import {
-  Scale, BarChart3, ShieldCheck, Zap, ArrowLeft, Languages,
+  Scale, BarChart3, ShieldCheck, Zap, ArrowLeft, Languages, Loader2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useLanguage } from '@/components/language-provider'
+import { GoogleSignInModal } from '@/components/auth/google-sign-in-modal'
+import { signIn } from 'next-auth/react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 
@@ -27,13 +29,34 @@ export function AuthLayout({
 }: AuthLayoutProps) {
   const { t, lang, setLang } = useLanguage()
 
-  const handleGoogleSignIn = () => {
-    toast.info(
-      t(
-        'Google OAuth sign-in is managed by administrator in production settings.',
-        'گوگل لاگ ان پروڈکشن سیٹنگز میں ایڈمن کے ذریعے فعال ہے۔'
-      )
-    )
+  const [googleModalOpen, setGoogleModalOpen] = React.useState(false)
+  const [isGoogleConfigured, setIsGoogleConfigured] = React.useState(false)
+  const [loadingGoogle, setLoadingGoogle] = React.useState(false)
+
+  React.useEffect(() => {
+    fetch('/api/auth/google/status')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.configured) {
+          setIsGoogleConfigured(true)
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  const handleGoogleSignIn = async () => {
+    if (isGoogleConfigured) {
+      try {
+        setLoadingGoogle(true)
+        await signIn('google', { callbackUrl: '/' })
+      } catch (err) {
+        console.error('Google sign in error:', err)
+        setLoadingGoogle(false)
+        setGoogleModalOpen(true)
+      }
+    } else {
+      setGoogleModalOpen(true)
+    }
   }
 
   return (
@@ -246,27 +269,32 @@ export function AuthLayout({
               type="button"
               variant="outline"
               onClick={handleGoogleSignIn}
+              disabled={loadingGoogle}
               className="w-full h-11 text-xs font-semibold gap-2.5 rounded-xl border-border/80 hover:bg-muted/60 transition-all cursor-pointer shadow-sm"
             >
-              {/* Official Google 4-color 'G' icon */}
-              <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
-                <path
-                  fill="#4285F4"
-                  d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.15C3.26 21.36 7.33 24 12 24Z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.26C.46 8.16 0 9.96 0 12s.46 3.84 1.26 5.42l4.02-3.15Z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.26 6.58l4.02 3.15c.95-2.83 3.6-4.98 6.72-4.98Z"
-                />
-              </svg>
+              {loadingGoogle ? (
+                <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
+              ) : (
+                /* Official Google 4-color 'G' icon */
+                <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
+                  <path
+                    fill="#4285F4"
+                    d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.15C3.26 21.36 7.33 24 12 24Z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.26C.46 8.16 0 9.96 0 12s.46 3.84 1.26 5.42l4.02-3.15Z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.26 6.58l4.02 3.15c.95-2.83 3.6-4.98 6.72-4.98Z"
+                  />
+                </svg>
+              )}
               <span>{t('Continue with Google', 'گوگل کے ساتھ لاگ ان کریں')}</span>
             </Button>
           </div>
@@ -304,6 +332,15 @@ export function AuthLayout({
         <div className="pt-6 text-center text-[11px] text-muted-foreground">
           © {new Date().getFullYear()} QanoonPK • {t('Pakistan Legal Directory', 'پاکستان قانونی ڈائریکٹری')}
         </div>
+
+        {/* Google Sign-in Modal */}
+        <GoogleSignInModal
+          open={googleModalOpen}
+          onOpenChange={setGoogleModalOpen}
+          callbackUrl="/"
+          isLiveConfigured={isGoogleConfigured}
+          onConfiguredChange={setIsGoogleConfigured}
+        />
       </div>
     </div>
   )

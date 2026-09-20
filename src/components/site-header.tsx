@@ -23,6 +23,7 @@ import { useLanguage } from '@/components/language-provider'
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts'
 import { KeyboardShortcutsHelp } from '@/components/keyboard-shortcuts-help'
 import { SearchModal } from '@/components/search-modal'
+import { SignOutModal } from '@/components/sign-out-modal'
 import { cn } from '@/lib/utils'
 
 const navItems = [
@@ -53,6 +54,7 @@ export function SiteHeader() {
   const [q, setQ] = React.useState('')
   const [open, setOpen] = React.useState(false)
   const [searchModalOpen, setSearchModalOpen] = React.useState(false)
+  const [signOutModalOpen, setSignOutModalOpen] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
 
   // Enable keyboard shortcuts
@@ -280,7 +282,10 @@ export function SiteHeader() {
                     )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
-                      onClick={() => signOut({ callbackUrl: '/' })}
+                      onSelect={(e) => {
+                        e.preventDefault()
+                        setSignOutModalOpen(true)
+                      }}
                       className="cursor-pointer text-xs py-2 gap-2 rounded-md text-destructive focus:text-destructive focus:bg-destructive/10"
                     >
                       <LogOut className="h-3.5 w-3.5" />
@@ -449,7 +454,10 @@ export function SiteHeader() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => signOut({ callbackUrl: '/' })}
+                              onClick={() => {
+                                setOpen(false)
+                                setSignOutModalOpen(true)
+                              }}
                               className="w-full text-xs h-8 text-destructive hover:bg-destructive/10 hover:text-destructive gap-1.5"
                             >
                               <LogOut className="h-3.5 w-3.5" />
@@ -481,6 +489,7 @@ export function SiteHeader() {
       </header>
       <KeyboardShortcutsHelp />
       <SearchModal open={searchModalOpen} onOpenChange={setSearchModalOpen} />
+      <SignOutModal open={signOutModalOpen} onOpenChange={setSignOutModalOpen} />
     </>
   )
 }
