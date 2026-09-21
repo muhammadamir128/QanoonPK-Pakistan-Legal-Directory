@@ -135,7 +135,7 @@ export function SocialShare({
               <span className="text-[10px] text-muted-foreground">{t('Copy direct URL', 'براہ راست یو آر ایل کاپی')}</span>
             </div>
           </DropdownMenuItem>
-          {typeof navigator !== 'undefined' && navigator.share && (
+          {typeof navigator !== 'undefined' && 'share' in navigator && (
             <DropdownMenuItem onClick={nativeShare} className="flex items-center gap-3 cursor-pointer">
               <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary">
                 <Share2 className="h-3.5 w-3.5" />

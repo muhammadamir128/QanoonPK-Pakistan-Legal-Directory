@@ -11,8 +11,15 @@ import {
   Languages, Menu, X, ArrowLeft, ArrowUpRight, CheckCircle2,
   UserCheck, Settings, Lock, Sparkles, Filter, Check, Mail, Compass,
   Layers, MessageSquare, Copy, FileSpreadsheet, Server, HardDrive, Shield, Sliders,
-  HelpCircle, CheckCircle, Clock,
+  HelpCircle, CheckCircle, Clock, Landmark, BookOpen, KeyRound,
 } from 'lucide-react'
+import { SignOutModal } from '@/components/sign-out-modal'
+import { ConfirmDeleteModal } from '@/components/confirm-delete-modal'
+import { AdminCourtsTab } from '@/components/admin/admin-courts-tab'
+import { AdminGlossaryTab } from '@/components/admin/admin-glossary-tab'
+import { AdminFaqTab } from '@/components/admin/admin-faq-tab'
+import { AdminExportTab } from '@/components/admin/admin-export-tab'
+import { AdminOverviewCharts } from '@/components/admin/admin-overview-charts'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -183,8 +190,40 @@ type LawAmendment = {
   effectiveDate: string | null
 }
 
-type AdminTab = 'overview' | 'laws' | 'categories' | 'lawyers' | 'templates' | 'analytics' | 'users' | 'subscribers' | 'reviews' | 'finder' | 'settings'
-const VALID_TABS: AdminTab[] = ['overview', 'laws', 'categories', 'lawyers', 'templates', 'analytics', 'users', 'subscribers', 'reviews', 'finder', 'settings']
+type AdminTab =
+  | 'overview'
+  | 'laws'
+  | 'categories'
+  | 'courts'
+  | 'glossary'
+  | 'lawyers'
+  | 'reviews'
+  | 'templates'
+  | 'finder'
+  | 'faq'
+  | 'analytics'
+  | 'users'
+  | 'subscribers'
+  | 'export'
+  | 'settings'
+
+const VALID_TABS: AdminTab[] = [
+  'overview',
+  'laws',
+  'categories',
+  'courts',
+  'glossary',
+  'lawyers',
+  'reviews',
+  'templates',
+  'finder',
+  'faq',
+  'analytics',
+  'users',
+  'subscribers',
+  'export',
+  'settings',
+]
 
 export default function AdminPage() {
   const { data: session, status } = useSession()
@@ -194,6 +233,42 @@ export default function AdminPage() {
 
   const [activeTab, setActiveTab] = React.useState<AdminTab>('overview')
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
+  const [signOutModalOpen, setSignOutModalOpen] = React.useState(false)
+
+  // Unified Delete Confirmation Modal State
+  const [deleteModalState, setDeleteModalState] = React.useState<{
+    open: boolean
+    title?: string
+    titleUrdu?: string
+    itemName?: string
+    itemType?: string
+    itemTypeUrdu?: string
+    description?: string
+    descriptionUrdu?: string
+    onConfirm: () => Promise<void> | void
+  }>({
+    open: false,
+    onConfirm: () => {},
+  })
+
+  const requestDelete = React.useCallback(
+    (config: {
+      title?: string
+      titleUrdu?: string
+      itemName?: string
+      itemType?: string
+      itemTypeUrdu?: string
+      description?: string
+      descriptionUrdu?: string
+      onConfirm: () => Promise<void> | void
+    }) => {
+      setDeleteModalState({
+        open: true,
+        ...config,
+      })
+    },
+    []
+  )
 
   // Synchronize active tab with URL (?tab=...) and localStorage
   const handleTabChange = React.useCallback((tab: AdminTab) => {
@@ -315,6 +390,9 @@ export default function AdminPage() {
   const REVIEWS_PER_PAGE = 20
   const [reviewsPage, setReviewsPage] = React.useState(1)
 
+  const TEMPLATES_PER_PAGE = 10
+  const [templatesPage, setTemplatesPage] = React.useState(1)
+
   // Reset page when filters change
   React.useEffect(() => {
     setLawsPage(1)
@@ -322,6 +400,10 @@ export default function AdminPage() {
 
   React.useEffect(() => {
     setLawyersPage(1)
+  }, [search])
+
+  React.useEffect(() => {
+    setTemplatesPage(1)
   }, [search])
 
   React.useEffect(() => {
@@ -387,70 +469,130 @@ export default function AdminPage() {
   }, [session, loadAll])
 
   // --- Reseed Handler ---
-  const reseed = async () => {
-    if (!confirm(t('Are you sure you want to reseed the database?', 'کیا آپ واقعی ڈیٹابیس کو دوبارہ سید کرنا چاہتے ہیں؟'))) return
-    toast.info(t('Reseeding database...', 'ڈیٹابیس دوبارہ سید ہو رہا ہے...'))
-    try {
-      const res = await fetch('/api/seed', { method: 'POST' })
-      const d = await res.json()
-      if (d.ok) {
-        toast.success(t('Database reseeded successfully', 'ڈیٹابیس کامیابی سے سید ہو گیا'))
-        loadAll()
-      } else {
-        toast.error(t('Reseed failed', 'سید ناکام'))
-      }
-    } catch {
-      toast.error(t('Reseed failed', 'سید ناکام'))
-    }
+  const reseed = () => {
+    requestDelete({
+      title: t('Reseed Database', 'ڈیٹابیس ری سیڈ کریں'),
+      titleUrdu: 'ڈیٹابیس دوبارہ سید کریں',
+      itemName: 'Platform Database & Initial Directory Seeds',
+      itemType: 'System Database',
+      itemTypeUrdu: 'سسٹم ڈیٹابیس',
+      description: t(
+        'Are you sure you want to reseed the database? This will reset sample laws, lawyer directories, and templates.',
+        'کیا آپ واقعی ڈیٹابیس کو دوبارہ سید کرنا چاہتے ہیں؟ اس سے تمام ڈیفالٹ قوانین اور ڈائریکٹریز ری سیٹ ہو جائیں گی۔'
+      ),
+      onConfirm: async () => {
+        toast.info(t('Reseeding database...', 'ڈیٹابیس دوبارہ سید ہو رہا ہے...'))
+        try {
+          const res = await fetch('/api/seed', { method: 'POST' })
+          const d = await res.json()
+          if (d.ok) {
+            toast.success(t('Database reseeded successfully', 'ڈیٹابیس کامیابی سے سید ہو گیا'))
+            loadAll()
+          } else {
+            toast.error(t('Reseed failed', 'سید ناکام'))
+          }
+        } catch {
+          toast.error(t('Reseed failed', 'سید ناکام'))
+        }
+      },
+    })
   }
 
   // --- Delete Law ---
-  const deleteLaw = async (law: Law) => {
-    if (!confirm(`${t('Delete', 'حذف کریں')} "${law.title}"?`)) return
-    const res = await fetch(`/api/laws/${law.slug}`, { method: 'DELETE' })
-    if (res.ok) {
-      toast.success(t('Law deleted', 'قانون حذف ہو گیا'))
-      loadAll()
-    } else {
-      toast.error(t('Delete failed', 'حذف ناکام'))
-    }
+  const deleteLaw = (law: Law) => {
+    requestDelete({
+      title: t('Delete Statute', 'قانون حذف کریں'),
+      titleUrdu: 'قانون حذف کریں',
+      itemName: law.title,
+      itemType: 'Statute / Law',
+      itemTypeUrdu: 'قانون / ایکٹ',
+      description: t(
+        `Are you sure you want to delete "${law.title}"? All related sections, bookmarks, and search index entries will be permanently removed.`,
+        `کیا آپ واقعی "${law.title}" کو حذف کرنا چاہتے ہیں؟ اس سے متعلقہ تمام دفعات اور ریکارڈز ہمیشہ کے لیے ختم ہو جائیں گے۔`
+      ),
+      onConfirm: async () => {
+        const res = await fetch(`/api/laws/${law.slug}`, { method: 'DELETE' })
+        if (res.ok) {
+          toast.success(t('Law deleted', 'قانون حذف ہو گیا'))
+          loadAll()
+        } else {
+          toast.error(t('Delete failed', 'حذف ناکام'))
+        }
+      },
+    })
   }
 
   // --- Delete Category ---
-  const deleteCategory = async (cat: Category) => {
-    if (!confirm(`${t('Delete category', 'قسم حذف کریں')} "${cat.name}"?`)) return
-    const res = await fetch(`/api/categories/${cat.slug}`, { method: 'DELETE' })
-    const data = await res.json()
-    if (res.ok && data.ok) {
-      toast.success(t('Category deleted', 'قسم حذف ہو گئی'))
-      loadAll()
-    } else {
-      toast.error(data.error || t('Delete failed', 'حذف ناکام'))
-    }
+  const deleteCategory = (cat: Category) => {
+    requestDelete({
+      title: t('Delete Category', 'کیٹیگری حذف کریں'),
+      titleUrdu: 'کیٹیگری حذف کریں',
+      itemName: cat.name,
+      itemType: 'Legal Category',
+      itemTypeUrdu: 'قانونی قسم',
+      description: t(
+        `Are you sure you want to delete category "${cat.name}"?`,
+        `کیا آپ واقعی کیٹیگری "${cat.name}" کو حذف کرنا چاہتے ہیں؟`
+      ),
+      onConfirm: async () => {
+        const res = await fetch(`/api/categories/${cat.slug}`, { method: 'DELETE' })
+        const data = await res.json()
+        if (res.ok && data.ok) {
+          toast.success(t('Category deleted', 'قسم حذف ہو گئی'))
+          loadAll()
+        } else {
+          toast.error(data.error || t('Delete failed', 'حذف ناکام'))
+        }
+      },
+    })
   }
 
   // --- Delete Lawyer ---
-  const deleteLawyer = async (lawyer: Lawyer) => {
-    if (!confirm(`${t('Delete', 'حذف کریں')} "${lawyer.name}"?`)) return
-    const res = await fetch(`/api/admin/lawyers/${lawyer.slug}`, { method: 'DELETE' })
-    if (res.ok) {
-      toast.success(t('Lawyer deleted', 'وکیل حذف ہو گیا'))
-      loadAll()
-    } else {
-      toast.error(t('Delete failed', 'حذف ناکام'))
-    }
+  const deleteLawyer = (lawyer: Lawyer) => {
+    requestDelete({
+      title: t('Delete Lawyer Profile', 'وکیل کا پروفائل حذف کریں'),
+      titleUrdu: 'وکیل کا پروفائل حذف کریں',
+      itemName: lawyer.name,
+      itemType: 'Lawyer Profile',
+      itemTypeUrdu: 'وکیل پروفائل',
+      description: t(
+        `Are you sure you want to delete the directory profile for "${lawyer.name}"?`,
+        `کیا آپ واقعی "${lawyer.name}" کا پروفائل حذف کرنا چاہتے ہیں؟`
+      ),
+      onConfirm: async () => {
+        const res = await fetch(`/api/admin/lawyers/${lawyer.slug}`, { method: 'DELETE' })
+        if (res.ok) {
+          toast.success(t('Lawyer deleted', 'وکیل حذف ہو گیا'))
+          loadAll()
+        } else {
+          toast.error(t('Delete failed', 'حذف ناکام'))
+        }
+      },
+    })
   }
 
   // --- Delete Template ---
-  const deleteTemplate = async (tpl: Template) => {
-    if (!confirm(`${t('Delete', 'حذف کریں')} "${tpl.title}"?`)) return
-    const res = await fetch(`/api/admin/templates/${tpl.slug}`, { method: 'DELETE' })
-    if (res.ok) {
-      toast.success(t('Template deleted', 'ٹیمپلیٹ حذف ہو گیا'))
-      loadAll()
-    } else {
-      toast.error(t('Delete failed', 'حذف ناکام'))
-    }
+  const deleteTemplate = (tpl: Template) => {
+    requestDelete({
+      title: t('Delete Legal Template', 'قانونی ٹیمپلیٹ حذف کریں'),
+      titleUrdu: 'قانونی ٹیمپلیٹ حذف کریں',
+      itemName: tpl.title,
+      itemType: 'Legal Template',
+      itemTypeUrdu: 'قانونی دستاویز',
+      description: t(
+        `Are you sure you want to delete document template "${tpl.title}"?`,
+        `کیا آپ واقعی ٹیمپلیٹ "${tpl.title}" کو حذف کرنا چاہتے ہیں؟`
+      ),
+      onConfirm: async () => {
+        const res = await fetch(`/api/admin/templates/${tpl.slug}`, { method: 'DELETE' })
+        if (res.ok) {
+          toast.success(t('Template deleted', 'ٹیمپلیٹ حذف ہو گیا'))
+          loadAll()
+        } else {
+          toast.error(t('Delete failed', 'حذف ناکام'))
+        }
+      },
+    })
   }
 
   // --- Toggle Lawyer Status ---
@@ -518,20 +660,32 @@ export default function AdminPage() {
     }
   }
 
-  const deleteSubscriber = async (sub: Subscriber) => {
-    if (!confirm(`${t('Delete subscriber', 'حذف کریں')} "${sub.email}"?`)) return
-    try {
-      const res = await fetch(`/api/admin/subscribers?id=${sub.id}`, { method: 'DELETE' })
-      const d = await res.json()
-      if (d.ok) {
-        toast.success(t('Subscriber deleted', 'سبسکرائبر حذف ہو گیا'))
-        setSubscribers((prev) => prev.filter((s) => s.id !== sub.id))
-      } else {
-        toast.error(d.error || 'Failed to delete')
-      }
-    } catch {
-      toast.error('Failed to delete subscriber')
-    }
+  const deleteSubscriber = (sub: Subscriber) => {
+    requestDelete({
+      title: t('Delete Subscriber', 'سبسکرائبر حذف کریں'),
+      titleUrdu: 'سبسکرائبر حذف کریں',
+      itemName: sub.email,
+      itemType: 'Newsletter Subscriber',
+      itemTypeUrdu: 'نیوز لیٹر سبسکرائبر',
+      description: t(
+        `Are you sure you want to remove "${sub.email}" from the newsletter subscription list?`,
+        `کیا آپ واقعی "${sub.email}" کو سبسکرپشن لسٹ سے حذف کرنا چاہتے ہیں؟`
+      ),
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`/api/admin/subscribers?id=${sub.id}`, { method: 'DELETE' })
+          const d = await res.json()
+          if (d.ok) {
+            toast.success(t('Subscriber deleted', 'سبسکرائبر حذف ہو گیا'))
+            setSubscribers((prev) => prev.filter((s) => s.id !== sub.id))
+          } else {
+            toast.error(d.error || 'Failed to delete')
+          }
+        } catch {
+          toast.error('Failed to delete subscriber')
+        }
+      },
+    })
   }
 
   const copySubscribersEmails = () => {
@@ -545,37 +699,61 @@ export default function AdminPage() {
   }
 
   // --- Review Handlers ---
-  const deleteReview = async (review: Review) => {
-    if (!confirm(t('Delete this lawyer review?', 'کیا آپ یہ جائزہ حذف کرنا چاہتے ہیں؟'))) return
-    try {
-      const res = await fetch(`/api/admin/reviews?id=${review.id}`, { method: 'DELETE' })
-      const d = await res.json()
-      if (d.ok) {
-        toast.success(t('Review deleted', 'جائزہ حذف ہو گیا'))
-        setReviews((prev) => prev.filter((r) => r.id !== review.id))
-      } else {
-        toast.error(d.error || 'Failed to delete review')
-      }
-    } catch {
-      toast.error('Failed to delete review')
-    }
+  const deleteReview = (review: Review) => {
+    requestDelete({
+      title: t('Delete Client Review', 'ریویو حذف کریں'),
+      titleUrdu: 'ریویو حذف کریں',
+      itemName: `${review.authorName} (${review.rating} ★) - ${review.comment ? `"${review.comment.slice(0, 50)}..."` : ''}`,
+      itemType: 'Lawyer Review',
+      itemTypeUrdu: 'وکیل کا جائزہ',
+      description: t(
+        `Are you sure you want to delete this review by "${review.authorName}"?`,
+        `کیا آپ واقعی "${review.authorName}" کا یہ جائزہ حذف کرنا چاہتے ہیں؟`
+      ),
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`/api/admin/reviews?id=${review.id}`, { method: 'DELETE' })
+          const d = await res.json()
+          if (d.ok) {
+            toast.success(t('Review deleted', 'جائزہ حذف ہو گیا'))
+            setReviews((prev) => prev.filter((r) => r.id !== review.id))
+          } else {
+            toast.error(d.error || 'Failed to delete review')
+          }
+        } catch {
+          toast.error('Failed to delete review')
+        }
+      },
+    })
   }
 
   // --- Finder Question Handlers ---
-  const deleteFinderQuestion = async (q: FinderQuestionItem) => {
-    if (!confirm(`${t('Delete question', 'سوال حذف کریں')} "${q.question}"?`)) return
-    try {
-      const res = await fetch(`/api/admin/finder?id=${q.id}`, { method: 'DELETE' })
-      const d = await res.json()
-      if (d.ok) {
-        toast.success(t('Question deleted', 'سوال حذف ہو گیا'))
-        setFinderQuestions((prev) => prev.filter((item) => item.id !== q.id))
-      } else {
-        toast.error(d.error || 'Failed to delete')
-      }
-    } catch {
-      toast.error('Failed to delete question')
-    }
+  const deleteFinderQuestion = (q: FinderQuestionItem) => {
+    requestDelete({
+      title: t('Delete Citizen Finder Question', 'رہنمائی سوال حذف کریں'),
+      titleUrdu: 'رہنمائی سوال حذف کریں',
+      itemName: q.question,
+      itemType: 'Citizen Guide Question',
+      itemTypeUrdu: 'رہنمائی سوال',
+      description: t(
+        `Are you sure you want to delete this decision-tree question and all its configured answer branches?`,
+        `کیا آپ واقعی یہ رہنمائی سوال اور اس کی تمام متعلقہ شاخیں حذف کرنا چاہتے ہیں؟`
+      ),
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`/api/admin/finder?id=${q.id}`, { method: 'DELETE' })
+          const d = await res.json()
+          if (d.ok) {
+            toast.success(t('Question deleted', 'سوال حذف ہو گیا'))
+            setFinderQuestions((prev) => prev.filter((item) => item.id !== q.id))
+          } else {
+            toast.error(d.error || 'Failed to delete')
+          }
+        } catch {
+          toast.error('Failed to delete question')
+        }
+      },
+    })
   }
 
   // --- AUTH GUARD CHECKS ---
@@ -738,6 +916,9 @@ export default function AdminPage() {
   const totalLawyersPages = Math.max(1, Math.ceil(filteredLawyers.length / LAWYERS_PER_PAGE))
   const paginatedLawyers = filteredLawyers.slice((lawyersPage - 1) * LAWYERS_PER_PAGE, lawyersPage * LAWYERS_PER_PAGE)
 
+  const totalTemplatesPages = Math.max(1, Math.ceil(filteredTemplates.length / TEMPLATES_PER_PAGE))
+  const paginatedTemplates = filteredTemplates.slice((templatesPage - 1) * TEMPLATES_PER_PAGE, templatesPage * TEMPLATES_PER_PAGE)
+
   // --- FILTERED SUBSCRIBERS ---
   const filteredSubscribers = subscribers.filter((sub) => {
     if (subscriberFilter === 'active' && !sub.active) return false
@@ -763,106 +944,178 @@ export default function AdminPage() {
   const totalReviewsPages = Math.max(1, Math.ceil(filteredReviews.length / REVIEWS_PER_PAGE))
   const paginatedReviews = filteredReviews.slice((reviewsPage - 1) * REVIEWS_PER_PAGE, reviewsPage * REVIEWS_PER_PAGE)
 
-  // --- SIDEBAR NAVIGATION DEFINITION ---
-  const navItems = [
+  // --- SIDEBAR NAVIGATION DEFINITION (ORGANIZED BY SECTIONS) ---
+  type NavSection = {
+    titleEn: string
+    titleUr: string
+    items: Array<{
+      id: AdminTab
+      labelEn: string
+      labelUr: string
+      icon: any
+      badge: string | number | null
+    }>
+  }
+
+  const navSections: NavSection[] = [
     {
-      id: 'overview',
-      labelEn: 'Dashboard Overview',
-      labelUr: 'ڈیش بورڈ خلاصہ',
-      icon: LayoutDashboard,
-      badge: null,
+      titleEn: 'Main',
+      titleUr: 'مرکزی',
+      items: [
+        {
+          id: 'overview',
+          labelEn: 'Dashboard Overview',
+          labelUr: 'ڈیش بورڈ خلاصہ',
+          icon: LayoutDashboard,
+          badge: null,
+        },
+      ],
     },
     {
-      id: 'laws',
-      labelEn: 'Laws Management',
-      labelUr: 'قوانین کا انتظام',
-      icon: FileText,
-      badge: laws.length,
+      titleEn: 'Statutes & Judiciary',
+      titleUr: 'قوانین و عدلیہ',
+      items: [
+        {
+          id: 'laws',
+          labelEn: 'Laws Management',
+          labelUr: 'قوانین کا انتظام',
+          icon: FileText,
+          badge: laws.length,
+        },
+        {
+          id: 'categories',
+          labelEn: 'Categories',
+          labelUr: 'قانونی اقسام',
+          icon: Tags,
+          badge: categories.length,
+        },
+        {
+          id: 'courts',
+          labelEn: 'Court Hierarchy',
+          labelUr: 'عدالتی درجہ بندی',
+          icon: Landmark,
+          badge: 9,
+        },
+        {
+          id: 'glossary',
+          labelEn: 'Legal Glossary',
+          labelUr: 'قانونی فرہنگ',
+          icon: BookOpen,
+          badge: 45,
+        },
+      ],
     },
     {
-      id: 'categories',
-      labelEn: 'Categories',
-      labelUr: 'قانونی اقسام',
-      icon: Tags,
-      badge: categories.length,
+      titleEn: 'Directory & Services',
+      titleUr: 'ڈائریکٹری و خدمات',
+      items: [
+        {
+          id: 'lawyers',
+          labelEn: 'Lawyers Directory',
+          labelUr: 'وکلاء کی ڈائریکٹری',
+          icon: Briefcase,
+          badge: lawyers.length,
+        },
+        {
+          id: 'reviews',
+          labelEn: 'Lawyer Reviews',
+          labelUr: 'وکلاء کے جائزے',
+          icon: Star,
+          badge: reviews.length || null,
+        },
+        {
+          id: 'templates',
+          labelEn: 'Legal Templates',
+          labelUr: 'قانونی ٹیمپلیٹس',
+          icon: FilePlus,
+          badge: templates.length,
+        },
+        {
+          id: 'finder',
+          labelEn: 'Legal Finder',
+          labelUr: 'رہنمائی سوالات',
+          icon: Compass,
+          badge: finderQuestions.length || null,
+        },
+      ],
     },
     {
-      id: 'lawyers',
-      labelEn: 'Lawyers Directory',
-      labelUr: 'وکلاء کی ڈائریکٹری',
-      icon: Briefcase,
-      badge: lawyers.length,
+      titleEn: 'Community & Citizen Help',
+      titleUr: 'کمیونٹی و رہنمائی',
+      items: [
+        {
+          id: 'faq',
+          labelEn: 'FAQ & Help Center',
+          labelUr: 'سوالات و رہنمائی',
+          icon: HelpCircle,
+          badge: 25,
+        },
+        {
+          id: 'users',
+          labelEn: 'User Management',
+          labelUr: 'صارفین کا انتظام',
+          icon: Users,
+          badge: users.length || null,
+        },
+        {
+          id: 'subscribers',
+          labelEn: 'Subscribers',
+          labelUr: 'سبسکرائبرز',
+          icon: Mail,
+          badge: subscribers.length || null,
+        },
+        {
+          id: 'analytics',
+          labelEn: 'Analytics & Logs',
+          labelUr: 'تجزیات و لاگز',
+          icon: BarChart3,
+          badge: analytics ? `${analytics.zeroResultCount} ⚠️` : null,
+        },
+      ],
     },
     {
-      id: 'templates',
-      labelEn: 'Legal Templates',
-      labelUr: 'قانونی ٹیمپلیٹس',
-      icon: FilePlus,
-      badge: templates.length,
-    },
-    {
-      id: 'analytics',
-      labelEn: 'Analytics & Logs',
-      labelUr: 'تجزیات و تلاش لاگز',
-      icon: BarChart3,
-      badge: analytics ? `${analytics.zeroResultCount} ⚠️` : null,
-    },
-    {
-      id: 'users',
-      labelEn: 'User Management',
-      labelUr: 'صارفین کا انتظام',
-      icon: Users,
-      badge: users.length || null,
-    },
-    {
-      id: 'subscribers',
-      labelEn: 'Subscribers',
-      labelUr: 'سبسکرائبرز',
-      icon: Mail,
-      badge: subscribers.length || null,
-    },
-    {
-      id: 'reviews',
-      labelEn: 'Lawyer Reviews',
-      labelUr: 'وکلاء کے جائزے',
-      icon: Star,
-      badge: reviews.length || null,
-    },
-    {
-      id: 'finder',
-      labelEn: 'Legal Finder',
-      labelUr: 'رہنمائی سوالات',
-      icon: Compass,
-      badge: finderQuestions.length || null,
-    },
-    {
-      id: 'settings',
-      labelEn: 'Settings & Tools',
-      labelUr: 'ترتیبات و اوزار',
-      icon: Settings,
-      badge: null,
+      titleEn: 'System & Data',
+      titleUr: 'سسٹم و ڈیٹا',
+      items: [
+        {
+          id: 'export',
+          labelEn: 'Data Export & Backup',
+          labelUr: 'ڈیٹا ایکسپورٹ و بیک اپ',
+          icon: HardDrive,
+          badge: 'Live',
+        },
+        {
+          id: 'settings',
+          labelEn: 'Settings & Tools',
+          labelUr: 'ترتیبات و اوزار',
+          icon: Settings,
+          badge: null,
+        },
+      ],
     },
   ]
+
+  const navItems = navSections.flatMap((section) => section.items)
 
   // Shared Sidebar Component
   const SidebarContent = () => (
     <div className="flex flex-col h-full bg-card border-r border-border text-card-foreground">
       {/* Brand Header */}
-      <div className="p-5 border-b border-border/70 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground shadow-md shadow-primary/20">
+      <div className="p-4 border-b border-border/70 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-2.5">
+          <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center text-primary-foreground shadow-md shadow-primary/20">
             <ScaleIcon className="h-5 w-5" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="font-extrabold text-base tracking-tight text-foreground">
+            <div className="flex items-center gap-1.5">
+              <span className="font-extrabold text-sm tracking-tight text-foreground">
                 {t('QanoonPK', 'قانون پی کے')}
               </span>
-              <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+              <span className="text-[9px] uppercase font-bold tracking-wider px-1 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
                 ADMIN
               </span>
             </div>
-            <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 mt-0.5">
+            <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
               {t('Control Center', 'مرکزی کنٹرول پینل')}
             </p>
@@ -870,73 +1123,90 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* Navigation Links */}
-      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1 scrollbar-thin">
-        <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
-          {t('Navigation Menu', 'نیویگیشن مینو')}
-        </div>
-        {navItems.map((item) => {
-          const Icon = item.icon
-          const isActive = activeTab === item.id
-          return (
-            <button
-              key={item.id}
-              onClick={() => {
-                handleTabChange(item.id as AdminTab)
-                setMobileMenuOpen(false)
-              }}
-              className={cn(
-                'w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition-all group text-left',
-                isActive
-                  ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/25 font-bold'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-accent/60'
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <Icon className={cn('h-4 w-4 shrink-0 transition-transform group-hover:scale-110', isActive ? 'text-primary-foreground' : 'text-primary')} />
-                <span>{t(item.labelEn, item.labelUr)}</span>
-              </div>
-              {item.badge != null && (
-                <span
+      {/* Navigation Links with Clean Sections */}
+      <div className="flex-1 overflow-y-auto px-2.5 py-3 space-y-4 scrollbar-thin pb-8">
+        {navSections.map((section) => (
+          <div key={section.titleEn} className="space-y-1">
+            <div className="px-2.5 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+              {t(section.titleEn, section.titleUr)}
+            </div>
+            {section.items.map((item) => {
+              const Icon = item.icon
+              const isActive = activeTab === item.id
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    handleTabChange(item.id as AdminTab)
+                    setMobileMenuOpen(false)
+                  }}
                   className={cn(
-                    'text-[10px] px-2 py-0.5 rounded-full font-bold',
+                    'w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-semibold transition-all group text-left cursor-pointer',
                     isActive
-                      ? 'bg-white/20 text-white'
-                      : 'bg-muted text-muted-foreground border border-border/50'
+                      ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/25 font-bold'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/60'
                   )}
                 >
-                  {item.badge}
-                </span>
-              )}
-            </button>
-          )
-        })}
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <Icon className={cn('h-3.5 w-3.5 shrink-0 transition-transform group-hover:scale-110', isActive ? 'text-primary-foreground' : 'text-primary')} />
+                    <span className="truncate">{t(item.labelEn, item.labelUr)}</span>
+                  </div>
+                  {item.badge != null && (
+                    <span
+                      className={cn(
+                        'text-[10px] px-1.5 py-0.2 rounded-full font-bold shrink-0 ml-1.5',
+                        isActive
+                          ? 'bg-white/20 text-white'
+                          : 'bg-muted text-muted-foreground border border-border/50'
+                      )}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        ))}
 
-        <div className="pt-4 px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
-          {t('Quick Actions', 'فوری روابط')}
+        <div className="pt-2 border-t border-border/60">
+          <div className="px-2.5 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+            {t('Quick Links', 'فوری روابط')}
+          </div>
+          <Link
+            href="/"
+            target="_blank"
+            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <ExternalLink className="h-3.5 w-3.5 text-blue-500" />
+              <span>{t('View Public Site', 'عوامی سائٹ')}</span>
+            </div>
+            <ArrowUpRight className="h-3 w-3 opacity-60" />
+          </Link>
+          <Link
+            href="/courts"
+            target="_blank"
+            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <Landmark className="h-3.5 w-3.5 text-teal-500" />
+              <span>{t('Courts Directory', 'عدالتی نظام')}</span>
+            </div>
+            <ArrowUpRight className="h-3 w-3 opacity-60" />
+          </Link>
+          <Link
+            href="/chat"
+            target="_blank"
+            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+              <span>{t('AI Assistant', 'اے آئی اسسٹنٹ')}</span>
+            </div>
+            <ArrowUpRight className="h-3 w-3 opacity-60" />
+          </Link>
         </div>
-        <Link
-          href="/"
-          target="_blank"
-          className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
-        >
-          <div className="flex items-center gap-2.5">
-            <ExternalLink className="h-3.5 w-3.5 text-blue-500" />
-            <span>{t('View Public Site', 'عوامی سائٹ کھولیں')}</span>
-          </div>
-          <ArrowUpRight className="h-3 w-3 opacity-60" />
-        </Link>
-        <Link
-          href="/chat"
-          target="_blank"
-          className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
-        >
-          <div className="flex items-center gap-2.5">
-            <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-            <span>{t('AI Legal Assistant', 'اے آئی قانونی اسسٹنٹ')}</span>
-          </div>
-          <ArrowUpRight className="h-3 w-3 opacity-60" />
-        </Link>
       </div>
 
       {/* Sidebar Footer / User Card & Controls */}
@@ -965,12 +1235,12 @@ export default function AdminPage() {
             {theme === 'dark' ? <Sun className="h-3.5 w-3.5 text-amber-400" /> : <Moon className="h-3.5 w-3.5 text-slate-700" />}
           </Button>
 
-          {/* Sign Out */}
+          {/* Sign Out with Confirmation Modal */}
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => signOut({ callbackUrl: '/' })}
-            className="h-8 w-8 text-destructive hover:bg-destructive/10"
+            onClick={() => setSignOutModalOpen(true)}
+            className="h-8 w-8 text-destructive hover:bg-destructive/10 cursor-pointer"
             title="Sign Out"
           >
             <LogOut className="h-3.5 w-3.5" />
@@ -1148,7 +1418,7 @@ export default function AdminPage() {
 
               {/* KPI Stat Cards */}
               {stats && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-9 gap-2.5">
                   <StatCard
                     icon={FileText}
                     label={t('Total Laws', 'کل قوانین')}
@@ -1164,6 +1434,20 @@ export default function AdminPage() {
                     onClick={() => handleTabChange('categories')}
                   />
                   <StatCard
+                    icon={Landmark}
+                    label={t('Courts', 'عدالتیں')}
+                    value={9}
+                    color="#0d9488"
+                    onClick={() => handleTabChange('courts')}
+                  />
+                  <StatCard
+                    icon={BookOpen}
+                    label={t('Glossary', 'فرہنگ')}
+                    value={45}
+                    color="#2563eb"
+                    onClick={() => handleTabChange('glossary')}
+                  />
+                  <StatCard
                     icon={Briefcase}
                     label={t('Lawyers', 'وکلاء')}
                     value={stats.lawyerCount ?? 0}
@@ -1176,6 +1460,13 @@ export default function AdminPage() {
                     value={stats.templateCount ?? 0}
                     color="#db2777"
                     onClick={() => handleTabChange('templates')}
+                  />
+                  <StatCard
+                    icon={HelpCircle}
+                    label={t('FAQs', 'سوالات')}
+                    value={25}
+                    color="#d97706"
+                    onClick={() => handleTabChange('faq')}
                   />
                   <StatCard
                     icon={Users}
@@ -1216,6 +1507,18 @@ export default function AdminPage() {
                   </CardContent>
                 </Card>
               )}
+
+              {/* Comprehensive Visual Graphs for All Pages Data */}
+              <AdminOverviewCharts
+                laws={laws}
+                categories={categories}
+                lawyers={lawyers}
+                templates={templates}
+                analytics={analytics}
+                reviews={reviews}
+                users={users}
+                subscribers={subscribers}
+              />
 
               {/* Two Column Layout: Quick Law Directory & Top Searches */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1886,6 +2189,7 @@ export default function AdminPage() {
                       </CardTitle>
                       <CardDescription className="text-xs mt-0.5">
                         {filteredTemplates.length} {t('ready-to-use agreements and legal drafts', 'قانونی معاہدات اور ڈرافٹس')}
+                        {filteredTemplates.length > TEMPLATES_PER_PAGE && ` • ${t('Page', 'صفحہ')} ${templatesPage} / ${totalTemplatesPages}`}
                       </CardDescription>
                     </div>
                     <div className="flex items-center gap-2">
@@ -1918,50 +2222,116 @@ export default function AdminPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredTemplates.map((tpl, i) => (
-                          <TableRow key={tpl.id} className="hover:bg-muted/30">
-                            <TableCell className="text-center text-xs text-muted-foreground">{i + 1}</TableCell>
-                            <TableCell>
-                              <div className="font-semibold text-xs text-foreground">
-                                {lang === 'ur' && tpl.titleUrdu ? tpl.titleUrdu : tpl.title}
-                              </div>
-                              <div className="text-[10px] text-muted-foreground font-mono mt-0.5">/{tpl.slug}</div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className="text-[10px]">
-                                {tpl.category}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-center font-mono text-xs text-muted-foreground">
-                              {tpl.downloads}
-                            </TableCell>
-                            <TableCell className="text-right pr-4 space-x-1">
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                                asChild
-                                title="Open Template Builder"
-                              >
-                                <Link href={`/templates/${tpl.slug}`} target="_blank">
-                                  <ExternalLink className="h-3.5 w-3.5" />
-                                </Link>
-                              </Button>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                                onClick={() => deleteTemplate(tpl)}
-                                title="Delete Template"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {paginatedTemplates.map((tpl, i) => {
+                          const serialNumber = (templatesPage - 1) * TEMPLATES_PER_PAGE + i + 1
+                          return (
+                            <TableRow key={tpl.id} className="hover:bg-muted/30">
+                              <TableCell className="text-center text-xs text-muted-foreground">{serialNumber}</TableCell>
+                              <TableCell>
+                                <div className="font-semibold text-xs text-foreground">
+                                  {lang === 'ur' && tpl.titleUrdu ? tpl.titleUrdu : tpl.title}
+                                </div>
+                                <div className="text-[10px] text-muted-foreground font-mono mt-0.5">/{tpl.slug}</div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="text-[10px]">
+                                  {tpl.category}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-center font-mono text-xs text-muted-foreground">
+                                {tpl.downloads}
+                              </TableCell>
+                              <TableCell className="text-right pr-4 space-x-1">
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                  asChild
+                                  title="Open Template Builder"
+                                >
+                                  <Link href={`/templates/${tpl.slug}`} target="_blank">
+                                    <ExternalLink className="h-3.5 w-3.5" />
+                                  </Link>
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                                  onClick={() => deleteTemplate(tpl)}
+                                  title="Delete Template"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })}
                       </TableBody>
                     </Table>
                   </div>
+
+                  {/* Templates Pagination Controls */}
+                  {filteredTemplates.length > TEMPLATES_PER_PAGE && (
+                    <div className="p-4 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-4 bg-muted/10">
+                      <div className="text-xs text-muted-foreground font-medium order-2 sm:order-1">
+                        {t(
+                          `Showing ${(templatesPage - 1) * TEMPLATES_PER_PAGE + 1} to ${Math.min(templatesPage * TEMPLATES_PER_PAGE, filteredTemplates.length)} of ${filteredTemplates.length} templates`,
+                          `${filteredTemplates.length} میں سے ${(templatesPage - 1) * TEMPLATES_PER_PAGE + 1} تا ${Math.min(templatesPage * TEMPLATES_PER_PAGE, filteredTemplates.length)} ٹیمپلیٹس`
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 order-1 sm:order-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setTemplatesPage((p) => Math.max(1, p - 1))}
+                          disabled={templatesPage === 1}
+                          className="h-8 px-2.5 text-xs gap-1 cursor-pointer"
+                        >
+                          <ChevronLeft className={cn('h-3.5 w-3.5', lang === 'ur' && 'rotate-180')} />
+                          <span>{t('Previous', 'پچھلا')}</span>
+                        </Button>
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: Math.min(7, totalTemplatesPages) }).map((_, idx) => {
+                            let pNum: number
+                            if (totalTemplatesPages <= 7) {
+                              pNum = idx + 1
+                            } else if (templatesPage <= 4) {
+                              pNum = idx + 1
+                            } else if (templatesPage >= totalTemplatesPages - 3) {
+                              pNum = totalTemplatesPages - 6 + idx
+                            } else {
+                              pNum = templatesPage - 3 + idx
+                            }
+                            const isActive = pNum === templatesPage
+                            return (
+                              <Button
+                                key={pNum}
+                                variant={isActive ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => setTemplatesPage(pNum)}
+                                className={cn(
+                                  'h-8 w-8 p-0 text-xs tabular-nums cursor-pointer',
+                                  isActive && 'font-bold shadow-sm'
+                                )}
+                              >
+                                {pNum}
+                              </Button>
+                            )
+                          })}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setTemplatesPage((p) => Math.min(totalTemplatesPages, p + 1))}
+                          disabled={templatesPage === totalTemplatesPages}
+                          className="h-8 px-2.5 text-xs gap-1 cursor-pointer"
+                        >
+                          <span>{t('Next', 'اگلا')}</span>
+                          <ChevronRight className={cn('h-3.5 w-3.5', lang === 'ur' && 'rotate-180')} />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -2006,6 +2376,18 @@ export default function AdminPage() {
                   </CardContent>
                 </Card>
               </div>
+
+              {/* Visual Analytics Graphs */}
+              <AdminOverviewCharts
+                laws={laws}
+                categories={categories}
+                lawyers={lawyers}
+                templates={templates}
+                analytics={analytics}
+                reviews={reviews}
+                users={users}
+                subscribers={subscribers}
+              />
 
               {/* Zero Result Search Terms Table */}
               <Card className="border-amber-500/30">
@@ -2715,9 +3097,77 @@ export default function AdminPage() {
             </div>
           )}
 
+          {/* TAB: COURTS HIERARCHY */}
+          {activeTab === 'courts' && <AdminCourtsTab />}
+
+          {/* TAB: LEGAL GLOSSARY */}
+          {activeTab === 'glossary' && <AdminGlossaryTab />}
+
+          {/* TAB: CITIZEN FAQ & HELP */}
+          {activeTab === 'faq' && <AdminFaqTab />}
+
+          {/* TAB: DATA EXPORT & BACKUP */}
+          {activeTab === 'export' && (
+            <AdminExportTab
+              stats={stats}
+              laws={laws}
+              lawyers={lawyers}
+              templates={templates}
+              categories={categories}
+              subscribers={subscribers}
+              users={users}
+              onReseed={reseed}
+            />
+          )}
+
           {/* TAB 11: SETTINGS, BACKUP & MAINTENANCE */}
           {activeTab === 'settings' && (
             <div className="space-y-6 animate-in fade-in-50 duration-200">
+              {/* Google OAuth 2.0 Card */}
+              <Card className="border-border/80 shadow-xs">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base font-bold flex items-center gap-2">
+                      <KeyRound className="h-5 w-5 text-primary" />
+                      {t('Google OAuth 2.0 & NextAuth Settings', 'گوگل او آتھ اور سائن ان کنفیگریشن')}
+                    </CardTitle>
+                    <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-semibold text-xs">
+                      <CheckCircle2 className="h-3 w-3 mr-1" />
+                      {t('Google Sign-In Ready', 'گوگل لاگ ان فعال')}
+                    </Badge>
+                  </div>
+                  <CardDescription className="text-xs">
+                    {t(
+                      'Google Cloud single sign-on parameters for citizen & advocate portal access.',
+                      'شہریوں اور وکلاء کے لیے گوگل کلاؤڈ کنسول کیز اور ری ڈائریکٹ یو آر ایل کا جائزہ لیں۔'
+                    )}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3 pt-0">
+                  <div className="p-3 rounded-xl bg-muted/40 border border-border/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                    <div>
+                      <span className="font-semibold text-foreground">{t('Authorized Redirect URI:', 'منظور شدہ Redirect URI:')}</span>
+                      <p className="text-[11px] text-muted-foreground">{t('Add to Google Cloud Console > Credentials', 'گوگل کلاؤڈ کنسول میں شامل کریں')}</p>
+                    </div>
+                    <code className="text-primary font-mono text-[11px] bg-background px-2.5 py-1 rounded border border-border/70 select-all">
+                      {typeof window !== 'undefined' ? `${window.location.origin}/api/auth/callback/google` : 'http://localhost:3007/api/auth/callback/google'}
+                    </code>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button variant="outline" size="sm" asChild className="h-8 text-xs gap-1.5">
+                      <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="h-3.5 w-3.5 text-blue-500" />
+                        <span>{t('Open Google Cloud Console', 'گوگل کلاؤڈ کنسول')}</span>
+                      </a>
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => handleTabChange('export')} className="h-8 text-xs gap-1.5">
+                      <HardDrive className="h-3.5 w-3.5 text-primary" />
+                      <span>{t('Go to Data Export & Backup', 'ڈیٹا ایکسپورٹ ہب')}</span>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Diagnostics & Health Check */}
               <Card>
                 <CardHeader className="pb-3">
@@ -3025,6 +3475,22 @@ export default function AdminPage() {
           }}
         />
       )}
+      {/* Sign Out Confirmation Modal */}
+      <SignOutModal open={signOutModalOpen} onOpenChange={setSignOutModalOpen} />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmDeleteModal
+        open={deleteModalState.open}
+        onOpenChange={(open) => setDeleteModalState((prev) => ({ ...prev, open }))}
+        title={deleteModalState.title}
+        titleUrdu={deleteModalState.titleUrdu}
+        itemName={deleteModalState.itemName}
+        itemType={deleteModalState.itemType}
+        itemTypeUrdu={deleteModalState.itemTypeUrdu}
+        description={deleteModalState.description}
+        descriptionUrdu={deleteModalState.descriptionUrdu}
+        onConfirm={deleteModalState.onConfirm}
+      />
     </div>
   )
 }
@@ -3875,9 +4341,15 @@ function LawSectionsAndAmendmentsDialog({
     }
   }
 
+  // Delete Target Modal State
+  const [deleteTarget, setDeleteTarget] = React.useState<{
+    id: string
+    type: 'section' | 'amendment'
+    name: string
+  } | null>(null)
+
   // Delete Section
-  const handleDeleteSection = async (id: string) => {
-    if (!confirm(t('Delete this section?', 'کیا آپ یہ دفعہ حذف کرنا چاہتے ہیں؟'))) return
+  const confirmDeleteSection = async (id: string) => {
     try {
       const res = await fetch(`/api/admin/sections?id=${id}`, { method: 'DELETE' })
       const d = await res.json()
@@ -3885,6 +4357,8 @@ function LawSectionsAndAmendmentsDialog({
         toast.success(t('Section deleted', 'دفعہ حذف ہو گئی'))
         loadDetails()
         onSaved()
+      } else {
+        toast.error(d.error || 'Failed to delete section')
       }
     } catch {
       toast.error('Failed to delete section')
@@ -3935,8 +4409,7 @@ function LawSectionsAndAmendmentsDialog({
   }
 
   // Delete Amendment
-  const handleDeleteAmendment = async (id: string) => {
-    if (!confirm(t('Delete this amendment?', 'کیا آپ یہ ترمیم حذف کرنا چاہتے ہیں؟'))) return
+  const confirmDeleteAmendment = async (id: string) => {
     try {
       const res = await fetch(`/api/admin/amendments?id=${id}`, { method: 'DELETE' })
       const d = await res.json()
@@ -3944,6 +4417,8 @@ function LawSectionsAndAmendmentsDialog({
         toast.success(t('Amendment deleted', 'ترمیم حذف ہو گئی'))
         loadDetails()
         onSaved()
+      } else {
+        toast.error(d.error || 'Failed to delete amendment')
       }
     } catch {
       toast.error('Failed to delete amendment')
@@ -3997,7 +4472,7 @@ function LawSectionsAndAmendmentsDialog({
         </div>
 
         {/* Tab Content Area */}
-        <div className="flex-1 overflow-y-auto py-4 space-y-4">
+        <div className="flex-1 overflow-y-auto py-4 space-y-4 scrollbar-thin">
           {activeTab === 'sections' && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               {/* Sections List */}
@@ -4032,7 +4507,7 @@ function LawSectionsAndAmendmentsDialog({
                     {t('No sections recorded for this law yet. Use the form to add Section 1.', 'اس قانون کی کوئی دفعہ درج نہیں ہے۔ نیا فارم استعمال کریں۔')}
                   </div>
                 ) : (
-                  <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+                  <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1 scrollbar-thin">
                     {sections.map((s) => (
                       <div
                         key={s.id}
@@ -4080,7 +4555,7 @@ function LawSectionsAndAmendmentsDialog({
                             size="icon"
                             variant="ghost"
                             className="h-7 w-7 text-destructive hover:bg-destructive/10"
-                            onClick={() => handleDeleteSection(s.id)}
+                            onClick={() => setDeleteTarget({ id: s.id, type: 'section', name: `Section ${s.sectionNumber}${s.title ? `: ${s.title}` : ''}` })}
                             title="Delete"
                           >
                             <Trash2 className="h-3 w-3" />
@@ -4218,7 +4693,7 @@ function LawSectionsAndAmendmentsDialog({
                     {t('No amendments recorded for this act.', 'کوئی ترمیم درج نہیں ہے۔')}
                   </div>
                 ) : (
-                  <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+                  <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1 scrollbar-thin">
                     {amendments.map((a) => (
                       <div
                         key={a.id}
@@ -4265,7 +4740,7 @@ function LawSectionsAndAmendmentsDialog({
                             size="icon"
                             variant="ghost"
                             className="h-7 w-7 text-destructive hover:bg-destructive/10"
-                            onClick={() => handleDeleteAmendment(a.id)}
+                            onClick={() => setDeleteTarget({ id: a.id, type: 'amendment', name: `${a.amendmentTitle} (${a.amendmentYear})` })}
                             title="Delete"
                           >
                             <Trash2 className="h-3 w-3" />
@@ -4363,6 +4838,30 @@ function LawSectionsAndAmendmentsDialog({
             {t('Done & Close', 'مکمل و بند کریں')}
           </Button>
         </DialogFooter>
+
+        {/* Delete Confirmation Modal for Sections / Amendments */}
+        <ConfirmDeleteModal
+          open={!!deleteTarget}
+          onOpenChange={(open) => !open && setDeleteTarget(null)}
+          title={deleteTarget?.type === 'section' ? t('Delete Section', 'دفعہ حذف کریں') : t('Delete Amendment', 'ترمیم حذف کریں')}
+          titleUrdu={deleteTarget?.type === 'section' ? 'دفعہ حذف کریں' : 'ترمیم حذف کریں'}
+          itemName={deleteTarget?.name}
+          itemType={deleteTarget?.type === 'section' ? 'Statute Section' : 'Legislative Amendment'}
+          itemTypeUrdu={deleteTarget?.type === 'section' ? 'قانونی دفعہ' : 'قانونی ترمیم'}
+          description={
+            deleteTarget?.type === 'section'
+              ? t('Are you sure you want to delete this section? This action is permanent.', 'کیا آپ واقعی یہ دفعہ حذف کرنا چاہتے ہیں؟ یہ عمل واپس نہیں ہو سکتا۔')
+              : t('Are you sure you want to delete this amendment record?', 'کیا آپ واقعی یہ ترمیم حذف کرنا چاہتے ہیں؟')
+          }
+          onConfirm={async () => {
+            if (!deleteTarget) return
+            if (deleteTarget.type === 'section') {
+              await confirmDeleteSection(deleteTarget.id)
+            } else {
+              await confirmDeleteAmendment(deleteTarget.id)
+            }
+          }}
+        />
       </DialogContent>
     </Dialog>
   )
@@ -4571,7 +5070,7 @@ function FinderQuestionDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSave} className="flex-1 overflow-y-auto space-y-4 py-2 pr-1">
+        <form onSubmit={handleSave} className="flex-1 overflow-y-auto space-y-4 py-2 pr-1 scrollbar-thin">
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-2 space-y-1.5">
               <Label className="text-xs">{t('Question Prompt (English)', 'سوال (انگریزی)')} *</Label>

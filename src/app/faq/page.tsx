@@ -276,14 +276,16 @@ export default function FAQPage() {
                           </p>
 
                           {/* Related Law tag if present */}
-                          {item.relatedLawSlug && (
-                            <div className="mb-3">
-                              <Button asChild variant="outline" size="sm" className="h-7 text-xs">
-                                <Link href={`/laws/${item.relatedLawSlug}`}>
-                                  <FileText className="h-3 w-3 mr-1 text-primary" />
-                                  {t('View relevant statute', 'متعلقہ قانون دیکھیں')}
-                                </Link>
-                              </Button>
+                          {item.relatedLaws && item.relatedLaws.length > 0 && (
+                            <div className="mb-3 flex flex-wrap gap-2">
+                              {item.relatedLaws.map((lawSlug) => (
+                                <Button key={lawSlug} asChild variant="outline" size="sm" className="h-7 text-xs">
+                                  <Link href={`/laws/${lawSlug}`}>
+                                    <FileText className="h-3 w-3 mr-1 text-primary" />
+                                    {t('View relevant statute', 'متعلقہ قانون دیکھیں')}
+                                  </Link>
+                                </Button>
+                              ))}
                             </div>
                           )}
 
