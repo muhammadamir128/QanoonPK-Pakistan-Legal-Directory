@@ -12,6 +12,8 @@ import {
   UserCheck, Settings, Lock, Sparkles, Filter, Check, Mail, Compass,
   Layers, MessageSquare, Copy, FileSpreadsheet, Server, HardDrive, Shield, Sliders,
   HelpCircle, CheckCircle, Clock, Landmark, BookOpen, KeyRound,
+  Calendar, Globe, Hash, Save, Info, Link2,
+  PanelLeftClose, PanelLeftOpen, PanelLeft,
 } from 'lucide-react'
 import { SignOutModal } from '@/components/sign-out-modal'
 import { ConfirmDeleteModal } from '@/components/confirm-delete-modal'
@@ -40,6 +42,7 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip'
 import { useSession, signOut } from 'next-auth/react'
 import { useTheme } from 'next-themes'
 import { useLanguage } from '@/components/language-provider'
@@ -234,6 +237,30 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = React.useState<AdminTab>('overview')
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
   const [signOutModalOpen, setSignOutModalOpen] = React.useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false)
+
+  React.useEffect(() => {
+    try {
+      const saved = localStorage.getItem('admin_sidebar_collapsed')
+      if (saved !== null) {
+        setSidebarCollapsed(saved === 'true')
+      }
+    } catch {
+      // ignore
+    }
+  }, [])
+
+  const toggleSidebar = () => {
+    setSidebarCollapsed((prev) => {
+      const next = !prev
+      try {
+        localStorage.setItem('admin_sidebar_collapsed', String(next))
+      } catch {
+        // ignore
+      }
+      return next
+    })
+  }
 
   // Unified Delete Confirmation Modal State
   const [deleteModalState, setDeleteModalState] = React.useState<{
@@ -1098,209 +1125,491 @@ export default function AdminPage() {
   const navItems = navSections.flatMap((section) => section.items)
 
   // Shared Sidebar Component
-  const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-card border-r border-border text-card-foreground">
-      {/* Brand Header */}
-      <div className="p-4 border-b border-border/70 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-2.5">
-          <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center text-primary-foreground shadow-md shadow-primary/20">
-            <ScaleIcon className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-extrabold text-sm tracking-tight text-foreground">
-                {t('QanoonPK', 'قانون پی کے')}
-              </span>
-              <span className="text-[9px] uppercase font-bold tracking-wider px-1 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
-                ADMIN
-              </span>
-            </div>
-            <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              {t('Control Center', 'مرکزی کنٹرول پینل')}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Navigation Links with Clean Sections */}
-      <div className="flex-1 overflow-y-auto px-2.5 py-3 space-y-4 scrollbar-thin pb-8">
-        {navSections.map((section) => (
-          <div key={section.titleEn} className="space-y-1">
-            <div className="px-2.5 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
-              {t(section.titleEn, section.titleUr)}
-            </div>
-            {section.items.map((item) => {
-              const Icon = item.icon
-              const isActive = activeTab === item.id
-              return (
+  const SidebarContent = ({
+    collapsed = false,
+    onToggle,
+  }: {
+    collapsed?: boolean
+    onToggle?: () => void
+  }) => (
+    <TooltipProvider delayDuration={0}>
+      <div className="flex flex-col h-full bg-card border-r border-border text-card-foreground">
+        {/* Brand Header */}
+        {collapsed ? (
+          <div className="h-16 p-2 border-b border-border/70 flex items-center justify-center shrink-0">
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
                 <button
-                  key={item.id}
-                  onClick={() => {
-                    handleTabChange(item.id as AdminTab)
-                    setMobileMenuOpen(false)
-                  }}
-                  className={cn(
-                    'w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-semibold transition-all group text-left cursor-pointer',
-                    isActive
-                      ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/25 font-bold'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/60'
-                  )}
+                  type="button"
+                  onClick={onToggle}
+                  className="h-10 w-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-600/25 ring-1 ring-white/20 hover:scale-105 active:scale-95 transition-all cursor-pointer group"
                 >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <Icon className={cn('h-3.5 w-3.5 shrink-0 transition-transform group-hover:scale-110', isActive ? 'text-primary-foreground' : 'text-primary')} />
-                    <span className="truncate">{t(item.labelEn, item.labelUr)}</span>
-                  </div>
-                  {item.badge != null && (
-                    <span
-                      className={cn(
-                        'text-[10px] px-1.5 py-0.2 rounded-full font-bold shrink-0 ml-1.5',
-                        isActive
-                          ? 'bg-white/20 text-white'
-                          : 'bg-muted text-muted-foreground border border-border/50'
-                      )}
-                    >
-                      {item.badge}
-                    </span>
-                  )}
+                  <ScaleIcon className="h-5 w-5 transition-transform group-hover:rotate-6" />
                 </button>
-              )
-            })}
+              </TooltipTrigger>
+              <TooltipContent side={lang === 'ur' ? 'left' : 'right'} sideOffset={10} className="font-semibold text-xs py-1.5 px-3 shadow-lg">
+                <span>{t('QanoonPK Admin Portal', 'قانون پی کے ایڈمن پورٹل')}</span>
+              </TooltipContent>
+            </Tooltip>
           </div>
-        ))}
-
-        <div className="pt-2 border-t border-border/60">
-          <div className="px-2.5 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
-            {t('Quick Links', 'فوری روابط')}
+        ) : (
+          <div className="h-16 px-4 border-b border-border/70 flex items-center shrink-0">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-600/25 ring-1 ring-white/20 shrink-0">
+                <ScaleIcon className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-extrabold text-sm tracking-tight text-foreground truncate">
+                    {t('QanoonPK', 'قانون پی کے')}
+                  </span>
+                  <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-mono">
+                    ADMIN
+                  </span>
+                </div>
+                <p className="text-[10px] text-muted-foreground flex items-center gap-1.5 mt-0.5 truncate">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                  <span>{t('Control Center', 'مرکزی کنٹرول پینل')}</span>
+                </p>
+              </div>
+            </div>
           </div>
-          <Link
-            href="/"
-            target="_blank"
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <ExternalLink className="h-3.5 w-3.5 text-blue-500" />
-              <span>{t('View Public Site', 'عوامی سائٹ')}</span>
-            </div>
-            <ArrowUpRight className="h-3 w-3 opacity-60" />
-          </Link>
-          <Link
-            href="/courts"
-            target="_blank"
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <Landmark className="h-3.5 w-3.5 text-teal-500" />
-              <span>{t('Courts Directory', 'عدالتی نظام')}</span>
-            </div>
-            <ArrowUpRight className="h-3 w-3 opacity-60" />
-          </Link>
-          <Link
-            href="/chat"
-            target="_blank"
-            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-              <span>{t('AI Assistant', 'اے آئی اسسٹنٹ')}</span>
-            </div>
-            <ArrowUpRight className="h-3 w-3 opacity-60" />
-          </Link>
+        )}
+
+        {/* Navigation Links */}
+        <div
+          className={cn(
+            'flex-1 overflow-y-auto overflow-x-hidden scrollbar-none no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden pb-6',
+            collapsed ? 'px-2 py-3 space-y-2' : 'px-2.5 py-3 space-y-4'
+          )}
+        >
+          {collapsed ? (
+            <>
+              {navSections.map((section, sIdx) => (
+                <div key={section.titleEn} className="space-y-1.5">
+                  {sIdx > 0 && <div className="my-2 border-t border-border/60 mx-1" />}
+                  {section.items.map((item) => {
+                    const Icon = item.icon
+                    const isActive = activeTab === item.id
+                    const label = t(item.labelEn, item.labelUr)
+                    return (
+                      <Tooltip key={item.id} delayDuration={0}>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleTabChange(item.id as AdminTab)
+                              setMobileMenuOpen(false)
+                            }}
+                            className={cn(
+                              'w-10 h-10 mx-auto flex items-center justify-center rounded-xl text-xs font-semibold transition-all relative group cursor-pointer',
+                              isActive
+                                ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/30 ring-1 ring-primary/40 font-bold'
+                                : 'text-muted-foreground hover:text-foreground hover:bg-accent/70'
+                            )}
+                          >
+                            <Icon
+                              className={cn(
+                                'h-4 w-4 shrink-0 transition-transform group-hover:scale-110',
+                                isActive ? 'text-primary-foreground' : 'text-primary'
+                              )}
+                            />
+                            {item.badge != null && (
+                              <span
+                                className={cn(
+                                  'absolute top-1 right-1 h-2 w-2 rounded-full ring-2 ring-card',
+                                  isActive ? 'bg-primary-foreground' : 'bg-emerald-500'
+                                )}
+                              />
+                            )}
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent
+                          side={lang === 'ur' ? 'left' : 'right'}
+                          sideOffset={10}
+                          className="flex items-center gap-2 font-semibold text-xs py-1.5 px-3 z-50 shadow-lg border border-border/60"
+                        >
+                          <span>{label}</span>
+                          {item.badge != null && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary-foreground/20 text-primary-foreground font-mono font-bold">
+                              {item.badge}
+                            </span>
+                          )}
+                        </TooltipContent>
+                      </Tooltip>
+                    )
+                  })}
+                </div>
+              ))}
+
+              {/* Collapsed Quick Links */}
+              <div className="pt-2 border-t border-border/60 space-y-1.5">
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <Link
+                      href="/"
+                      target="_blank"
+                      className="w-10 h-10 mx-auto flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent/70 transition-colors group cursor-pointer"
+                    >
+                      <ExternalLink className="h-4 w-4 text-blue-500 transition-transform group-hover:scale-110" />
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent side={lang === 'ur' ? 'left' : 'right'} sideOffset={10} className="font-semibold text-xs py-1.5 px-3 shadow-lg border border-border/60">
+                    {t('View Public Site', 'عوامی سائٹ')}
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <Link
+                      href="/courts"
+                      target="_blank"
+                      className="w-10 h-10 mx-auto flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent/70 transition-colors group cursor-pointer"
+                    >
+                      <Landmark className="h-4 w-4 text-teal-500 transition-transform group-hover:scale-110" />
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent side={lang === 'ur' ? 'left' : 'right'} sideOffset={10} className="font-semibold text-xs py-1.5 px-3 shadow-lg border border-border/60">
+                    {t('Courts Directory', 'عدالتی نظام')}
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <Link
+                      href="/chat"
+                      target="_blank"
+                      className="w-10 h-10 mx-auto flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent/70 transition-colors group cursor-pointer"
+                    >
+                      <Sparkles className="h-4 w-4 text-amber-500 transition-transform group-hover:scale-110" />
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent side={lang === 'ur' ? 'left' : 'right'} sideOffset={10} className="font-semibold text-xs py-1.5 px-3 shadow-lg border border-border/60">
+                    {t('AI Assistant', 'اے آئی اسسٹنٹ')}
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </>
+          ) : (
+            <>
+              {navSections.map((section) => (
+                <div key={section.titleEn} className="space-y-1">
+                  <div className="px-2.5 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+                    {t(section.titleEn, section.titleUr)}
+                  </div>
+                  {section.items.map((item) => {
+                    const Icon = item.icon
+                    const isActive = activeTab === item.id
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => {
+                          handleTabChange(item.id as AdminTab)
+                          setMobileMenuOpen(false)
+                        }}
+                        className={cn(
+                          'w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all group text-left cursor-pointer',
+                          isActive
+                            ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/25 font-bold ring-1 ring-primary/30'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-accent/60'
+                        )}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <Icon
+                            className={cn(
+                              'h-3.5 w-3.5 shrink-0 transition-transform group-hover:scale-110',
+                              isActive ? 'text-primary-foreground' : 'text-primary'
+                            )}
+                          />
+                          <span className="truncate">{t(item.labelEn, item.labelUr)}</span>
+                        </div>
+                        {item.badge != null && (
+                          <span
+                            className={cn(
+                              'text-[10px] px-1.5 py-0.5 rounded-full font-bold shrink-0 ml-1.5 font-mono',
+                              isActive
+                                ? 'bg-white/20 text-white'
+                                : 'bg-muted text-muted-foreground border border-border/50'
+                            )}
+                          >
+                            {item.badge}
+                          </span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              ))}
+
+              <div className="pt-2 border-t border-border/60">
+                <div className="px-2.5 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+                  {t('Quick Links', 'فوری روابط')}
+                </div>
+                <Link
+                  href="/"
+                  target="_blank"
+                  className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <ExternalLink className="h-3.5 w-3.5 text-blue-500" />
+                    <span>{t('View Public Site', 'عوامی سائٹ')}</span>
+                  </div>
+                  <ArrowUpRight className="h-3 w-3 opacity-60" />
+                </Link>
+                <Link
+                  href="/courts"
+                  target="_blank"
+                  className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Landmark className="h-3.5 w-3.5 text-teal-500" />
+                    <span>{t('Courts Directory', 'عدالتی نظام')}</span>
+                  </div>
+                  <ArrowUpRight className="h-3 w-3 opacity-60" />
+                </Link>
+                <Link
+                  href="/chat"
+                  target="_blank"
+                  className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                    <span>{t('AI Assistant', 'اے آئی اسسٹنٹ')}</span>
+                  </div>
+                  <ArrowUpRight className="h-3 w-3 opacity-60" />
+                </Link>
+              </div>
+            </>
+          )}
         </div>
-      </div>
 
-      {/* Sidebar Footer / User Card & Controls */}
-      <div className="p-3.5 border-t border-border/70 space-y-3 bg-muted/20">
-        <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-background border border-border/70">
-          {/* Language Toggle */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setLang(lang === 'en' ? 'ur' : 'en')}
-            className="h-8 px-2 text-xs font-semibold gap-1.5"
-            title="Switch Language"
-          >
-            <Languages className="h-3.5 w-3.5 text-primary" />
-            <span>{lang === 'en' ? 'اردو' : 'English'}</span>
-          </Button>
+        {/* Sidebar Footer / User Card & Controls */}
+        {collapsed ? (
+          <div className="p-2 border-t border-border/70 flex flex-col items-center gap-2 bg-muted/20 shrink-0">
+            {/* Language Toggle */}
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setLang(lang === 'en' ? 'ur' : 'en')}
+                  className="h-9 w-9 rounded-xl text-xs font-bold hover:bg-accent/70 cursor-pointer"
+                >
+                  <Languages className="h-4 w-4 text-primary" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side={lang === 'ur' ? 'left' : 'right'} sideOffset={10} className="font-semibold text-xs py-1.5 px-3 shadow-lg border border-border/60">
+                {lang === 'en' ? 'Switch to Urdu (اردو)' : 'Switch to English'}
+              </TooltipContent>
+            </Tooltip>
 
-          {/* Theme Toggle */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="h-8 w-8 text-foreground"
-            title="Toggle Theme"
-          >
-            {theme === 'dark' ? <Sun className="h-3.5 w-3.5 text-amber-400" /> : <Moon className="h-3.5 w-3.5 text-slate-700" />}
-          </Button>
+            {/* Theme Toggle */}
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  className="h-9 w-9 rounded-xl hover:bg-accent/70 cursor-pointer"
+                >
+                  {theme === 'dark' ? (
+                    <Sun className="h-4 w-4 text-amber-400" />
+                  ) : (
+                    <Moon className="h-4 w-4 text-slate-700" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side={lang === 'ur' ? 'left' : 'right'} sideOffset={10} className="font-semibold text-xs py-1.5 px-3 shadow-lg border border-border/60">
+                {t('Toggle Theme', 'تھیم تبدیل کریں')}
+              </TooltipContent>
+            </Tooltip>
 
-          {/* Sign Out with Confirmation Modal */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setSignOutModalOpen(true)}
-            className="h-8 w-8 text-destructive hover:bg-destructive/10 cursor-pointer"
-            title="Sign Out"
-          >
-            <LogOut className="h-3.5 w-3.5" />
-          </Button>
-        </div>
+            {/* Sign Out */}
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setSignOutModalOpen(true)}
+                  className="h-9 w-9 rounded-xl text-destructive hover:bg-destructive/10 cursor-pointer"
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side={lang === 'ur' ? 'left' : 'right'} sideOffset={10} className="font-semibold text-xs py-1.5 px-3 shadow-lg border border-border/60">
+                {t('Sign Out', 'لاگ آؤٹ')}
+              </TooltipContent>
+            </Tooltip>
 
-        {/* Profile Details */}
-        <div className="flex items-center gap-2.5 px-1">
-          <Avatar className="h-8 w-8 border border-primary/30">
-            <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
-              {session?.user?.name ? session.user.name.charAt(0).toUpperCase() : 'A'}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-foreground truncate leading-tight">
-              {session?.user?.name || 'Administrator'}
-            </p>
-            <p className="text-[10px] text-muted-foreground truncate leading-tight">
-              {session?.user?.email}
-            </p>
+            {/* Expand toggle */}
+            {onToggle && (
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onToggle}
+                    className="h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent/70 cursor-pointer"
+                  >
+                    <PanelLeftOpen className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side={lang === 'ur' ? 'left' : 'right'} sideOffset={10} className="font-semibold text-xs py-1.5 px-3 shadow-lg border border-border/60">
+                  {lang === 'ur' ? 'سائیڈ بار کھولیں' : 'Expand Sidebar'}
+                </TooltipContent>
+              </Tooltip>
+            )}
+
+            {/* Avatar with Tooltip */}
+            <div className="pt-1 border-t border-border/50 w-full flex justify-center">
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <div className="cursor-pointer">
+                    <Avatar
+                      className="h-8 w-8 border border-primary/30 hover:ring-2 hover:ring-primary/40 transition-all"
+                    >
+                      <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
+                        {session?.user?.name ? session.user.name.charAt(0).toUpperCase() : 'A'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side={lang === 'ur' ? 'left' : 'right'} sideOffset={10} className="text-xs py-1.5 px-3 shadow-lg border border-border/60">
+                  <p className="font-bold">{session?.user?.name || 'Administrator'}</p>
+                  <p className="text-[10px] opacity-80">{session?.user?.email || 'admin@qanoon.pk'}</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          </div>
+        ) : (
+        <div className="p-3.5 border-t border-border/70 space-y-3 bg-muted/20 shrink-0">
+          <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-background border border-border/70">
+            {/* Language Toggle */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLang(lang === 'en' ? 'ur' : 'en')}
+              className="h-8 px-2 text-xs font-semibold gap-1.5 cursor-pointer"
+              title="Switch Language"
+            >
+              <Languages className="h-3.5 w-3.5 text-primary" />
+              <span>{lang === 'en' ? 'اردو' : 'English'}</span>
+            </Button>
+
+            {/* Theme Toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="h-8 w-8 text-foreground cursor-pointer"
+              title="Toggle Theme"
+            >
+              {theme === 'dark' ? (
+                <Sun className="h-3.5 w-3.5 text-amber-400" />
+              ) : (
+                <Moon className="h-3.5 w-3.5 text-slate-700" />
+              )}
+            </Button>
+
+            {/* Sign Out with Confirmation Modal */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSignOutModalOpen(true)}
+              className="h-8 w-8 text-destructive hover:bg-destructive/10 cursor-pointer"
+              title="Sign Out"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+
+          {/* Profile Details */}
+          <div className="flex items-center gap-2.5 px-1">
+            <Avatar className="h-8 w-8 border border-primary/30">
+              <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
+                {session?.user?.name ? session.user.name.charAt(0).toUpperCase() : 'A'}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-foreground truncate leading-tight">
+                {session?.user?.name || 'Administrator'}
+              </p>
+              <p className="text-[10px] text-muted-foreground truncate leading-tight">
+                {session?.user?.email}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
-  )
+  </TooltipProvider>
+)
 
   return (
     <div className="min-h-screen flex bg-background text-foreground selection:bg-primary/20">
       {/* Desktop Persistent Sidebar */}
-      <aside className="hidden lg:flex w-72 flex-col shrink-0 sticky top-0 h-screen z-30 shadow-sm">
-        <SidebarContent />
+      <aside
+        className={cn(
+          'hidden lg:flex flex-col shrink-0 sticky top-0 h-screen z-30 shadow-sm transition-[width] duration-300 ease-in-out',
+          sidebarCollapsed ? 'w-[68px]' : 'w-72'
+        )}
+      >
+        <SidebarContent collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
       </aside>
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Navbar */}
-        <header className="sticky top-0 z-20 h-16 border-b border-border/80 bg-background/90 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between gap-4">
+        <header className="sticky top-0 z-20 h-16 border-b border-border/80 bg-background/95 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between gap-4 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
           <div className="flex items-center gap-3">
             {/* Mobile Sheet Trigger */}
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden h-9 w-9">
+                <Button variant="ghost" size="icon" className="lg:hidden h-9 w-9 cursor-pointer">
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
               <SheetContent side={lang === 'ur' ? 'right' : 'left'} className="p-0 w-72">
-                <SidebarContent />
+                <SidebarContent collapsed={false} />
               </SheetContent>
             </Sheet>
 
-            {/* Breadcrumb / Title */}
+            {/* Desktop Sidebar Collapse / Expand Toggle Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleSidebar}
+              className="hidden lg:inline-flex h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-accent/70 rounded-xl cursor-pointer"
+              title={
+                sidebarCollapsed
+                  ? t('Expand Sidebar', 'سائیڈ بار کھولیں')
+                  : t('Collapse Sidebar', 'سائیڈ بار بند کریں')
+              }
+            >
+              {sidebarCollapsed ? (
+                <PanelLeftOpen className="h-4 w-4" />
+              ) : (
+                <PanelLeftClose className="h-4 w-4" />
+              )}
+            </Button>
+
+            {/* Breadcrumb / Title with Live Badge */}
             <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold">
               <span className="text-muted-foreground hidden sm:inline">{t('Admin Portal', 'ایڈمن پورٹل')}</span>
-              <ChevronRight className="h-3 w-3 text-muted-foreground hidden sm:inline" />
-              <span className="text-primary font-bold capitalize">
-                {t(
-                  navItems.find((n) => n.id === activeTab)?.labelEn || 'Dashboard',
-                  navItems.find((n) => n.id === activeTab)?.labelUr || 'ڈیش بورڈ'
-                )}
-              </span>
+              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50 hidden sm:inline" />
+              <div className="flex items-center gap-2.5">
+                <span className="text-foreground font-bold capitalize text-sm sm:text-base">
+                  {t(
+                    navItems.find((n) => n.id === activeTab)?.labelEn || 'Dashboard',
+                    navItems.find((n) => n.id === activeTab)?.labelUr || 'ڈیش بورڈ'
+                  )}
+                </span>
+                <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full font-mono">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>{t('Live', 'فعال')}</span>
+                </span>
+              </div>
             </div>
           </div>
 
@@ -1310,67 +1619,30 @@ export default function AdminPage() {
               variant="outline"
               size="sm"
               onClick={reseed}
-              className="h-8 text-xs gap-1.5 hidden md:flex border-border/70"
+              className="h-8 text-xs gap-1.5 hidden md:flex border-border/70 hover:border-primary/40 hover:bg-accent cursor-pointer"
+              title={t('Reseed / Reset Database', 'ڈیٹابیس ری سیٹ کریں')}
             >
               <RefreshCw className="h-3.5 w-3.5 text-muted-foreground" />
               <span>{t('Reseed DB', 'ڈیٹابیس ری سیٹ')}</span>
             </Button>
-
-            {/* Context Action Button depending on tab */}
-            {activeTab === 'laws' && (
-              <Button size="sm" onClick={() => setCreatingLaw(true)} className="h-8 text-xs gap-1.5 shadow-sm">
-                <Plus className="h-3.5 w-3.5" />
-                <span>{t('Add Law', 'قانون شامل کریں')}</span>
-              </Button>
-            )}
-
-            {activeTab === 'categories' && (
-              <Button size="sm" onClick={() => setCreatingCategory(true)} className="h-8 text-xs gap-1.5 shadow-sm">
-                <Plus className="h-3.5 w-3.5" />
-                <span>{t('Add Category', 'قسم شامل کریں')}</span>
-              </Button>
-            )}
-
-            {activeTab === 'lawyers' && (
-              <Button size="sm" onClick={() => setCreatingLawyer(true)} className="h-8 text-xs gap-1.5 shadow-sm">
-                <Plus className="h-3.5 w-3.5" />
-                <span>{t('Add Lawyer', 'وکیل شامل کریں')}</span>
-              </Button>
-            )}
-
-            {activeTab === 'templates' && (
-              <Button size="sm" onClick={() => setCreatingTemplate(true)} className="h-8 text-xs gap-1.5 shadow-sm">
-                <Plus className="h-3.5 w-3.5" />
-                <span>{t('Add Template', 'ٹیمپلیٹ شامل کریں')}</span>
-              </Button>
-            )}
-
-            {activeTab === 'subscribers' && (
-              <Button size="sm" onClick={() => setCreatingSubscriber(true)} className="h-8 text-xs gap-1.5 shadow-sm">
-                <Plus className="h-3.5 w-3.5" />
-                <span>{t('Add Subscriber', 'سبسکرائبر شامل کریں')}</span>
-              </Button>
-            )}
-
-            {activeTab === 'finder' && (
-              <Button size="sm" onClick={() => setCreatingFinderQuestion(true)} className="h-8 text-xs gap-1.5 shadow-sm">
-                <Plus className="h-3.5 w-3.5" />
-                <span>{t('Add Question', 'سوال شامل کریں')}</span>
-              </Button>
-            )}
-
-            {activeTab === 'overview' && (
-              <Button size="sm" onClick={() => setCreatingLaw(true)} className="h-8 text-xs gap-1.5 shadow-sm">
-                <Plus className="h-3.5 w-3.5" />
-                <span>{t('New Law', 'نیا قانون')}</span>
-              </Button>
-            )}
 
             <Button
               variant="ghost"
               size="sm"
               asChild
               className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground hidden sm:flex"
+            >
+              <Link href="/" target="_blank">
+                <ExternalLink className="h-3.5 w-3.5 mr-1 text-primary" />
+                <span>{t('Public Site', 'ویب سائٹ')}</span>
+              </Link>
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              className="h-8 px-2.5 text-xs text-muted-foreground hover:text-destructive hover:border-destructive/40 transition-colors"
             >
               <Link href="/">
                 <ArrowLeft className="h-3.5 w-3.5 mr-1" />
@@ -1612,76 +1884,131 @@ export default function AdminPage() {
           {/* TAB 2: LAWS MANAGEMENT */}
           {activeTab === 'laws' && (
             <div className="space-y-4 animate-in fade-in-50 duration-200">
-              <Card>
-                <CardHeader className="pb-4">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <FileText className="h-5 w-5 text-primary" />
-                        {t('Laws Management', 'قوانین کا انتظام')}
-                      </CardTitle>
-                      <CardDescription className="text-xs mt-0.5">
-                        {filteredLaws.length} {t('laws listed', 'قوانین درج ہیں')}
-                        {filteredLaws.length > LAWS_PER_PAGE && ` • ${t('Page', 'صفحہ')} ${lawsPage} / ${totalLawsPages}`}
-                      </CardDescription>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-2">
-                      {/* Search */}
-                      <div className="relative w-full sm:w-60">
-                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                        <Input
-                          placeholder={t('Search laws...', 'قوانین تلاش کریں...')}
-                          value={search}
-                          onChange={(e) => setSearch(e.target.value)}
-                          className="h-9 pl-8 text-xs"
-                        />
-                      </div>
-
-                      {/* Jurisdiction Filter */}
-                      <Select value={selectedJurisdiction} onValueChange={setSelectedJurisdiction}>
-                        <SelectTrigger className="h-9 text-xs w-36">
-                          <SelectValue placeholder={t('Jurisdiction', 'دائرہ اختیار')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">{t('All Jurisdictions', 'تمام دائرہ اختیار')}</SelectItem>
-                          <SelectItem value="federal">Federal</SelectItem>
-                          <SelectItem value="punjab">Punjab</SelectItem>
-                          <SelectItem value="sindh">Sindh</SelectItem>
-                          <SelectItem value="kpk">Khyber Pakhtunkhwa</SelectItem>
-                          <SelectItem value="balochistan">Balochistan</SelectItem>
-                        </SelectContent>
-                      </Select>
-
-                      {/* Category Filter */}
-                      <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                        <SelectTrigger className="h-9 text-xs w-36">
-                          <SelectValue placeholder={t('Category', 'قسم')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">{t('All Categories', 'تمام اقسام')}</SelectItem>
-                          {categories.map((c) => (
-                            <SelectItem key={c.id} value={c.slug}>
-                              {lang === 'ur' ? c.nameUrdu : c.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-
-                      <Button variant="outline" size="sm" asChild className="h-9 text-xs gap-1.5">
-                        <a href="/api/admin/export?type=laws" download>
-                          <Download className="h-3.5 w-3.5" />
-                          <span>{t('Export CSV', 'ایکسپورٹ CSV')}</span>
-                        </a>
-                      </Button>
-
-                      <Button size="sm" onClick={() => setCreatingLaw(true)} className="h-9 text-xs gap-1.5 shadow-sm">
-                        <Plus className="h-4 w-4" />
-                        <span>{t('Add New Law', 'نیا قانون شامل کریں')}</span>
-                      </Button>
-                    </div>
+              {/* Page Header: Title, Stats & Primary Actions */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center border border-primary/20 shrink-0">
+                    <FileText className="h-5 w-5" />
                   </div>
-                </CardHeader>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-foreground">
+                        {t('Laws Management', 'قوانین کا انتظام')}
+                      </h1>
+                      <Badge variant="secondary" className="text-[11px] font-mono font-bold px-2 py-0.5">
+                        {laws.length} {t('Statutes', 'قوانین')}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {filteredLaws.length !== laws.length
+                        ? t(`${filteredLaws.length} filtered results matching criteria`, `فلٹر کے مطابق ${filteredLaws.length} قوانین`)
+                        : t('Directory of federal and provincial statutory acts, ordinances, and codes.', 'وفاقی و صوبائی قوانین، آرڈیننس اور کوڈز کی مرکزی ڈائریکٹری۔')}
+                      {filteredLaws.length > LAWS_PER_PAGE && ` • ${t('Page', 'صفحہ')} ${lawsPage} / ${totalLawsPages}`}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button variant="outline" size="sm" asChild className="h-9 text-xs gap-1.5 shadow-xs border-border/80">
+                    <a href="/api/admin/export?type=laws" download>
+                      <Download className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span>{t('Export CSV', 'ایکسپورٹ CSV')}</span>
+                    </a>
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    onClick={() => setCreatingLaw(true)}
+                    className="h-9 text-xs gap-1.5 shadow-sm font-semibold cursor-pointer"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>{t('Add New Law', 'نیا قانون شامل کریں')}</span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Dedicated Filter & Search Toolbar */}
+              <Card className="p-3 sm:p-3.5 border-border/80 shadow-xs bg-card">
+                <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2.5">
+                  {/* Search input */}
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                    <Input
+                      placeholder={t('Search laws by title, slug, or keywords...', 'قوانین عنوان، سلگ یا لفظ سے تلاش کریں...')}
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      className="h-9 pl-9 pr-8 text-xs bg-background"
+                    />
+                    {search && (
+                      <button
+                        onClick={() => setSearch('')}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Jurisdiction Filter */}
+                    <Select value={selectedJurisdiction} onValueChange={setSelectedJurisdiction}>
+                      <SelectTrigger className="h-9 text-xs w-full sm:w-40 bg-background">
+                        <SelectValue placeholder={t('Jurisdiction', 'دائرہ اختیار')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{t('All Jurisdictions', 'تمام دائرہ اختیار')}</SelectItem>
+                        <SelectItem value="federal">Federal (وفاقی)</SelectItem>
+                        <SelectItem value="punjab">Punjab (پنجاب)</SelectItem>
+                        <SelectItem value="sindh">Sindh (سندھ)</SelectItem>
+                        <SelectItem value="kpk">KPK (خیبر پختونخوا)</SelectItem>
+                        <SelectItem value="balochistan">Balochistan (بلوچستان)</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    {/* Category Filter */}
+                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                      <SelectTrigger className="h-9 text-xs w-full sm:w-44 bg-background">
+                        <SelectValue placeholder={t('Category', 'قسم')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{t('All Categories', 'تمام اقسام')}</SelectItem>
+                        {categories.map((c) => (
+                          <SelectItem key={c.id} value={c.slug}>
+                            <span className="flex items-center gap-1.5">
+                              <span
+                                className="h-2 w-2 rounded-full shrink-0"
+                                style={{ backgroundColor: c.color || 'hsl(var(--primary))' }}
+                              />
+                              <span>{lang === 'ur' ? c.nameUrdu : c.name}</span>
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    {/* Reset Filters */}
+                    {(search || selectedJurisdiction !== 'all' || selectedCategory !== 'all') && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSearch('')
+                          setSelectedJurisdiction('all')
+                          setSelectedCategory('all')
+                        }}
+                        className="h-9 text-xs px-2.5 text-muted-foreground hover:text-foreground cursor-pointer"
+                        title={t('Clear Filters', 'فلٹرز ختم کریں')}
+                      >
+                        <RefreshCw className="h-3.5 w-3.5 mr-1" />
+                        <span>{t('Reset', 'ری سیٹ')}</span>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </Card>
+
+              {/* Data Table Card */}
+              <Card className="border-border/80 shadow-xs overflow-hidden">
                 <CardContent className="p-0">
                   {loading ? (
                     <div className="p-6 space-y-3">
@@ -1690,69 +2017,86 @@ export default function AdminPage() {
                       ))}
                     </div>
                   ) : filteredLaws.length === 0 ? (
-                    <div className="p-10 text-center text-sm text-muted-foreground">
-                      {t('No laws found matching criteria', 'کوئی قانون نہیں ملا')}
+                    <div className="p-12 text-center text-sm text-muted-foreground space-y-2">
+                      <FileText className="h-8 w-8 text-muted-foreground/50 mx-auto" />
+                      <p className="font-semibold">{t('No laws found matching criteria', 'کوئی قانون نہیں ملا')}</p>
+                      <p className="text-xs">{t('Try clearing the search or changing the filters.', 'سرچ یا فلٹر تبدیل کر کے دوبارہ کوشش کریں۔')}</p>
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
                       <Table>
                         <TableHeader>
-                          <TableRow className="bg-muted/40">
-                            <TableHead className="w-12 text-center text-xs">#</TableHead>
-                            <TableHead className="text-xs">{t('Title / Statute', 'عنوان و قانون')}</TableHead>
-                            <TableHead className="text-xs">{t('Category', 'قسم')}</TableHead>
-                            <TableHead className="text-xs">{t('Year', 'سال')}</TableHead>
-                            <TableHead className="text-xs">{t('Jurisdiction', 'دائرہ اختیار')}</TableHead>
-                            <TableHead className="text-xs">{t('Status', 'حیثیت')}</TableHead>
-                            <TableHead className="text-xs text-center">{t('Views', 'مناظر')}</TableHead>
-                            <TableHead className="text-xs text-right pr-4">{t('Actions', 'اقدامات')}</TableHead>
+                          <TableRow className="bg-muted/40 hover:bg-muted/40">
+                            <TableHead className="w-12 text-center text-xs font-bold uppercase tracking-wider text-muted-foreground/80">#</TableHead>
+                            <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">{t('Title / Statute', 'عنوان و قانون')}</TableHead>
+                            <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">{t('Category', 'قسم')}</TableHead>
+                            <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">{t('Year', 'سال')}</TableHead>
+                            <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">{t('Jurisdiction', 'دائرہ اختیار')}</TableHead>
+                            <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">{t('Status', 'حیثیت')}</TableHead>
+                            <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 text-center">{t('Views', 'مناظر')}</TableHead>
+                            <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 text-right pr-4">{t('Actions', 'اقدامات')}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {paginatedLaws.map((law, index) => {
                             const serialNumber = (lawsPage - 1) * LAWS_PER_PAGE + index + 1
                             return (
-                              <TableRow key={law.id} className="hover:bg-muted/30">
-                                <TableCell className="text-center text-xs text-muted-foreground">{serialNumber}</TableCell>
-                                <TableCell className="max-w-md">
-                                  <div className="font-semibold text-xs text-foreground line-clamp-1">
+                              <TableRow key={law.id} className="hover:bg-muted/30 transition-colors">
+                                <TableCell className="text-center text-xs text-muted-foreground font-mono font-medium">{serialNumber}</TableCell>
+                                <TableCell className="max-w-md py-3">
+                                  <div className="font-semibold text-xs text-foreground line-clamp-1 hover:text-primary transition-colors">
                                     {lang === 'ur' && law.titleUrdu ? law.titleUrdu : law.title}
                                   </div>
                                   <div className="text-[10px] text-muted-foreground/80 font-mono mt-0.5">
                                     /{law.slug}
                                   </div>
                                 </TableCell>
-                                <TableCell>
-                                  <Badge variant="outline" className="text-[10px] font-normal" style={{ borderColor: law.category?.color ?? undefined }}>
+                                <TableCell className="py-3">
+                                  <Badge
+                                    variant="outline"
+                                    className="text-[10px] font-normal"
+                                    style={{
+                                      borderColor: law.category?.color ? `${law.category.color}60` : undefined,
+                                      backgroundColor: law.category?.color ? `${law.category.color}10` : undefined,
+                                    }}
+                                  >
                                     {lang === 'ur' ? law.category?.nameUrdu : law.category?.name}
                                   </Badge>
                                 </TableCell>
-                                <TableCell className="text-xs font-mono">{law.yearEnacted}</TableCell>
-                                <TableCell>
-                                  <span className="text-[11px] font-medium uppercase px-2 py-0.5 rounded bg-muted">
+                                <TableCell className="text-xs font-mono py-3">{law.yearEnacted}</TableCell>
+                                <TableCell className="py-3">
+                                  <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border/50">
                                     {law.jurisdiction}
                                   </span>
                                 </TableCell>
-                                <TableCell>
+                                <TableCell className="py-3">
                                   <Badge
                                     className={cn(
-                                      'text-[10px] capitalize font-medium',
+                                      'text-[10px] capitalize font-medium gap-1',
                                       law.status === 'active' && 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
                                       law.status === 'repealed' && 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20',
                                       law.status === 'amended' && 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
                                     )}
                                   >
+                                    <span
+                                      className={cn(
+                                        'h-1.5 w-1.5 rounded-full',
+                                        law.status === 'active' && 'bg-emerald-500',
+                                        law.status === 'repealed' && 'bg-rose-500',
+                                        law.status === 'amended' && 'bg-blue-500'
+                                      )}
+                                    />
                                     {law.status}
                                   </Badge>
                                 </TableCell>
-                                <TableCell className="text-center text-xs font-mono text-muted-foreground">
+                                <TableCell className="text-center text-xs font-mono text-muted-foreground py-3">
                                   {law.viewCount}
                                 </TableCell>
-                                <TableCell className="text-right pr-4 space-x-1">
+                                <TableCell className="text-right pr-4 space-x-1 py-3">
                                   <Button
                                     size="icon"
                                     variant="ghost"
-                                    className="h-8 w-8 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/30"
+                                    className="h-8 w-8 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40"
                                     onClick={() => setManagingLawSections(law)}
                                     title={t('Manage Sections & Amendments', 'دفعات اور ترامیم کا انتظام')}
                                   >
@@ -1763,7 +2107,7 @@ export default function AdminPage() {
                                     variant="ghost"
                                     className="h-8 w-8 text-primary hover:bg-primary/10"
                                     onClick={() => setEditingLaw(law)}
-                                    title="Edit Law"
+                                    title={t('Edit Law', 'ترمیم کریں')}
                                   >
                                     <Edit2 className="h-3.5 w-3.5" />
                                   </Button>
@@ -1772,7 +2116,7 @@ export default function AdminPage() {
                                     variant="ghost"
                                     className="h-8 w-8 text-muted-foreground hover:text-foreground"
                                     asChild
-                                    title="View Live"
+                                    title={t('View Live Page', 'عوامی صفحہ دیکھیں')}
                                   >
                                     <Link href={`/laws/${law.slug}`} target="_blank">
                                       <ExternalLink className="h-3.5 w-3.5" />
@@ -1783,7 +2127,7 @@ export default function AdminPage() {
                                     variant="ghost"
                                     className="h-8 w-8 text-destructive hover:bg-destructive/10"
                                     onClick={() => deleteLaw(law)}
-                                    title="Delete Law"
+                                    title={t('Delete Law', 'حذف کریں')}
                                   >
                                     <Trash2 className="h-3.5 w-3.5" />
                                   </Button>
@@ -1798,7 +2142,7 @@ export default function AdminPage() {
 
                   {/* Laws Pagination Controls (20 per page) */}
                   {!loading && filteredLaws.length > LAWS_PER_PAGE && (
-                    <div className="p-4 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-4 bg-muted/10">
+                    <div className="p-3.5 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-4 bg-muted/10">
                       <div className="text-xs text-muted-foreground font-medium order-2 sm:order-1">
                         {t(
                           `Showing ${(lawsPage - 1) * LAWS_PER_PAGE + 1} to ${Math.min(lawsPage * LAWS_PER_PAGE, filteredLaws.length)} of ${filteredLaws.length} laws`,
@@ -1837,7 +2181,7 @@ export default function AdminPage() {
                                 onClick={() => setLawsPage(pNum)}
                                 className={cn(
                                   'h-8 w-8 p-0 text-xs tabular-nums cursor-pointer',
-                                  isActive && 'font-bold shadow-sm'
+                                  isActive && 'font-bold shadow-xs'
                                 )}
                               >
                                 {pNum}
@@ -1866,65 +2210,91 @@ export default function AdminPage() {
           {/* TAB 3: CATEGORIES */}
           {activeTab === 'categories' && (
             <div className="space-y-4 animate-in fade-in-50 duration-200">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-lg font-bold flex items-center gap-2">
-                    <Tags className="h-5 w-5 text-primary" />
-                    {t('Legal Categories', 'قانونی اقسام')}
-                  </h2>
-                  <p className="text-xs text-muted-foreground">
-                    {categories.length} {t('specialized legal domains', 'قانونی شاخیں و اقسام')}
-                    {categories.length > CATEGORIES_PER_PAGE && ` • ${t('Page', 'صفحہ')} ${categoriesPage} / ${totalCategoriesPages}`}
-                  </p>
+              {/* Page Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-500/20 shrink-0">
+                    <Tags className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-foreground">
+                        {t('Legal Categories', 'قانونی اقسام')}
+                      </h1>
+                      <Badge variant="secondary" className="text-[11px] font-mono font-bold px-2 py-0.5">
+                        {categories.length} {t('Categories', 'شاخیں')}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {t('Specialized legal branches, statute categories, and subject classifications.', 'قانونی شاخیں، موضوعات اور شعبہ جات کی درجہ بندی۔')}
+                      {categories.length > CATEGORIES_PER_PAGE && ` • ${t('Page', 'صفحہ')} ${categoriesPage} / ${totalCategoriesPages}`}
+                    </p>
+                  </div>
                 </div>
-                <Button size="sm" onClick={() => setCreatingCategory(true)} className="h-9 text-xs gap-1.5 shadow-sm">
-                  <Plus className="h-4 w-4" />
-                  <span>{t('Add Category', 'نئی قسم شامل کریں')}</span>
-                </Button>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button
+                    size="sm"
+                    onClick={() => setCreatingCategory(true)}
+                    className="h-9 text-xs gap-1.5 shadow-sm font-semibold cursor-pointer"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>{t('Add Category', 'نئی قسم شامل کریں')}</span>
+                  </Button>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
+              {/* Categories Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3.5">
                 {paginatedCategories.map((c) => (
-                  <Card key={c.id} className="hover:border-primary/40 transition-all shadow-sm">
-                    <CardContent className="p-4 flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-3 min-w-0">
-                        <span
-                          className="h-4 w-4 rounded-full shrink-0 mt-0.5"
-                          style={{ backgroundColor: c.color ?? 'var(--primary)' }}
-                        />
-                        <div className="min-w-0">
-                          <p className="text-sm font-bold text-foreground truncate">
-                            {lang === 'ur' && c.nameUrdu ? c.nameUrdu : c.name}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground/70 font-mono mt-0.5">/{c.slug}</p>
-                          {(lang === 'ur' ? (c.descriptionUrdu || c.description) : c.description) && (
-                            <p className="text-[11px] text-muted-foreground mt-1.5 line-clamp-2">
-                              {lang === 'ur' ? (c.descriptionUrdu || c.description) : c.description}
+                  <Card key={c.id} className="hover:border-primary/50 transition-all shadow-xs relative overflow-hidden group flex flex-col justify-between">
+                    <div
+                      className="h-1 w-full shrink-0"
+                      style={{ backgroundColor: c.color || 'hsl(var(--primary))' }}
+                    />
+                    <CardContent className="p-4 flex-1 flex flex-col justify-between gap-3">
+                      <div>
+                        <div className="flex items-start justify-between gap-2 mb-1.5">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span
+                              className="h-3 w-3 rounded-full shrink-0 ring-2 ring-background"
+                              style={{ backgroundColor: c.color || 'hsl(var(--primary))' }}
+                            />
+                            <p className="text-sm font-bold text-foreground truncate">
+                              {lang === 'ur' && c.nameUrdu ? c.nameUrdu : c.name}
                             </p>
-                          )}
+                          </div>
+                          <div className="flex items-center gap-0.5 shrink-0">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                              asChild
+                              title={t('View Laws in Category', 'اس قسم کے قوانین دیکھیں')}
+                            >
+                              <Link href={`/categories/${c.slug}`} target="_blank">
+                                <ExternalLink className="h-3.5 w-3.5" />
+                              </Link>
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                              onClick={() => deleteCategory(c)}
+                              title={t('Delete Category', 'حذف کریں')}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex flex-col items-end gap-1 shrink-0">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-7 w-7 text-destructive hover:bg-destructive/10"
-                          onClick={() => deleteCategory(c)}
-                          title="Delete Category"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-7 w-7 text-muted-foreground"
-                          asChild
-                          title="View Laws in Category"
-                        >
-                          <Link href={`/categories/${c.slug}`} target="_blank">
-                            <ExternalLink className="h-3.5 w-3.5" />
-                          </Link>
-                        </Button>
+
+                        <p className="text-[10px] text-muted-foreground/80 font-mono">/{c.slug}</p>
+
+                        {(lang === 'ur' ? (c.descriptionUrdu || c.description) : c.description) && (
+                          <p className="text-[11px] text-muted-foreground mt-2 line-clamp-2 leading-relaxed">
+                            {lang === 'ur' ? (c.descriptionUrdu || c.description) : c.description}
+                          </p>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -1933,7 +2303,7 @@ export default function AdminPage() {
 
               {/* Categories Pagination Controls (20 per page) */}
               {categories.length > CATEGORIES_PER_PAGE && (
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-border/60">
+                <div className="p-3.5 rounded-xl border border-border/70 bg-card flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
                   <div className="text-xs text-muted-foreground font-medium order-2 sm:order-1">
                     {t(
                       `Showing ${(categoriesPage - 1) * CATEGORIES_PER_PAGE + 1} to ${Math.min(categoriesPage * CATEGORIES_PER_PAGE, categories.length)} of ${categories.length} categories`,
@@ -1963,7 +2333,7 @@ export default function AdminPage() {
                             onClick={() => setCategoriesPage(pNum)}
                             className={cn(
                               'h-8 w-8 p-0 text-xs tabular-nums cursor-pointer',
-                              isActive && 'font-bold shadow-sm'
+                              isActive && 'font-bold shadow-xs'
                             )}
                           >
                             {pNum}
@@ -1990,112 +2360,162 @@ export default function AdminPage() {
           {/* TAB 4: LAWYERS DIRECTORY */}
           {activeTab === 'lawyers' && (
             <div className="space-y-4 animate-in fade-in-50 duration-200">
-              <Card>
-                <CardHeader className="pb-4">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <Briefcase className="h-5 w-5 text-teal-600" />
-                        {t('Lawyers Directory', 'وکلاء کی ڈائریکٹری')}
-                      </CardTitle>
-                      <CardDescription className="text-xs mt-0.5">
-                        {filteredLawyers.length} {t('practicing advocates and legal counsel', 'وکلاء و قانونی مشیران')}
-                        {filteredLawyers.length > LAWYERS_PER_PAGE && ` • ${t('Page', 'صفحہ')} ${lawyersPage} / ${totalLawyersPages}`}
-                      </CardDescription>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="relative w-full sm:w-64">
-                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                        <Input
-                          placeholder={t('Search lawyers by name or city...', 'نام یا شہر سے وکیل تلاش کریں...')}
-                          value={search}
-                          onChange={(e) => setSearch(e.target.value)}
-                          className="h-9 pl-8 text-xs"
-                        />
-                      </div>
-                      <Button variant="outline" size="sm" asChild className="h-9 text-xs gap-1.5">
-                        <a href="/api/admin/export?type=lawyers" download>
-                          <Download className="h-3.5 w-3.5" />
-                          <span>{t('Export CSV', 'ایکسپورٹ CSV')}</span>
-                        </a>
-                      </Button>
-                      <Button size="sm" onClick={() => setCreatingLawyer(true)} className="h-9 text-xs gap-1.5 shadow-sm">
-                        <Plus className="h-4 w-4" />
-                        <span>{t('Add Lawyer', 'وکیل شامل کریں')}</span>
-                      </Button>
-                    </div>
+              {/* Page Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center border border-teal-500/20 shrink-0">
+                    <Briefcase className="h-5 w-5" />
                   </div>
-                </CardHeader>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-foreground">
+                        {t('Lawyers Directory', 'وکلاء کی ڈائریکٹری')}
+                      </h1>
+                      <Badge variant="secondary" className="text-[11px] font-mono font-bold px-2 py-0.5">
+                        {lawyers.length} {t('Advocates', 'وکلاء')}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {filteredLawyers.length !== lawyers.length
+                        ? t(`${filteredLawyers.length} filtered counsel matching query`, `تلاش کے مطابق ${filteredLawyers.length} وکلاء`)
+                        : t('Directory of practicing advocates, high court counsel, and legal consultants.', 'پریکٹس کرنے والے وکلاء اور قانونی مشیران کی تصدیق شدہ فہرست۔')}
+                      {filteredLawyers.length > LAWYERS_PER_PAGE && ` • ${t('Page', 'صفحہ')} ${lawyersPage} / ${totalLawyersPages}`}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button variant="outline" size="sm" asChild className="h-9 text-xs gap-1.5 shadow-xs border-border/80">
+                    <a href="/api/admin/export?type=lawyers" download>
+                      <Download className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span>{t('Export CSV', 'ایکسپورٹ CSV')}</span>
+                    </a>
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    onClick={() => setCreatingLawyer(true)}
+                    className="h-9 text-xs gap-1.5 shadow-sm font-semibold cursor-pointer"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>{t('Add Lawyer', 'وکیل شامل کریں')}</span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Dedicated Search Toolbar */}
+              <Card className="p-3 sm:p-3.5 border-border/80 shadow-xs bg-card">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                    <Input
+                      placeholder={t('Search lawyers by name, city, province, or contact...', 'نام، شہر، صوبہ یا رابطے سے وکیل تلاش کریں...')}
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      className="h-9 pl-9 pr-8 text-xs bg-background"
+                    />
+                    {search && (
+                      <button
+                        onClick={() => setSearch('')}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {search && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSearch('')}
+                      className="h-9 text-xs px-2.5 text-muted-foreground hover:text-foreground cursor-pointer"
+                    >
+                      <RefreshCw className="h-3.5 w-3.5 mr-1" />
+                      <span>{t('Reset', 'ری سیٹ')}</span>
+                    </Button>
+                  )}
+                </div>
+              </Card>
+
+              {/* Data Table Card */}
+              <Card className="border-border/80 shadow-xs overflow-hidden">
                 <CardContent className="p-0">
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
-                        <TableRow className="bg-muted/40">
-                          <TableHead className="w-12 text-center text-xs">#</TableHead>
-                          <TableHead className="text-xs">{t('Lawyer / Advocate', 'وکیل')}</TableHead>
-                          <TableHead className="text-xs">{t('Location', 'شہر و صوبہ')}</TableHead>
-                          <TableHead className="text-xs">{t('Specialization', 'شعبہ')}</TableHead>
-                          <TableHead className="text-xs">{t('Verified', 'تصدیق شدہ')}</TableHead>
-                          <TableHead className="text-xs">{t('Featured', 'نمایاں')}</TableHead>
-                          <TableHead className="text-xs text-right pr-4">{t('Actions', 'اقدامات')}</TableHead>
+                        <TableRow className="bg-muted/40 hover:bg-muted/40">
+                          <TableHead className="w-12 text-center text-xs font-bold uppercase tracking-wider text-muted-foreground/80">#</TableHead>
+                          <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">{t('Lawyer / Advocate', 'وکیل')}</TableHead>
+                          <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">{t('Location', 'شہر و صوبہ')}</TableHead>
+                          <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">{t('Specialization', 'شعبہ')}</TableHead>
+                          <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">{t('Verified', 'تصدیق شدہ')}</TableHead>
+                          <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">{t('Featured', 'نمایاں')}</TableHead>
+                          <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 text-right pr-4">{t('Actions', 'اقدامات')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {paginatedLawyers.map((lawyer, idx) => {
                           const serialNumber = (lawyersPage - 1) * LAWYERS_PER_PAGE + idx + 1
                           return (
-                            <TableRow key={lawyer.id} className="hover:bg-muted/30">
-                              <TableCell className="text-center text-xs text-muted-foreground">{serialNumber}</TableCell>
-                              <TableCell>
+                            <TableRow key={lawyer.id} className="hover:bg-muted/30 transition-colors">
+                              <TableCell className="text-center text-xs text-muted-foreground font-mono font-medium">{serialNumber}</TableCell>
+                              <TableCell className="py-3">
                                 <div className="font-semibold text-xs text-foreground flex items-center gap-1.5">
-                                  {lang === 'ur' && lawyer.nameUrdu ? lawyer.nameUrdu : lawyer.name}
+                                  <span>{lang === 'ur' && lawyer.nameUrdu ? lawyer.nameUrdu : lawyer.name}</span>
                                   {lawyer.verified && <ShieldCheck className="h-3.5 w-3.5 text-blue-500 shrink-0" />}
                                 </div>
-                                <div className="text-[10px] text-muted-foreground mt-0.5">
+                                <div className="text-[10px] text-muted-foreground mt-0.5 font-mono">
                                   {lawyer.email || lawyer.phone || 'No direct contact'}
                                 </div>
                               </TableCell>
-                              <TableCell className="text-xs">
-                                <span className="font-medium text-foreground">{lawyer.city}</span>, {lawyer.province}
+                              <TableCell className="text-xs py-3">
+                                <span className="font-semibold text-foreground">{lawyer.city}</span>
+                                <span className="text-muted-foreground">, {lawyer.province}</span>
                               </TableCell>
-                              <TableCell className="text-xs">
+                              <TableCell className="text-xs py-3">
                                 <div className="flex flex-wrap gap-1 max-w-xs">
                                   {lawyer.specialization?.slice(0, 2).map((s, i) => (
-                                    <Badge key={i} variant="secondary" className="text-[9px] px-1 py-0">
+                                    <Badge key={i} variant="secondary" className="text-[9px] px-1.5 py-0 font-normal">
                                       {s}
                                     </Badge>
                                   ))}
+                                  {(lawyer.specialization?.length || 0) > 2 && (
+                                    <span className="text-[9px] text-muted-foreground">
+                                      +{lawyer.specialization.length - 2}
+                                    </span>
+                                  )}
                                 </div>
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="py-3">
                                 <Button
                                   size="sm"
                                   variant={lawyer.verified ? 'default' : 'outline'}
                                   onClick={() => toggleLawyerVerified(lawyer)}
-                                  className={cn('h-6 px-2 text-[10px] rounded-full gap-1', lawyer.verified && 'bg-blue-600 hover:bg-blue-700 text-white')}
+                                  className={cn('h-6 px-2 text-[10px] rounded-full gap-1 cursor-pointer font-medium', lawyer.verified && 'bg-blue-600 hover:bg-blue-700 text-white')}
                                 >
                                   <ShieldCheck className="h-3 w-3" />
-                                  <span>{lawyer.verified ? t('Verified', 'تصدیق شدہ') : t('Unverified', 'غیر تصدیق شدہ')}</span>
+                                  <span>{lawyer.verified ? t('Verified', 'تصدیق شدہ') : t('Unverified', 'غیر تصدیق')}</span>
                                 </Button>
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="py-3">
                                 <Button
                                   size="sm"
                                   variant={lawyer.featured ? 'default' : 'outline'}
                                   onClick={() => toggleLawyerFeatured(lawyer)}
-                                  className={cn('h-6 px-2 text-[10px] rounded-full gap-1', lawyer.featured && 'bg-amber-600 hover:bg-amber-700 text-white')}
+                                  className={cn('h-6 px-2 text-[10px] rounded-full gap-1 cursor-pointer font-medium', lawyer.featured && 'bg-amber-600 hover:bg-amber-700 text-white')}
                                 >
                                   <Star className="h-3 w-3" />
                                   <span>{lawyer.featured ? t('Featured', 'نمایاں') : t('Standard', 'معیاری')}</span>
                                 </Button>
                               </TableCell>
-                              <TableCell className="text-right pr-4 space-x-1">
+                              <TableCell className="text-right pr-4 space-x-1 py-3">
                                 <Button
                                   size="icon"
                                   variant="ghost"
                                   className="h-8 w-8 text-muted-foreground hover:text-foreground"
                                   asChild
-                                  title="View Public Profile"
+                                  title={t('View Public Profile', 'پروفائل دیکھیں')}
                                 >
                                   <Link href={`/lawyers/${lawyer.slug}`} target="_blank">
                                     <ExternalLink className="h-3.5 w-3.5" />
@@ -2106,7 +2526,7 @@ export default function AdminPage() {
                                   variant="ghost"
                                   className="h-8 w-8 text-destructive hover:bg-destructive/10"
                                   onClick={() => deleteLawyer(lawyer)}
-                                  title="Delete Lawyer"
+                                  title={t('Delete Lawyer', 'حذف کریں')}
                                 >
                                   <Trash2 className="h-3.5 w-3.5" />
                                 </Button>
@@ -2120,7 +2540,7 @@ export default function AdminPage() {
 
                   {/* Lawyers Pagination Controls (20 per page) */}
                   {!loading && filteredLawyers.length > LAWYERS_PER_PAGE && (
-                    <div className="p-4 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-4 bg-muted/10">
+                    <div className="p-3.5 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-4 bg-muted/10">
                       <div className="text-xs text-muted-foreground font-medium order-2 sm:order-1">
                         {t(
                           `Showing ${(lawyersPage - 1) * LAWYERS_PER_PAGE + 1} to ${Math.min(lawyersPage * LAWYERS_PER_PAGE, filteredLawyers.length)} of ${filteredLawyers.length} lawyers`,
@@ -2150,7 +2570,7 @@ export default function AdminPage() {
                                 onClick={() => setLawyersPage(pNum)}
                                 className={cn(
                                   'h-8 w-8 p-0 text-xs tabular-nums cursor-pointer',
-                                  isActive && 'font-bold shadow-sm'
+                                  isActive && 'font-bold shadow-xs'
                                 )}
                               >
                                 {pNum}
@@ -2179,75 +2599,119 @@ export default function AdminPage() {
           {/* TAB 5: TEMPLATES */}
           {activeTab === 'templates' && (
             <div className="space-y-4 animate-in fade-in-50 duration-200">
-              <Card>
-                <CardHeader className="pb-4">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <FilePlus className="h-5 w-5 text-pink-600" />
-                        {t('Legal Document Templates', 'قانونی دستاویز ٹیمپلیٹس')}
-                      </CardTitle>
-                      <CardDescription className="text-xs mt-0.5">
-                        {filteredTemplates.length} {t('ready-to-use agreements and legal drafts', 'قانونی معاہدات اور ڈرافٹس')}
-                        {filteredTemplates.length > TEMPLATES_PER_PAGE && ` • ${t('Page', 'صفحہ')} ${templatesPage} / ${totalTemplatesPages}`}
-                      </CardDescription>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="relative w-full sm:w-64">
-                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                        <Input
-                          placeholder={t('Search templates...', 'ٹیمپلیٹ تلاش کریں...')}
-                          value={search}
-                          onChange={(e) => setSearch(e.target.value)}
-                          className="h-9 pl-8 text-xs"
-                        />
-                      </div>
-                      <Button size="sm" onClick={() => setCreatingTemplate(true)} className="h-9 text-xs gap-1.5 shadow-sm">
-                        <Plus className="h-4 w-4" />
-                        <span>{t('Add Template', 'ٹیمپلیٹ شامل کریں')}</span>
-                      </Button>
-                    </div>
+              {/* Page Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-pink-500/10 text-pink-600 dark:text-pink-400 flex items-center justify-center border border-pink-500/20 shrink-0">
+                    <FilePlus className="h-5 w-5" />
                   </div>
-                </CardHeader>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-foreground">
+                        {t('Legal Document Templates', 'قانونی دستاویز ٹیمپلیٹس')}
+                      </h1>
+                      <Badge variant="secondary" className="text-[11px] font-mono font-bold px-2 py-0.5">
+                        {templates.length} {t('Templates', 'ٹیمپلیٹس')}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {t('Standardized legal contracts, agreements, notices, and citizen affidavits.', 'معاہدات، اقرار نامے، حلف نامے اور نوٹسز کے معیاری قانونی ڈرافٹس۔')}
+                      {filteredTemplates.length > TEMPLATES_PER_PAGE && ` • ${t('Page', 'صفحہ')} ${templatesPage} / ${totalTemplatesPages}`}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button
+                    size="sm"
+                    onClick={() => setCreatingTemplate(true)}
+                    className="h-9 text-xs gap-1.5 shadow-sm font-semibold cursor-pointer"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>{t('Add Template', 'ٹیمپلیٹ شامل کریں')}</span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Dedicated Search Toolbar */}
+              <Card className="p-3 sm:p-3.5 border-border/80 shadow-xs bg-card">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                    <Input
+                      placeholder={t('Search templates by title or category...', 'عنوان یا قسم سے ٹیمپلیٹ تلاش کریں...')}
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      className="h-9 pl-9 pr-8 text-xs bg-background"
+                    />
+                    {search && (
+                      <button
+                        onClick={() => setSearch('')}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {search && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSearch('')}
+                      className="h-9 text-xs px-2.5 text-muted-foreground hover:text-foreground cursor-pointer"
+                    >
+                      <RefreshCw className="h-3.5 w-3.5 mr-1" />
+                      <span>{t('Reset', 'ری سیٹ')}</span>
+                    </Button>
+                  )}
+                </div>
+              </Card>
+
+              {/* Data Table Card */}
+              <Card className="border-border/80 shadow-xs overflow-hidden">
                 <CardContent className="p-0">
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
-                        <TableRow className="bg-muted/40">
-                          <TableHead className="w-12 text-center text-xs">#</TableHead>
-                          <TableHead className="text-xs">{t('Template Title', 'عنوان')}</TableHead>
-                          <TableHead className="text-xs">{t('Category', 'شعبہ')}</TableHead>
-                          <TableHead className="text-xs text-center">{t('Downloads', 'ڈاؤنلوڈز')}</TableHead>
-                          <TableHead className="text-xs text-right pr-4">{t('Actions', 'اقدامات')}</TableHead>
+                        <TableRow className="bg-muted/40 hover:bg-muted/40">
+                          <TableHead className="w-12 text-center text-xs font-bold uppercase tracking-wider text-muted-foreground/80">#</TableHead>
+                          <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">{t('Template Title', 'عنوان')}</TableHead>
+                          <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">{t('Category', 'شعبہ')}</TableHead>
+                          <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 text-center">{t('Downloads', 'ڈاؤنلوڈز')}</TableHead>
+                          <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 text-right pr-4">{t('Actions', 'اقدامات')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {paginatedTemplates.map((tpl, i) => {
                           const serialNumber = (templatesPage - 1) * TEMPLATES_PER_PAGE + i + 1
                           return (
-                            <TableRow key={tpl.id} className="hover:bg-muted/30">
-                              <TableCell className="text-center text-xs text-muted-foreground">{serialNumber}</TableCell>
-                              <TableCell>
+                            <TableRow key={tpl.id} className="hover:bg-muted/30 transition-colors">
+                              <TableCell className="text-center text-xs text-muted-foreground font-mono font-medium">{serialNumber}</TableCell>
+                              <TableCell className="py-3">
                                 <div className="font-semibold text-xs text-foreground">
                                   {lang === 'ur' && tpl.titleUrdu ? tpl.titleUrdu : tpl.title}
                                 </div>
-                                <div className="text-[10px] text-muted-foreground font-mono mt-0.5">/{tpl.slug}</div>
+                                <div className="text-[10px] text-muted-foreground/80 font-mono mt-0.5">/{tpl.slug}</div>
                               </TableCell>
-                              <TableCell>
-                                <Badge variant="outline" className="text-[10px]">
+                              <TableCell className="py-3">
+                                <Badge variant="outline" className="text-[10px] font-normal">
                                   {tpl.category}
                                 </Badge>
                               </TableCell>
-                              <TableCell className="text-center font-mono text-xs text-muted-foreground">
-                                {tpl.downloads}
+                              <TableCell className="text-center font-mono text-xs text-muted-foreground py-3">
+                                <span className="inline-flex items-center gap-1 bg-muted px-2 py-0.5 rounded-full text-[11px]">
+                                  <Download className="h-3 w-3 text-muted-foreground" />
+                                  <span>{tpl.downloads}</span>
+                                </span>
                               </TableCell>
-                              <TableCell className="text-right pr-4 space-x-1">
+                              <TableCell className="text-right pr-4 space-x-1 py-3">
                                 <Button
                                   size="icon"
                                   variant="ghost"
                                   className="h-8 w-8 text-muted-foreground hover:text-foreground"
                                   asChild
-                                  title="Open Template Builder"
+                                  title={t('Open Template Builder', 'ٹیمپلیٹ ایڈیٹر کھولیں')}
                                 >
                                   <Link href={`/templates/${tpl.slug}`} target="_blank">
                                     <ExternalLink className="h-3.5 w-3.5" />
@@ -2258,7 +2722,7 @@ export default function AdminPage() {
                                   variant="ghost"
                                   className="h-8 w-8 text-destructive hover:bg-destructive/10"
                                   onClick={() => deleteTemplate(tpl)}
-                                  title="Delete Template"
+                                  title={t('Delete Template', 'حذف کریں')}
                                 >
                                   <Trash2 className="h-3.5 w-3.5" />
                                 </Button>
@@ -2272,7 +2736,7 @@ export default function AdminPage() {
 
                   {/* Templates Pagination Controls */}
                   {filteredTemplates.length > TEMPLATES_PER_PAGE && (
-                    <div className="p-4 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-4 bg-muted/10">
+                    <div className="p-3.5 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-4 bg-muted/10">
                       <div className="text-xs text-muted-foreground font-medium order-2 sm:order-1">
                         {t(
                           `Showing ${(templatesPage - 1) * TEMPLATES_PER_PAGE + 1} to ${Math.min(templatesPage * TEMPLATES_PER_PAGE, filteredTemplates.length)} of ${filteredTemplates.length} templates`,
@@ -2311,7 +2775,7 @@ export default function AdminPage() {
                                 onClick={() => setTemplatesPage(pNum)}
                                 className={cn(
                                   'h-8 w-8 p-0 text-xs tabular-nums cursor-pointer',
-                                  isActive && 'font-bold shadow-sm'
+                                  isActive && 'font-bold shadow-xs'
                                 )}
                               >
                                 {pNum}
@@ -2454,67 +2918,78 @@ export default function AdminPage() {
           {/* TAB 7: USER MANAGEMENT */}
           {activeTab === 'users' && (
             <div className="space-y-4 animate-in fade-in-50 duration-200">
-              <Card>
-                <CardHeader className="pb-4">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <Users className="h-5 w-5 text-blue-600" />
-                        {t('Registered Users & Roles', 'صارفین اور ان کے کردار')}
-                      </CardTitle>
-                      <CardDescription className="text-xs mt-0.5">
-                        {users.length} {t('registered members with assigned roles', 'رجسٹرڈ صارفین')}
-                      </CardDescription>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm" asChild className="h-9 text-xs gap-1.5">
-                        <a href="/api/admin/export?type=users" download>
-                          <Download className="h-3.5 w-3.5" />
-                          <span>{t('Export CSV', 'ایکسپورٹ CSV')}</span>
-                        </a>
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={loadAll} className="h-9 text-xs gap-1.5">
-                        <RefreshCw className="h-3.5 w-3.5" />
-                        <span>{t('Refresh Users', 'صارفین ریفریش')}</span>
-                      </Button>
-                    </div>
+              {/* Page Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-500/20 shrink-0">
+                    <Users className="h-5 w-5" />
                   </div>
-                </CardHeader>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-foreground">
+                        {t('User Management', 'صارفین کا انتظام')}
+                      </h1>
+                      <Badge variant="secondary" className="text-[11px] font-mono font-bold px-2 py-0.5">
+                        {users.length} {t('Accounts', 'صارفین')}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {t('Manage registered citizens, advocates, and administrative role assignments.', 'رجسٹرڈ ممبران، وکلاء اور ایڈمن کے کرداروں کا انتظام کریں۔')}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button variant="outline" size="sm" asChild className="h-9 text-xs gap-1.5 shadow-xs border-border/80">
+                    <a href="/api/admin/export?type=users" download>
+                      <Download className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span>{t('Export CSV', 'ایکسپورٹ CSV')}</span>
+                    </a>
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={loadAll} className="h-9 text-xs gap-1.5 shadow-xs border-border/80 cursor-pointer">
+                    <RefreshCw className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span>{t('Refresh Users', 'صارفین ریفریش')}</span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Data Table Card */}
+              <Card className="border-border/80 shadow-xs overflow-hidden">
                 <CardContent className="p-0">
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
-                        <TableRow className="bg-muted/40">
-                          <TableHead className="w-12 text-center text-xs">#</TableHead>
-                          <TableHead className="text-xs">{t('User', 'صارف')}</TableHead>
-                          <TableHead className="text-xs">{t('Email', 'ای میل')}</TableHead>
-                          <TableHead className="text-xs">{t('Registered', 'رجسٹریشن تاریخ')}</TableHead>
-                          <TableHead className="text-xs">{t('Current Role', 'موجودہ کردار')}</TableHead>
-                          <TableHead className="text-xs text-right pr-4">{t('Modify Role', 'کردار تبدیل کریں')}</TableHead>
+                        <TableRow className="bg-muted/40 hover:bg-muted/40">
+                          <TableHead className="w-12 text-center text-xs font-bold uppercase tracking-wider text-muted-foreground/80">#</TableHead>
+                          <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">{t('User', 'صارف')}</TableHead>
+                          <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">{t('Email', 'ای میل')}</TableHead>
+                          <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">{t('Registered', 'رجسٹریشن تاریخ')}</TableHead>
+                          <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">{t('Current Role', 'موجودہ کردار')}</TableHead>
+                          <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 text-right pr-4">{t('Modify Role', 'کردار تبدیل کریں')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {users.map((user, idx) => (
-                          <TableRow key={user.id} className="hover:bg-muted/30">
-                            <TableCell className="text-center text-xs text-muted-foreground">{idx + 1}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Avatar className="h-7 w-7 border border-border">
-                                  <AvatarFallback className="text-[10px] font-bold bg-primary/10 text-primary">
+                          <TableRow key={user.id} className="hover:bg-muted/30 transition-colors">
+                            <TableCell className="text-center text-xs text-muted-foreground font-mono font-medium">{idx + 1}</TableCell>
+                            <TableCell className="py-3">
+                              <div className="flex items-center gap-2.5">
+                                <Avatar className="h-8 w-8 border border-border shrink-0">
+                                  <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">
                                     {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                                   </AvatarFallback>
                                 </Avatar>
                                 <span className="font-semibold text-xs text-foreground">{user.name || 'Unnamed User'}</span>
                               </div>
                             </TableCell>
-                            <TableCell className="text-xs font-mono text-muted-foreground">{user.email}</TableCell>
-                            <TableCell className="text-xs text-muted-foreground">
+                            <TableCell className="text-xs font-mono text-muted-foreground py-3">{user.email}</TableCell>
+                            <TableCell className="text-xs text-muted-foreground py-3">
                               {new Date(user.createdAt).toLocaleDateString()}
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="py-3">
                               <Badge
                                 className={cn(
-                                  'text-[10px] uppercase font-bold',
+                                  'text-[10px] uppercase font-bold tracking-wider',
                                   user.role === 'admin' && 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30',
                                   user.role === 'editor' && 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/30',
                                   user.role === 'reviewer' && 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30',
@@ -2524,12 +2999,12 @@ export default function AdminPage() {
                                 {user.role}
                               </Badge>
                             </TableCell>
-                            <TableCell className="text-right pr-4">
+                            <TableCell className="text-right pr-4 py-3">
                               <Select
                                 value={user.role}
                                 onValueChange={(val) => handleRoleChange(user.id, val)}
                               >
-                                <SelectTrigger className="h-8 text-xs w-32 ml-auto">
+                                <SelectTrigger className="h-8 text-xs w-36 ml-auto bg-background">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -2554,132 +3029,182 @@ export default function AdminPage() {
           {activeTab === 'subscribers' && (
             <div className="space-y-4 animate-in fade-in-50 duration-200">
               {/* Metrics */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Card className="p-4 border-border/80">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                <Card className="border-border/80 shadow-xs relative overflow-hidden">
+                  <div className="h-1 w-full bg-purple-500" />
+                  <CardContent className="p-4 flex items-center gap-3.5">
+                    <div className="h-10 w-10 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
                       <Mail className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground font-medium">{t('Total Subscribers', 'کل سبسکرائبرز')}</p>
-                      <p className="text-xl font-bold">{subscribers.length}</p>
+                      <p className="text-[11px] text-muted-foreground font-semibold">{t('Total Subscribers', 'کل سبسکرائبرز')}</p>
+                      <p className="text-xl sm:text-2xl font-black font-mono tracking-tight">{subscribers.length}</p>
                     </div>
-                  </div>
+                  </CardContent>
                 </Card>
-                <Card className="p-4 border-border/80">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+
+                <Card className="border-border/80 shadow-xs relative overflow-hidden">
+                  <div className="h-1 w-full bg-emerald-500" />
+                  <CardContent className="p-4 flex items-center gap-3.5">
+                    <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                       <CheckCircle className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground font-medium">{t('Active Subscribers', 'فعال سبسکرائبرز')}</p>
-                      <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                      <p className="text-[11px] text-muted-foreground font-semibold">{t('Active Subscribers', 'فعال سبسکرائبرز')}</p>
+                      <p className="text-xl sm:text-2xl font-black font-mono tracking-tight text-emerald-600 dark:text-emerald-400">
                         {subscribers.filter((s) => s.active).length}
                       </p>
                     </div>
-                  </div>
+                  </CardContent>
                 </Card>
-                <Card className="p-4 border-border/80">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+
+                <Card className="border-border/80 shadow-xs relative overflow-hidden">
+                  <div className="h-1 w-full bg-amber-500" />
+                  <CardContent className="p-4 flex items-center gap-3.5">
+                    <div className="h-10 w-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                       <Clock className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground font-medium">{t('Inactive / Unsubscribed', 'غیر فعال')}</p>
-                      <p className="text-xl font-bold text-amber-600 dark:text-amber-400">
+                      <p className="text-[11px] text-muted-foreground font-semibold">{t('Inactive / Unsubscribed', 'غیر فعال')}</p>
+                      <p className="text-xl sm:text-2xl font-black font-mono tracking-tight text-amber-600 dark:text-amber-400">
                         {subscribers.filter((s) => !s.active).length}
                       </p>
                     </div>
-                  </div>
+                  </CardContent>
                 </Card>
               </div>
 
-              {/* Table Card */}
-              <Card>
-                <CardHeader className="pb-4">
-                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    <div>
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <Mail className="h-5 w-5 text-purple-600" />
-                        {t('Newsletter Subscribers', 'نیوز لیٹر سبسکرائبرز')}
-                      </CardTitle>
-                      <CardDescription className="text-xs mt-0.5">
-                        {filteredSubscribers.length} {t('registered email recipients', 'ای میل صارفین درج ہیں')}
-                        {filteredSubscribers.length > SUBSCRIBERS_PER_PAGE && ` • ${t('Page', 'صفحہ')} ${subscribersPage} / ${totalSubscribersPages}`}
-                      </CardDescription>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-2">
-                      <div className="relative w-full sm:w-60">
-                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                        <Input
-                          placeholder={t('Search by email or name...', 'ای میل یا نام سے تلاش کریں...')}
-                          value={subscriberSearch}
-                          onChange={(e) => setSubscriberSearch(e.target.value)}
-                          className="h-9 pl-8 text-xs"
-                        />
-                      </div>
-
-                      <Select value={subscriberFilter} onValueChange={(val: any) => setSubscriberFilter(val)}>
-                        <SelectTrigger className="h-9 text-xs w-36">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">{t('All Status', 'تمام اسٹیٹس')}</SelectItem>
-                          <SelectItem value="active">{t('Active Only', 'صرف فعال')}</SelectItem>
-                          <SelectItem value="inactive">{t('Inactive Only', 'صرف غیر فعال')}</SelectItem>
-                        </SelectContent>
-                      </Select>
-
-                      <Button variant="outline" size="sm" onClick={copySubscribersEmails} className="h-9 text-xs gap-1.5">
-                        <Copy className="h-3.5 w-3.5" />
-                        <span>{t('Copy Emails', 'ای میلز کاپی')}</span>
-                      </Button>
-
-                      <Button variant="outline" size="sm" asChild className="h-9 text-xs gap-1.5">
-                        <a href="/api/admin/export?type=subscribers" download>
-                          <Download className="h-3.5 w-3.5" />
-                          <span>{t('Export CSV', 'ایکسپورٹ CSV')}</span>
-                        </a>
-                      </Button>
-
-                      <Button size="sm" onClick={() => setCreatingSubscriber(true)} className="h-9 text-xs gap-1.5 shadow-sm">
-                        <Plus className="h-4 w-4" />
-                        <span>{t('Add Subscriber', 'سبسکرائبر شامل کریں')}</span>
-                      </Button>
-                    </div>
+              {/* Page Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-500/20 shrink-0">
+                    <Mail className="h-5 w-5" />
                   </div>
-                </CardHeader>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-foreground">
+                        {t('Newsletter Subscribers', 'نیوز لیٹر سبسکرائبرز')}
+                      </h1>
+                      <Badge variant="secondary" className="text-[11px] font-mono font-bold px-2 py-0.5">
+                        {subscribers.length} {t('Recipients', 'قارئین')}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {t('Subscribed email contacts receiving legal updates, gazette alerts, and amendments.', 'قانونی ترامیم اور گزٹ الرٹس وصول کرنے والے ای میل سبسکرائبرز۔')}
+                      {filteredSubscribers.length > SUBSCRIBERS_PER_PAGE && ` • ${t('Page', 'صفحہ')} ${subscribersPage} / ${totalSubscribersPages}`}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button variant="outline" size="sm" onClick={copySubscribersEmails} className="h-9 text-xs gap-1.5 shadow-xs border-border/80 cursor-pointer">
+                    <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span>{t('Copy Emails', 'ای میلز کاپی')}</span>
+                  </Button>
+
+                  <Button variant="outline" size="sm" asChild className="h-9 text-xs gap-1.5 shadow-xs border-border/80">
+                    <a href="/api/admin/export?type=subscribers" download>
+                      <Download className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span>{t('Export CSV', 'ایکسپورٹ CSV')}</span>
+                    </a>
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    onClick={() => setCreatingSubscriber(true)}
+                    className="h-9 text-xs gap-1.5 shadow-sm font-semibold cursor-pointer"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>{t('Add Subscriber', 'سبسکرائبر شامل کریں')}</span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Dedicated Filter Toolbar */}
+              <Card className="p-3 sm:p-3.5 border-border/80 shadow-xs bg-card">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                    <Input
+                      placeholder={t('Search by email or name...', 'ای میل یا نام سے تلاش کریں...')}
+                      value={subscriberSearch}
+                      onChange={(e) => setSubscriberSearch(e.target.value)}
+                      className="h-9 pl-9 pr-8 text-xs bg-background"
+                    />
+                    {subscriberSearch && (
+                      <button
+                        onClick={() => setSubscriberSearch('')}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Select value={subscriberFilter} onValueChange={(val: any) => setSubscriberFilter(val)}>
+                      <SelectTrigger className="h-9 text-xs w-full sm:w-40 bg-background">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{t('All Status', 'تمام اسٹیٹس')}</SelectItem>
+                        <SelectItem value="active">{t('Active Only', 'صرف فعال')}</SelectItem>
+                        <SelectItem value="inactive">{t('Inactive Only', 'صرف غیر فعال')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    {(subscriberSearch || subscriberFilter !== 'all') && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSubscriberSearch('')
+                          setSubscriberFilter('all')
+                        }}
+                        className="h-9 text-xs px-2.5 text-muted-foreground hover:text-foreground cursor-pointer"
+                      >
+                        <RefreshCw className="h-3.5 w-3.5 mr-1" />
+                        <span>{t('Reset', 'ری سیٹ')}</span>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </Card>
+
+              {/* Table Card */}
+              <Card className="border-border/80 shadow-xs overflow-hidden">
                 <CardContent className="p-0">
                   {filteredSubscribers.length === 0 ? (
-                    <div className="p-10 text-center text-sm text-muted-foreground">
-                      {t('No subscribers found', 'کوئی سبسکرائبر نہیں ملا')}
+                    <div className="p-12 text-center text-sm text-muted-foreground space-y-2">
+                      <Mail className="h-8 w-8 text-muted-foreground/50 mx-auto" />
+                      <p className="font-semibold">{t('No subscribers found matching query', 'کوئی سبسکرائبر نہیں ملا')}</p>
+                      <p className="text-xs">{t('Try clearing the filter or adding a new subscriber.', 'فلٹر تبدیل کر کے دوبارہ کوشش کریں۔')}</p>
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
                       <Table>
                         <TableHeader>
-                          <TableRow className="bg-muted/40">
-                            <TableHead className="w-12 text-center text-xs">#</TableHead>
-                            <TableHead className="text-xs">{t('Email Address', 'ای میل ایڈریس')}</TableHead>
-                            <TableHead className="text-xs">{t('Subscriber Name', 'نام')}</TableHead>
-                            <TableHead className="text-xs">{t('Joined Date', 'شمولیت تاریخ')}</TableHead>
-                            <TableHead className="text-xs">{t('Status', 'حیثیت')}</TableHead>
-                            <TableHead className="text-xs text-right pr-4">{t('Actions', 'اقدامات')}</TableHead>
+                          <TableRow className="bg-muted/40 hover:bg-muted/40">
+                            <TableHead className="w-12 text-center text-xs font-bold uppercase tracking-wider text-muted-foreground/80">#</TableHead>
+                            <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">{t('Email Address', 'ای میل ایڈریس')}</TableHead>
+                            <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">{t('Subscriber Name', 'نام')}</TableHead>
+                            <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">{t('Joined Date', 'شمولیت تاریخ')}</TableHead>
+                            <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">{t('Status', 'حیثیت')}</TableHead>
+                            <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 text-right pr-4">{t('Actions', 'اقدامات')}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {paginatedSubscribers.map((sub, idx) => {
                             const serialNumber = (subscribersPage - 1) * SUBSCRIBERS_PER_PAGE + idx + 1
                             return (
-                              <TableRow key={sub.id} className="hover:bg-muted/30">
-                                <TableCell className="text-center text-xs text-muted-foreground">{serialNumber}</TableCell>
-                                <TableCell className="text-xs font-mono font-medium text-foreground">{sub.email}</TableCell>
-                                <TableCell className="text-xs text-muted-foreground">{sub.name || '—'}</TableCell>
-                                <TableCell className="text-xs text-muted-foreground">
+                              <TableRow key={sub.id} className="hover:bg-muted/30 transition-colors">
+                                <TableCell className="text-center text-xs text-muted-foreground font-mono font-medium">{serialNumber}</TableCell>
+                                <TableCell className="text-xs font-mono font-medium text-foreground py-3">{sub.email}</TableCell>
+                                <TableCell className="text-xs text-muted-foreground py-3">{sub.name || '—'}</TableCell>
+                                <TableCell className="text-xs text-muted-foreground py-3">
                                   {new Date(sub.createdAt).toLocaleDateString()}
                                 </TableCell>
-                                <TableCell>
+                                <TableCell className="py-3">
                                   <button
                                     onClick={() => toggleSubscriber(sub)}
                                     title={t('Click to toggle status', 'اسٹیٹس تبدیل کرنے کے لیے کلک کریں')}
@@ -2687,17 +3212,23 @@ export default function AdminPage() {
                                   >
                                     <Badge
                                       className={cn(
-                                        'text-[10px] uppercase font-bold cursor-pointer transition-transform hover:scale-105',
+                                        'text-[10px] uppercase font-bold cursor-pointer transition-transform hover:scale-105 gap-1',
                                         sub.active
                                           ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                                           : 'bg-muted text-muted-foreground border border-border'
                                       )}
                                     >
+                                      <span
+                                        className={cn(
+                                          'h-1.5 w-1.5 rounded-full',
+                                          sub.active ? 'bg-emerald-500' : 'bg-muted-foreground/40'
+                                        )}
+                                      />
                                       {sub.active ? t('Active', 'فعال') : t('Inactive', 'غیر فعال')}
                                     </Badge>
                                   </button>
                                 </TableCell>
-                                <TableCell className="text-right pr-4 space-x-1">
+                                <TableCell className="text-right pr-4 space-x-1 py-3">
                                   <Button
                                     size="icon"
                                     variant="ghost"
@@ -2718,8 +3249,8 @@ export default function AdminPage() {
 
                   {/* Pagination */}
                   {filteredSubscribers.length > SUBSCRIBERS_PER_PAGE && (
-                    <div className="p-4 border-t border-border/60 flex items-center justify-between gap-4 bg-muted/10">
-                      <div className="text-xs text-muted-foreground">
+                    <div className="p-3.5 border-t border-border/60 flex items-center justify-between gap-4 bg-muted/10">
+                      <div className="text-xs text-muted-foreground font-medium">
                         {t(
                           `Showing ${(subscribersPage - 1) * SUBSCRIBERS_PER_PAGE + 1} to ${Math.min(subscribersPage * SUBSCRIBERS_PER_PAGE, filteredSubscribers.length)} of ${filteredSubscribers.length}`,
                           `${filteredSubscribers.length} میں سے ${(subscribersPage - 1) * SUBSCRIBERS_PER_PAGE + 1} تا ${Math.min(subscribersPage * SUBSCRIBERS_PER_PAGE, filteredSubscribers.length)}`
@@ -2731,7 +3262,7 @@ export default function AdminPage() {
                           size="sm"
                           onClick={() => setSubscribersPage((p) => Math.max(1, p - 1))}
                           disabled={subscribersPage === 1}
-                          className="h-8 px-2.5 text-xs gap-1"
+                          className="h-8 px-2.5 text-xs gap-1 cursor-pointer"
                         >
                           <ChevronLeft className={cn('h-3.5 w-3.5', lang === 'ur' && 'rotate-180')} />
                           <span>{t('Previous', 'پچھلا')}</span>
@@ -2741,7 +3272,7 @@ export default function AdminPage() {
                           size="sm"
                           onClick={() => setSubscribersPage((p) => Math.min(totalSubscribersPages, p + 1))}
                           disabled={subscribersPage === totalSubscribersPages}
-                          className="h-8 px-2.5 text-xs gap-1"
+                          className="h-8 px-2.5 text-xs gap-1 cursor-pointer"
                         >
                           <span>{t('Next', 'اگلا')}</span>
                           <ChevronRight className={cn('h-3.5 w-3.5', lang === 'ur' && 'rotate-180')} />
@@ -2757,120 +3288,171 @@ export default function AdminPage() {
           {/* TAB 9: LAWYER REVIEWS MODERATION */}
           {activeTab === 'reviews' && (
             <div className="space-y-4 animate-in fade-in-50 duration-200">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Card className="p-4 border-border/80">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+              {/* Metric Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                <Card className="border-border/80 shadow-xs relative overflow-hidden">
+                  <div className="h-1 w-full bg-amber-500" />
+                  <CardContent className="p-4 flex items-center gap-3.5">
+                    <div className="h-10 w-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                       <Star className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground font-medium">{t('Total Reviews', 'کل جائزے')}</p>
-                      <p className="text-xl font-bold">{reviews.length}</p>
+                      <p className="text-[11px] text-muted-foreground font-semibold">{t('Total Reviews', 'کل جائزے')}</p>
+                      <p className="text-xl sm:text-2xl font-black font-mono tracking-tight">{reviews.length}</p>
                     </div>
-                  </div>
+                  </CardContent>
                 </Card>
-                <Card className="p-4 border-border/80">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+
+                <Card className="border-border/80 shadow-xs relative overflow-hidden">
+                  <div className="h-1 w-full bg-emerald-500" />
+                  <CardContent className="p-4 flex items-center gap-3.5">
+                    <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                       <ShieldCheck className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground font-medium">{t('5-Star Feedback', '۵ ستارہ ریٹنگ')}</p>
-                      <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                      <p className="text-[11px] text-muted-foreground font-semibold">{t('5-Star Feedback', '۵ ستارہ ریٹنگ')}</p>
+                      <p className="text-xl sm:text-2xl font-black font-mono tracking-tight text-emerald-600 dark:text-emerald-400">
                         {reviews.filter((r) => r.rating === 5).length}
                       </p>
                     </div>
-                  </div>
+                  </CardContent>
                 </Card>
-                <Card className="p-4 border-border/80">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+
+                <Card className="border-border/80 shadow-xs relative overflow-hidden">
+                  <div className="h-1 w-full bg-blue-500" />
+                  <CardContent className="p-4 flex items-center gap-3.5">
+                    <div className="h-10 w-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
                       <MessageSquare className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground font-medium">{t('Average Directory Rating', 'اوسط ریٹنگ')}</p>
-                      <p className="text-xl font-bold">
-                        {reviews.length > 0
-                          ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
-                          : '0.0'}{' '}
-                        ⭐
+                      <p className="text-[11px] text-muted-foreground font-semibold">{t('Average Rating', 'اوسط ریٹنگ')}</p>
+                      <p className="text-xl sm:text-2xl font-black font-mono tracking-tight text-foreground flex items-center gap-1.5">
+                        <span>
+                          {reviews.length > 0
+                            ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
+                            : '0.0'}
+                        </span>
+                        <Star className="h-4 w-4 fill-amber-500 text-amber-500" />
                       </p>
                     </div>
-                  </div>
+                  </CardContent>
                 </Card>
               </div>
 
-              <Card>
-                <CardHeader className="pb-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <Star className="h-5 w-5 text-amber-500" />
-                        {t('Lawyer Reviews Moderation', 'وکلاء کے جائزوں کی نگرانی')}
-                      </CardTitle>
-                      <CardDescription className="text-xs mt-0.5">
-                        {filteredReviews.length} {t('client ratings and testimonials', 'کلائنٹس کی آراء و تاثرات')}
-                      </CardDescription>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-2">
-                      <div className="relative w-full sm:w-60">
-                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                        <Input
-                          placeholder={t('Search lawyer, author, or comment...', 'وکیل یا تبصرہ تلاش کریں...')}
-                          value={reviewSearch}
-                          onChange={(e) => setReviewSearch(e.target.value)}
-                          className="h-9 pl-8 text-xs"
-                        />
-                      </div>
-
-                      <Select value={reviewRatingFilter} onValueChange={setReviewRatingFilter}>
-                        <SelectTrigger className="h-9 text-xs w-36">
-                          <SelectValue placeholder={t('Filter Rating', 'ریٹنگ فلٹر')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">{t('All Ratings', 'تمام ریٹنگز')}</SelectItem>
-                          <SelectItem value="5">⭐⭐⭐⭐⭐ (5)</SelectItem>
-                          <SelectItem value="4">⭐⭐⭐⭐ (4)</SelectItem>
-                          <SelectItem value="3">⭐⭐⭐ (3)</SelectItem>
-                          <SelectItem value="2">⭐⭐ (2)</SelectItem>
-                          <SelectItem value="1">⭐ (1)</SelectItem>
-                        </SelectContent>
-                      </Select>
-
-                      <Button variant="outline" size="sm" onClick={loadAll} className="h-9 text-xs gap-1.5">
-                        <RefreshCw className="h-3.5 w-3.5" />
-                        <span>{t('Refresh', 'ریفریش')}</span>
-                      </Button>
-                    </div>
+              {/* Page Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20 shrink-0">
+                    <Star className="h-5 w-5" />
                   </div>
-                </CardHeader>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-foreground">
+                        {t('Lawyer Reviews Moderation', 'وکلاء کے جائزوں کی نگرانی')}
+                      </h1>
+                      <Badge variant="secondary" className="text-[11px] font-mono font-bold px-2 py-0.5">
+                        {reviews.length} {t('Reviews', 'جائزے')}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {t('Moderate client testimonials, public ratings, and advocate feedback.', 'کلائنٹس کے تبصروں، ریٹنگز اور تصدیق کا انتظام کریں۔')}
+                      {filteredReviews.length > REVIEWS_PER_PAGE && ` • ${t('Page', 'صفحہ')} ${reviewsPage} / ${totalReviewsPages}`}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button variant="outline" size="sm" onClick={loadAll} className="h-9 text-xs gap-1.5 shadow-xs border-border/80 cursor-pointer">
+                    <RefreshCw className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span>{t('Refresh Reviews', 'ریفریش')}</span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Dedicated Filter Toolbar */}
+              <Card className="p-3 sm:p-3.5 border-border/80 shadow-xs bg-card">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                    <Input
+                      placeholder={t('Search lawyer, author, or comment...', 'وکیل، مصنف یا تبصرہ تلاش کریں...')}
+                      value={reviewSearch}
+                      onChange={(e) => setReviewSearch(e.target.value)}
+                      className="h-9 pl-9 pr-8 text-xs bg-background"
+                    />
+                    {reviewSearch && (
+                      <button
+                        onClick={() => setReviewSearch('')}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Select value={reviewRatingFilter} onValueChange={setReviewRatingFilter}>
+                      <SelectTrigger className="h-9 text-xs w-full sm:w-40 bg-background">
+                        <SelectValue placeholder={t('Filter Rating', 'ریٹنگ فلٹر')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{t('All Ratings', 'تمام ریٹنگز')}</SelectItem>
+                        <SelectItem value="5">⭐⭐⭐⭐⭐ (5 Stars)</SelectItem>
+                        <SelectItem value="4">⭐⭐⭐⭐ (4 Stars)</SelectItem>
+                        <SelectItem value="3">⭐⭐⭐ (3 Stars)</SelectItem>
+                        <SelectItem value="2">⭐⭐ (2 Stars)</SelectItem>
+                        <SelectItem value="1">⭐ (1 Star)</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    {(reviewSearch || reviewRatingFilter !== 'all') && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setReviewSearch('')
+                          setReviewRatingFilter('all')
+                        }}
+                        className="h-9 text-xs px-2.5 text-muted-foreground hover:text-foreground cursor-pointer"
+                      >
+                        <RefreshCw className="h-3.5 w-3.5 mr-1" />
+                        <span>{t('Reset', 'ری سیٹ')}</span>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </Card>
+
+              {/* Table Card */}
+              <Card className="border-border/80 shadow-xs overflow-hidden">
                 <CardContent className="p-0">
                   {filteredReviews.length === 0 ? (
-                    <div className="p-10 text-center text-sm text-muted-foreground">
-                      {t('No reviews found matching criteria', 'کوئی جائزہ نہیں ملا')}
+                    <div className="p-12 text-center text-sm text-muted-foreground space-y-2">
+                      <Star className="h-8 w-8 text-muted-foreground/50 mx-auto" />
+                      <p className="font-semibold">{t('No reviews found matching criteria', 'کوئی جائزہ نہیں ملا')}</p>
+                      <p className="text-xs">{t('Try clearing the search or rating filter.', 'فلٹر تبدیل کر کے دوبارہ کوشش کریں۔')}</p>
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
                       <Table>
                         <TableHeader>
-                          <TableRow className="bg-muted/40">
-                            <TableHead className="w-12 text-center text-xs">#</TableHead>
-                            <TableHead className="text-xs">{t('Lawyer', 'وکیل')}</TableHead>
-                            <TableHead className="text-xs">{t('Reviewer', 'تبصرہ نگار')}</TableHead>
-                            <TableHead className="text-xs">{t('Rating', 'ریٹنگ')}</TableHead>
-                            <TableHead className="text-xs max-w-sm">{t('Comment', 'تبصرہ')}</TableHead>
-                            <TableHead className="text-xs">{t('Date', 'تاریخ')}</TableHead>
-                            <TableHead className="text-xs text-right pr-4">{t('Actions', 'اقدامات')}</TableHead>
+                          <TableRow className="bg-muted/40 hover:bg-muted/40">
+                            <TableHead className="w-12 text-center text-xs font-bold uppercase tracking-wider text-muted-foreground/80">#</TableHead>
+                            <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">{t('Lawyer', 'وکیل')}</TableHead>
+                            <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">{t('Reviewer', 'تبصرہ نگار')}</TableHead>
+                            <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">{t('Rating', 'ریٹنگ')}</TableHead>
+                            <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 max-w-sm">{t('Comment', 'تبصرہ')}</TableHead>
+                            <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">{t('Date', 'تاریخ')}</TableHead>
+                            <TableHead className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 text-right pr-4">{t('Actions', 'اقدامات')}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {paginatedReviews.map((rev, idx) => {
                             const serialNumber = (reviewsPage - 1) * REVIEWS_PER_PAGE + idx + 1
                             return (
-                              <TableRow key={rev.id} className="hover:bg-muted/30">
-                                <TableCell className="text-center text-xs text-muted-foreground">{serialNumber}</TableCell>
-                                <TableCell>
+                              <TableRow key={rev.id} className="hover:bg-muted/30 transition-colors">
+                                <TableCell className="text-center text-xs text-muted-foreground font-mono font-medium">{serialNumber}</TableCell>
+                                <TableCell className="py-3">
                                   {rev.lawyer ? (
                                     <Link
                                       href={`/lawyers/${rev.lawyer.slug}`}
@@ -2878,37 +3460,45 @@ export default function AdminPage() {
                                       className="font-semibold text-xs text-primary hover:underline flex items-center gap-1"
                                     >
                                       <span>{lang === 'ur' && rev.lawyer.nameUrdu ? rev.lawyer.nameUrdu : rev.lawyer.name}</span>
-                                      <ExternalLink className="h-2.5 w-2.5 opacity-60" />
+                                      <ExternalLink className="h-3 w-3 opacity-60" />
                                     </Link>
                                   ) : (
                                     <span className="text-xs text-muted-foreground">Unknown Lawyer</span>
                                   )}
-                                  <div className="text-[10px] text-muted-foreground">{rev.lawyer?.city}</div>
+                                  <div className="text-[10px] text-muted-foreground mt-0.5">{rev.lawyer?.city}</div>
                                 </TableCell>
-                                <TableCell className="text-xs font-medium text-foreground">{rev.authorName}</TableCell>
-                                <TableCell>
-                                  <div className="flex items-center gap-1 text-amber-500">
-                                    {Array.from({ length: rev.rating }).map((_, i) => (
-                                      <Star key={i} className="h-3 w-3 fill-amber-500 text-amber-500" />
-                                    ))}
-                                    <span className="text-xs font-bold ml-1 text-foreground font-mono">{rev.rating}/5</span>
+                                <TableCell className="text-xs font-semibold text-foreground py-3">{rev.authorName}</TableCell>
+                                <TableCell className="py-3">
+                                  <div className="flex items-center gap-1">
+                                    <div className="flex items-center text-amber-500">
+                                      {Array.from({ length: 5 }).map((_, i) => (
+                                        <Star
+                                          key={i}
+                                          className={cn(
+                                            'h-3 w-3',
+                                            i < rev.rating ? 'fill-amber-500 text-amber-500' : 'text-muted-foreground/30'
+                                          )}
+                                        />
+                                      ))}
+                                    </div>
+                                    <span className="text-[11px] font-bold text-foreground font-mono ml-1">{rev.rating}.0</span>
                                   </div>
                                 </TableCell>
-                                <TableCell className="max-w-md text-xs text-foreground/90">
+                                <TableCell className="max-w-md text-xs text-foreground/90 py-3">
                                   {rev.comment ? (
-                                    <p className="line-clamp-2 italic">"{rev.comment}"</p>
+                                    <p className="line-clamp-2 italic text-muted-foreground">"{rev.comment}"</p>
                                   ) : (
-                                    <span className="text-muted-foreground italic">— No comment provided —</span>
+                                    <span className="text-muted-foreground/60 italic">— No comment provided —</span>
                                   )}
                                 </TableCell>
-                                <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                                <TableCell className="text-xs text-muted-foreground whitespace-nowrap py-3">
                                   {new Date(rev.createdAt).toLocaleDateString()}
                                 </TableCell>
-                                <TableCell className="text-right pr-4">
+                                <TableCell className="text-right pr-4 py-3">
                                   <Button
                                     size="icon"
                                     variant="ghost"
-                                    className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                                    className="h-8 w-8 text-destructive hover:bg-destructive/10 cursor-pointer"
                                     onClick={() => deleteReview(rev)}
                                     title={t('Delete review', 'جائزہ حذف کریں')}
                                   >
@@ -2924,8 +3514,8 @@ export default function AdminPage() {
                   )}
 
                   {filteredReviews.length > REVIEWS_PER_PAGE && (
-                    <div className="p-4 border-t border-border/60 flex items-center justify-between gap-4 bg-muted/10">
-                      <div className="text-xs text-muted-foreground">
+                    <div className="p-3.5 border-t border-border/60 flex items-center justify-between gap-4 bg-muted/10">
+                      <div className="text-xs text-muted-foreground font-medium">
                         {t(
                           `Showing ${(reviewsPage - 1) * REVIEWS_PER_PAGE + 1} to ${Math.min(reviewsPage * REVIEWS_PER_PAGE, filteredReviews.length)} of ${filteredReviews.length}`,
                           `${filteredReviews.length} میں سے ${(reviewsPage - 1) * REVIEWS_PER_PAGE + 1} تا ${Math.min(reviewsPage * REVIEWS_PER_PAGE, filteredReviews.length)}`
@@ -2937,7 +3527,7 @@ export default function AdminPage() {
                           size="sm"
                           onClick={() => setReviewsPage((p) => Math.max(1, p - 1))}
                           disabled={reviewsPage === 1}
-                          className="h-8 px-2.5 text-xs gap-1"
+                          className="h-8 px-2.5 text-xs gap-1 cursor-pointer"
                         >
                           <ChevronLeft className={cn('h-3.5 w-3.5', lang === 'ur' && 'rotate-180')} />
                           <span>{t('Previous', 'پچھلا')}</span>
@@ -2947,7 +3537,7 @@ export default function AdminPage() {
                           size="sm"
                           onClick={() => setReviewsPage((p) => Math.min(totalReviewsPages, p + 1))}
                           disabled={reviewsPage === totalReviewsPages}
-                          className="h-8 px-2.5 text-xs gap-1"
+                          className="h-8 px-2.5 text-xs gap-1 cursor-pointer"
                         >
                           <span>{t('Next', 'اگلا')}</span>
                           <ChevronRight className={cn('h-3.5 w-3.5', lang === 'ur' && 'rotate-180')} />
@@ -2963,137 +3553,145 @@ export default function AdminPage() {
           {/* TAB 10: LEGAL FINDER ("WHICH LAW APPLIES?") QUESTION EDITOR */}
           {activeTab === 'finder' && (
             <div className="space-y-4 animate-in fade-in-50 duration-200">
-              <Card>
-                <CardHeader className="pb-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <Compass className="h-5 w-5 text-indigo-600" />
-                        {t('Legal Finder Decision Tree', 'قانونی رہنمائی سوالنامہ (Which Law Applies?)')}
-                      </CardTitle>
-                      <CardDescription className="text-xs mt-0.5">
-                        {finderQuestions.length} {t('interactive questions guiding citizens to relevant statutes', 'رہنمائی سوالات درج ہیں')}
-                      </CardDescription>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm" asChild className="h-9 text-xs gap-1.5">
-                        <Link href="/finder" target="_blank">
-                          <ExternalLink className="h-3.5 w-3.5" />
-                          <span>{t('Test Live Finder', 'لائیو ٹیسٹ کریں')}</span>
-                        </Link>
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => setCreatingFinderQuestion(true)}
-                        className="h-9 text-xs gap-1.5 shadow-sm"
-                      >
-                        <Plus className="h-4 w-4" />
-                        <span>{t('Add Question', 'نیا سوال شامل کریں')}</span>
-                      </Button>
-                    </div>
+              {/* Page Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/20 shrink-0">
+                    <Compass className="h-5 w-5" />
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {finderQuestions.length === 0 ? (
-                    <div className="p-12 text-center border rounded-xl border-dashed border-border/80">
-                      <Compass className="h-10 w-10 text-muted-foreground mx-auto mb-2 opacity-50" />
-                      <p className="text-sm font-semibold">{t('No finder questions found', 'کوئی سوال موجود نہیں')}</p>
-                      <p className="text-xs text-muted-foreground mt-1 mb-4">
-                        {t('Seed database or create your first question to guide users.', 'ڈیٹابیس سید کریں یا نیا سوال بنائیں۔')}
-                      </p>
-                      <Button size="sm" onClick={() => setCreatingFinderQuestion(true)} className="text-xs gap-1">
-                        <Plus className="h-3.5 w-3.5" />
-                        <span>{t('Create Question', 'سوال بنائیں')}</span>
-                      </Button>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-foreground">
+                        {t('Legal Finder Decision Tree', 'قانونی رہنمائی سوالنامہ (Which Law Applies?)')}
+                      </h1>
+                      <Badge variant="secondary" className="text-[11px] font-mono font-bold px-2 py-0.5">
+                        {finderQuestions.length} {t('Questions', 'سوالات')}
+                      </Badge>
                     </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {finderQuestions.map((q, idx) => (
-                        <Card key={q.id} className="p-4 border-border/80 flex flex-col justify-between hover:border-primary/40 transition-colors">
-                          <div className="space-y-3">
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="text-[10px] font-mono">
-                                  #{q.orderIndex ?? idx + 1}
-                                </Badge>
-                                <span className="text-[10px] text-muted-foreground font-mono">ID: {q.id}</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-7 w-7 text-primary hover:bg-primary/10"
-                                  onClick={() => setEditingFinderQuestion(q)}
-                                  title={t('Edit Question', 'ترمیم کریں')}
-                                >
-                                  <Edit2 className="h-3 w-3" />
-                                </Button>
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-7 w-7 text-destructive hover:bg-destructive/10"
-                                  onClick={() => deleteFinderQuestion(q)}
-                                  title={t('Delete Question', 'حذف کریں')}
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {t('Interactive questionnaire tree that routes citizens to relevant laws and statutes.', 'شہریوں کو ان کے مسائل کے مطابق صحیح قانون تک پہنچانے والا رہنمائی سسٹم۔')}
+                    </p>
+                  </div>
+                </div>
 
-                            <div>
-                              <h4 className="font-semibold text-sm text-foreground">{q.question}</h4>
-                              {q.questionUrdu && (
-                                <p className="text-xs text-muted-foreground font-urdu mt-0.5" dir="rtl">
-                                  {q.questionUrdu}
-                                </p>
-                              )}
-                            </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button variant="outline" size="sm" asChild className="h-9 text-xs gap-1.5 shadow-xs border-border/80">
+                    <Link href="/finder" target="_blank">
+                      <ExternalLink className="h-3.5 w-3.5 text-indigo-500" />
+                      <span>{t('Test Live Finder', 'لائیو ٹیسٹ کریں')}</span>
+                    </Link>
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => setCreatingFinderQuestion(true)}
+                    className="h-9 text-xs gap-1.5 shadow-sm font-semibold cursor-pointer"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>{t('Add Question', 'نیا سوال شامل کریں')}</span>
+                  </Button>
+                </div>
+              </div>
 
-                            <div className="space-y-1.5 pt-2 border-t border-border/60">
-                              <p className="text-[10px] uppercase font-bold text-muted-foreground">
-                                {t('Answer Choices & Paths', 'جوابی اختیارات')}: ({q.options?.length || 0})
-                              </p>
-                              <div className="space-y-1">
-                                {(q.options || []).map((opt, oIdx) => (
-                                  <div
-                                    key={opt.id || oIdx}
-                                    className="p-2 rounded-lg bg-muted/50 border border-border/60 text-xs flex flex-col gap-1"
-                                  >
-                                    <div className="flex items-center justify-between">
-                                      <span className="font-medium text-foreground">{opt.label}</span>
-                                      {opt.labelUrdu && (
-                                        <span className="text-[10px] text-muted-foreground font-urdu" dir="rtl">
-                                          {opt.labelUrdu}
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                                      {opt.nextQuestionId ? (
-                                        <span className="text-indigo-600 dark:text-indigo-400 font-mono">
-                                          ➔ Next: {opt.nextQuestionId}
-                                        </span>
-                                      ) : (
-                                        <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                                          ➔ Result Endpoint
-                                        </span>
-                                      )}
-                                      {opt.categoryIds && opt.categoryIds.length > 0 && (
-                                        <span className="bg-primary/10 text-primary px-1.5 py-0.2 rounded text-[9px]">
-                                          Categories: {opt.categoryIds.join(', ')}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
+              {/* Questions Container */}
+              {finderQuestions.length === 0 ? (
+                <Card className="p-12 text-center border-dashed border-border/80 shadow-xs">
+                  <Compass className="h-10 w-10 text-muted-foreground mx-auto mb-2 opacity-50" />
+                  <p className="text-sm font-semibold">{t('No finder questions found', 'کوئی سوال موجود نہیں')}</p>
+                  <p className="text-xs text-muted-foreground mt-1 mb-4">
+                    {t('Seed database or create your first question to guide users.', 'ڈیٹابیس سید کریں یا نیا سوال بنائیں۔')}
+                  </p>
+                  <Button size="sm" onClick={() => setCreatingFinderQuestion(true)} className="text-xs gap-1 cursor-pointer">
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>{t('Create Question', 'سوال بنائیں')}</span>
+                  </Button>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {finderQuestions.map((q, idx) => (
+                    <Card key={q.id} className="border-border/80 shadow-xs flex flex-col justify-between hover:border-primary/50 transition-all relative overflow-hidden group">
+                      <div className="h-1 w-full bg-indigo-500" />
+                      <CardContent className="p-4 space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-[10px] font-mono font-bold bg-muted/60">
+                              #{q.orderIndex ?? idx + 1}
+                            </Badge>
+                            <span className="text-[10px] text-muted-foreground font-mono">ID: {q.id}</span>
                           </div>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                          <div className="flex items-center gap-0.5">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 text-primary hover:bg-primary/10 cursor-pointer"
+                              onClick={() => setEditingFinderQuestion(q)}
+                              title={t('Edit Question', 'ترمیم کریں')}
+                            >
+                              <Edit2 className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 text-destructive hover:bg-destructive/10 cursor-pointer"
+                              onClick={() => deleteFinderQuestion(q)}
+                              title={t('Delete Question', 'حذف کریں')}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div>
+                          <h4 className="font-semibold text-sm text-foreground">{q.question}</h4>
+                          {q.questionUrdu && (
+                            <p className="text-xs text-muted-foreground font-urdu mt-0.5" dir="rtl">
+                              {q.questionUrdu}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="space-y-1.5 pt-2 border-t border-border/60">
+                          <p className="text-[10px] uppercase font-bold text-muted-foreground">
+                            {t('Answer Choices & Paths', 'جوابی اختیارات')}: ({q.options?.length || 0})
+                          </p>
+                          <div className="space-y-1.5">
+                            {(q.options || []).map((opt, oIdx) => (
+                              <div
+                                key={opt.id || oIdx}
+                                className="p-2.5 rounded-lg bg-muted/40 border border-border/70 text-xs flex flex-col gap-1 hover:bg-muted/60 transition-colors"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span className="font-semibold text-foreground">{opt.label}</span>
+                                  {opt.labelUrdu && (
+                                    <span className="text-[10px] text-muted-foreground font-urdu" dir="rtl">
+                                      {opt.labelUrdu}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                                  {opt.nextQuestionId ? (
+                                    <span className="text-indigo-600 dark:text-indigo-400 font-mono font-medium">
+                                      ➔ Next: {opt.nextQuestionId}
+                                    </span>
+                                  ) : (
+                                    <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                                      ➔ Result Endpoint
+                                    </span>
+                                  )}
+                                  {opt.categoryIds && opt.categoryIds.length > 0 && (
+                                    <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded text-[9px] font-mono">
+                                      Categories: {opt.categoryIds.join(', ')}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -3525,23 +4123,29 @@ function StatCard({
   onClick?: () => void
 }) {
   return (
-    <Card
+    <div
       className={cn(
-        'transition-all duration-200 border-border/80 shadow-sm',
+        'relative overflow-hidden rounded-xl border border-border/80 bg-card text-card-foreground p-3 transition-all duration-200 shadow-xs group',
         onClick && 'cursor-pointer hover:border-primary/50 hover:shadow-md hover:-translate-y-0.5'
       )}
       onClick={onClick}
     >
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between gap-2 mb-2">
-          <span className="text-xs font-semibold text-muted-foreground truncate">{label}</span>
-          <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${color}18` }}>
-            <Icon className="h-4 w-4" style={{ color }} />
-          </div>
+      <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ backgroundColor: color }} />
+      <div className="flex items-center justify-between gap-1.5 mb-1.5 pt-0.5">
+        <span className="text-[11px] font-semibold text-muted-foreground truncate" title={label}>
+          {label}
+        </span>
+        <div
+          className="h-6 w-6 rounded-md flex items-center justify-center shrink-0 transition-transform group-hover:scale-110"
+          style={{ backgroundColor: `${color}18` }}
+        >
+          <Icon className="h-3 w-3" style={{ color }} />
         </div>
-        <div className="text-2xl font-black tracking-tight text-foreground">{value.toLocaleString()}</div>
-      </CardContent>
-    </Card>
+      </div>
+      <div className="text-xl font-bold tracking-tight text-foreground font-mono leading-none">
+        {value.toLocaleString()}
+      </div>
+    </div>
   )
 }
 
@@ -3574,9 +4178,46 @@ function LawEditDialog({
   })
   const [saving, setSaving] = React.useState(false)
 
+  // Auto-generate slug helper
+  const handleAutoSlug = () => {
+    if (!form.title.trim()) return
+    const generated = form.title
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+    setForm((f) => ({ ...f, slug: generated }))
+  }
+
+  // Quick tag toggle helper
+  const toggleTag = (tag: string) => {
+    const currentTags = form.tags
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+    let newTags: string[]
+    if (currentTags.includes(tag)) {
+      newTags = currentTags.filter((t) => t !== tag)
+    } else {
+      newTags = [...currentTags, tag]
+    }
+    setForm((f) => ({ ...f, tags: newTags.join(', ') }))
+  }
+
+  const SUGGESTED_TAGS = [
+    'contract', 'commercial', 'criminal', 'civil', 'taxation',
+    'constitutional', 'family', 'banking', 'property', 'procedural',
+  ]
+
+  const activeTagList = form.tags
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+
   const save = async () => {
     if (!form.title.trim() || !form.slug.trim() || !form.categoryId) {
-      toast.error('Title, Slug and Category are required')
+      toast.error(t('Title, Slug and Category are required', 'عنوان، سلگ اور شعبہ لازمی ہیں'))
       return
     }
 
@@ -3599,7 +4240,11 @@ function LawEditDialog({
 
     setSaving(false)
     if (res.ok) {
-      toast.success(law ? t('Law updated successfully', 'قانون کامیابی سے اپڈیٹ ہوا') : t('Law created successfully', 'نیا قانون کامیابی سے شامل ہوا'))
+      toast.success(
+        law
+          ? t('Law updated successfully', 'قانون کامیابی سے اپڈیٹ ہوا')
+          : t('Law created successfully', 'نیا قانون کامیابی سے شامل ہوا')
+      )
       onSaved()
     } else {
       const d = await res.json().catch(() => ({}))
@@ -3609,168 +4254,443 @@ function LawEditDialog({
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto scrollbar-thin">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-primary" />
-            {law ? t('Edit Law', 'قانون میں ترمیم') : t('Create New Law', 'نیا قانون شامل کریں')}
-          </DialogTitle>
-          <DialogDescription className="text-xs">
-            {t('Fill in statute specifications, English & Urdu translations, and applicability tags.', 'قانونی متن، اردو ترجمہ اور ضروری تفصیلات درج کریں۔')}
-          </DialogDescription>
+      <DialogContent className="max-w-3xl max-h-[92vh] flex flex-col p-0 overflow-hidden border-border/80 shadow-2xl rounded-2xl bg-card">
+        {/* Pinned Header */}
+        <DialogHeader className="px-6 py-4.5 border-b border-border/70 bg-muted/25 shrink-0">
+          <div className="flex items-center gap-3.5 pr-8">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary shadow-xs">
+              <FileText className="h-5 w-5" />
+            </div>
+            <div className="space-y-0.5 min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <DialogTitle className="text-base sm:text-lg font-bold text-foreground tracking-tight">
+                  {law ? t('Edit Law', 'قانون میں ترمیم') : t('Create New Law', 'نیا قانون شامل کریں')}
+                </DialogTitle>
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    'text-[10px] font-semibold uppercase tracking-wider',
+                    law
+                      ? 'text-primary border-primary/30 bg-primary/5'
+                      : 'text-amber-600 dark:text-amber-400 border-amber-500/30 bg-amber-500/5'
+                  )}
+                >
+                  {law ? law.slug : t('New Statute', 'نیا مسودہ')}
+                </Badge>
+              </div>
+              <DialogDescription className="text-xs text-muted-foreground line-clamp-1">
+                {t(
+                  'Fill in statute specifications, English & Urdu translations, and applicability tags.',
+                  'قانونی متن، اردو ترجمہ اور ضروری تفصیلات درج کریں۔'
+                )}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="space-y-4 py-2">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label className="text-xs">{t('Title (English) *', 'عنوان (انگریزی) *')}</Label>
-              <Input
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                placeholder="e.g. Contract Act 1872"
-                className="text-xs"
-              />
+        {/* Scrollable Form Body */}
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6 scrollbar-thin">
+          {/* Section 1: Basic Information */}
+          <div className="rounded-xl border border-border/70 bg-muted/15 p-4 sm:p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-border/50 pb-2.5">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-foreground">
+                <FileText className="h-3.5 w-3.5 text-primary" />
+                <span>{t('Primary Identification', 'بنیادی شناختی معلومات')}</span>
+              </div>
+              <span className="text-[11px] text-muted-foreground font-medium">
+                {t('Step 1 of 4', 'مرحلہ 1 از 4')}
+              </span>
             </div>
-            <div className="space-y-1.5">
-              <Label className={cn('text-xs', lang === 'ur' && 'font-urdu')}>{t('Title (Urdu)', 'عنوان (اردو)')}</Label>
-              <Input
-                value={form.titleUrdu}
-                onChange={(e) => setForm({ ...form, titleUrdu: e.target.value })}
-                placeholder={lang === 'ur' ? 'مثلاً قانونِ معاہدہ 1872' : 'Urdu title (optional) e.g. قانونِ معاہدہ'}
-                className={cn('text-xs', lang === 'ur' && 'font-urdu')}
-              />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold flex items-center gap-1.5">
+                  <Globe className="h-3 w-3 text-muted-foreground" />
+                  <span>{t('Title (English)', 'عنوان (انگریزی)')}</span>
+                  <span className="text-destructive font-bold">*</span>
+                </Label>
+                <Input
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  placeholder="e.g. Contract Act 1872"
+                  className="h-9 text-xs transition-all focus-visible:ring-primary/30"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className={cn('text-xs font-semibold flex items-center justify-between', lang === 'ur' && 'font-urdu')}>
+                  <span className="flex items-center gap-1.5">
+                    <Languages className="h-3 w-3 text-muted-foreground" />
+                    <span>{t('Title (Urdu)', 'عنوان (اردو)')}</span>
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-normal">{t('Optional', 'اختیاری')}</span>
+                </Label>
+                <Input
+                  value={form.titleUrdu}
+                  onChange={(e) => setForm({ ...form, titleUrdu: e.target.value })}
+                  placeholder={lang === 'ur' ? 'مثلاً قانونِ معاہدہ 1872' : 'Urdu title (optional) e.g. قانونِ معاہدہ'}
+                  dir="rtl"
+                  className={cn('h-9 text-xs text-right font-urdu transition-all focus-visible:ring-primary/30')}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-semibold flex items-center gap-1.5">
+                    <Link2 className="h-3 w-3 text-muted-foreground" />
+                    <span>{t('Slug (URL Identifier)', 'سلگ (URL)')}</span>
+                    <span className="text-destructive font-bold">*</span>
+                  </Label>
+                  {!law && (
+                    <button
+                      type="button"
+                      onClick={handleAutoSlug}
+                      className="text-[11px] text-primary hover:underline flex items-center gap-1 cursor-pointer font-medium"
+                    >
+                      <Sparkles className="h-3 w-3" />
+                      <span>{t('Auto Generate', 'خودکار بنائیں')}</span>
+                    </button>
+                  )}
+                </div>
+                <div className="flex rounded-md border border-input focus-within:ring-2 focus-within:ring-primary/30 focus-within:border-primary overflow-hidden bg-background">
+                  <span className="inline-flex items-center px-2.5 text-[11px] text-muted-foreground bg-muted/40 border-r border-border select-none font-mono">
+                    /laws/
+                  </span>
+                  <input
+                    type="text"
+                    value={form.slug}
+                    disabled={!!law}
+                    onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                    placeholder="contract-act-1872"
+                    className="flex-1 h-9 px-3 text-xs font-mono bg-transparent outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold flex items-center gap-1.5">
+                  <Tags className="h-3 w-3 text-muted-foreground" />
+                  <span>{t('Category', 'شعبہ / قسم')}</span>
+                  <span className="text-destructive font-bold">*</span>
+                </Label>
+                <Select
+                  value={form.categoryId}
+                  onValueChange={(val) => setForm({ ...form, categoryId: val })}
+                >
+                  <SelectTrigger className="h-9 text-xs">
+                    <SelectValue placeholder={t('Select Category', 'شعبہ منتخب کریں')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((c) => (
+                      <SelectItem key={c.id} value={c.id} className="text-xs">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="h-2 w-2 rounded-full shrink-0"
+                            style={{ backgroundColor: c.color || '#0d9488' }}
+                          />
+                          <span>{lang === 'ur' ? c.nameUrdu : c.name}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label className="text-xs">{t('Slug (URL identifier) *', 'سلگ (URL) *')}</Label>
-              <Input
-                value={form.slug}
-                disabled={!!law}
-                onChange={(e) => setForm({ ...form, slug: e.target.value })}
-                placeholder="contract-act-1872"
-                className="text-xs font-mono"
-              />
+          {/* Section 2: Jurisdiction & Legal Classification */}
+          <div className="rounded-xl border border-border/70 bg-muted/15 p-4 sm:p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-border/50 pb-2.5">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-foreground">
+                <Landmark className="h-3.5 w-3.5 text-primary" />
+                <span>{t('Jurisdiction & Legal Status', 'دائرہ اختیار اور قانونی حیثیت')}</span>
+              </div>
+              <span className="text-[11px] text-muted-foreground font-medium">
+                {t('Step 2 of 4', 'مرحلہ 2 از 4')}
+              </span>
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">{t('Category *', 'شعبہ / قسم *')}</Label>
-              <Select
-                value={form.categoryId}
-                onValueChange={(val) => setForm({ ...form, categoryId: val })}
-              >
-                <SelectTrigger className="text-xs">
-                  <SelectValue placeholder={t('Select Category', 'شعبہ منتخب کریں')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((c) => (
-                    <SelectItem key={c.id} value={c.id} className="text-xs">
-                      {lang === 'ur' ? c.nameUrdu : c.name}
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold flex items-center gap-1.5">
+                  <Calendar className="h-3 w-3 text-muted-foreground" />
+                  <span>{t('Year Enacted', 'سالِ نفاذ')}</span>
+                </Label>
+                <Input
+                  type="number"
+                  value={form.yearEnacted}
+                  onChange={(e) => setForm({ ...form, yearEnacted: Number(e.target.value) })}
+                  className="h-9 text-xs"
+                  min={1800}
+                  max={2100}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold flex items-center gap-1.5">
+                  <Globe className="h-3 w-3 text-muted-foreground" />
+                  <span>{t('Jurisdiction', 'دائرہ اختیار')}</span>
+                </Label>
+                <Select
+                  value={form.jurisdiction}
+                  onValueChange={(val) => setForm({ ...form, jurisdiction: val })}
+                >
+                  <SelectTrigger className="h-9 text-xs capitalize">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="federal">Federal (وفاقی)</SelectItem>
+                    <SelectItem value="punjab">Punjab (پنجاب)</SelectItem>
+                    <SelectItem value="sindh">Sindh (سندھ)</SelectItem>
+                    <SelectItem value="kpk">KPK (خیبر پختونخوا)</SelectItem>
+                    <SelectItem value="balochistan">Balochistan (بلوچستان)</SelectItem>
+                    <SelectItem value="gilgit_baltistan">Gilgit-Baltistan (گلگت بلتستان)</SelectItem>
+                    <SelectItem value="ajk">AJK (آزاد کشمیر)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold flex items-center gap-1.5">
+                  <ShieldCheck className="h-3 w-3 text-muted-foreground" />
+                  <span>{t('Statute Status', 'حیثیت')}</span>
+                </Label>
+                <Select
+                  value={form.status}
+                  onValueChange={(val) => setForm({ ...form, status: val })}
+                >
+                  <SelectTrigger className="h-9 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                        <span>Active (نافذ العمل)</span>
+                      </div>
                     </SelectItem>
+                    <SelectItem value="amended">
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-amber-500" />
+                        <span>Amended (ترمیم شدہ)</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="repealed">
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-rose-500" />
+                        <span>Repealed (منسوخ شدہ)</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold flex items-center gap-1.5">
+                  <Landmark className="h-3 w-3 text-muted-foreground" />
+                  <span>{t('Promulgating Authority', 'مجاز اتھارٹی')}</span>
+                </Label>
+                <Input
+                  value={form.promulgatingAuthority}
+                  onChange={(e) => setForm({ ...form, promulgatingAuthority: e.target.value })}
+                  placeholder="e.g. Parliament of Pakistan, Ministry of Law"
+                  className="h-9 text-xs"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold flex items-center gap-1.5">
+                  <BookOpen className="h-3 w-3 text-muted-foreground" />
+                  <span>{t('Gazette Reference', 'گزٹ حوالہ')}</span>
+                </Label>
+                <Input
+                  value={form.gazetteReference}
+                  onChange={(e) => setForm({ ...form, gazetteReference: e.target.value })}
+                  placeholder="e.g. Gazette of Pakistan, Extra., Part I, p. 120"
+                  className="h-9 text-xs font-mono"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Section 3: Bilingual Statutory Summaries */}
+          <div className="rounded-xl border border-border/70 bg-muted/15 p-4 sm:p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-border/50 pb-2.5">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-foreground">
+                <BookOpen className="h-3.5 w-3.5 text-primary" />
+                <span>{t('Bilingual Statutory Summaries', 'قانونی خلاصہ و تشریح')}</span>
+              </div>
+              <span className="text-[11px] text-muted-foreground font-medium">
+                {t('Step 3 of 4', 'مرحلہ 3 از 4')}
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-semibold flex items-center gap-1.5">
+                    <Globe className="h-3 w-3 text-muted-foreground" />
+                    <span>{t('Summary (English)', 'خلاصہ (انگریزی)')}</span>
+                  </Label>
+                  <span className="text-[10px] text-muted-foreground">
+                    {form.summary.length} {t('characters', 'حروف')}
+                  </span>
+                </div>
+                <Textarea
+                  value={form.summary}
+                  onChange={(e) => setForm({ ...form, summary: e.target.value })}
+                  rows={3}
+                  placeholder="Brief statutory summary and practical legal context..."
+                  className="text-xs leading-relaxed transition-all focus-visible:ring-primary/30"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className={cn('text-xs font-semibold flex items-center gap-1.5', lang === 'ur' && 'font-urdu')}>
+                    <Languages className="h-3 w-3 text-muted-foreground" />
+                    <span>{t('Summary (Urdu)', 'خلاصہ (اردو)')}</span>
+                  </Label>
+                  <span className="text-[10px] text-muted-foreground">
+                    {form.summaryUrdu.length} {t('characters', 'حروف')}
+                  </span>
+                </div>
+                <Textarea
+                  value={form.summaryUrdu}
+                  onChange={(e) => setForm({ ...form, summaryUrdu: e.target.value })}
+                  rows={3}
+                  dir="rtl"
+                  placeholder={lang === 'ur' ? 'قانون کا اردو میں مختصر اور جامع خلاصہ...' : 'Urdu summary translation (optional)...'}
+                  className={cn('text-xs leading-relaxed text-right font-urdu transition-all focus-visible:ring-primary/30')}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Section 4: Applicability Tags & Indexing */}
+          <div className="rounded-xl border border-border/70 bg-muted/15 p-4 sm:p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-border/50 pb-2.5">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-foreground">
+                <Hash className="h-3.5 w-3.5 text-primary" />
+                <span>{t('Applicability Tags & Indexing', 'متعلقہ ٹیگز اور تلاش')}</span>
+              </div>
+              <span className="text-[11px] text-muted-foreground font-medium">
+                {t('Step 4 of 4', 'مرحلہ 4 از 4')}
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold flex items-center gap-1.5">
+                  <Tags className="h-3 w-3 text-muted-foreground" />
+                  <span>{t('Applicability Tags (comma-separated)', 'ٹیگز (کوما سے الگ کریں)')}</span>
+                </Label>
+                <Input
+                  value={form.tags}
+                  onChange={(e) => setForm({ ...form, tags: e.target.value })}
+                  placeholder="contract, commercial, breach of agreement, damages"
+                  className="h-9 text-xs"
+                />
+              </div>
+
+              {/* Quick Tag Suggestion Chips */}
+              <div className="space-y-1.5">
+                <div className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
+                  <Sparkles className="h-3 w-3 text-primary" />
+                  <span>{t('Quick add suggested tags:', 'فوری تجویز کردہ ٹیگز:')}</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {SUGGESTED_TAGS.map((tag) => {
+                    const isSelected = activeTagList.includes(tag)
+                    return (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => toggleTag(tag)}
+                        className={cn(
+                          'text-[11px] px-2.5 py-1 rounded-lg border transition-all cursor-pointer select-none',
+                          isSelected
+                            ? 'bg-primary text-primary-foreground border-primary font-semibold shadow-xs'
+                            : 'bg-background text-muted-foreground border-border/80 hover:border-primary/50 hover:text-foreground'
+                        )}
+                      >
+                        {isSelected ? `✓ ${tag}` : `+ ${tag}`}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Active Tag Preview Badges */}
+              {activeTagList.length > 0 && (
+                <div className="pt-1 flex flex-wrap items-center gap-1.5">
+                  <span className="text-[11px] text-muted-foreground font-medium mr-1">
+                    {t('Current tags:', 'موجودہ ٹیگز:')}
+                  </span>
+                  {activeTagList.map((tag) => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center gap-1 text-[11px] px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/25 font-medium"
+                    >
+                      #{tag}
+                      <button
+                        type="button"
+                        onClick={() => toggleTag(tag)}
+                        className="hover:text-destructive cursor-pointer ml-0.5"
+                        title="Remove tag"
+                      >
+                        <X className="h-2.5 w-2.5" />
+                      </button>
+                    </span>
                   ))}
-                </SelectContent>
-              </Select>
+                </div>
+              )}
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="space-y-1.5">
-              <Label className="text-xs">{t('Year Enacted', 'سال نفاذ')}</Label>
-              <Input
-                type="number"
-                value={form.yearEnacted}
-                onChange={(e) => setForm({ ...form, yearEnacted: Number(e.target.value) })}
-                className="text-xs"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">{t('Jurisdiction', 'دائرہ اختیار')}</Label>
-              <Select
-                value={form.jurisdiction}
-                onValueChange={(val) => setForm({ ...form, jurisdiction: val })}
-              >
-                <SelectTrigger className="text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="federal">Federal</SelectItem>
-                  <SelectItem value="punjab">Punjab</SelectItem>
-                  <SelectItem value="sindh">Sindh</SelectItem>
-                  <SelectItem value="kpk">KPK</SelectItem>
-                  <SelectItem value="balochistan">Balochistan</SelectItem>
-                  <SelectItem value="gilgit_baltistan">Gilgit-Baltistan</SelectItem>
-                  <SelectItem value="ajk">AJK</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">{t('Status', 'حیثیت')}</Label>
-              <Select
-                value={form.status}
-                onValueChange={(val) => setForm({ ...form, status: val })}
-              >
-                <SelectTrigger className="text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="repealed">Repealed</SelectItem>
-                  <SelectItem value="amended">Amended</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs">{t('Promulgating Authority', 'مجاز اتھارٹی')}</Label>
-            <Input
-              value={form.promulgatingAuthority}
-              onChange={(e) => setForm({ ...form, promulgatingAuthority: e.target.value })}
-              placeholder="e.g. Parliament of Pakistan, Ministry of Law"
-              className="text-xs"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs">{t('Summary (English)', 'خلاصہ (انگریزی)')}</Label>
-            <Textarea
-              value={form.summary}
-              onChange={(e) => setForm({ ...form, summary: e.target.value })}
-              rows={3}
-              placeholder="Brief statutory summary..."
-              className="text-xs"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className={cn('text-xs', lang === 'ur' && 'font-urdu')}>{t('Summary (Urdu)', 'خلاصہ (اردو)')}</Label>
-            <Textarea
-              value={form.summaryUrdu}
-              onChange={(e) => setForm({ ...form, summaryUrdu: e.target.value })}
-              rows={3}
-              placeholder={lang === 'ur' ? 'قانون کا اردو میں مختصر خلاصہ...' : 'Urdu summary translation (optional)...'}
-              className={cn('text-xs', lang === 'ur' && 'font-urdu')}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs">{t('Applicability Tags (comma-separated)', 'ٹیگز (کوما سے الگ)')}</Label>
-            <Input
-              value={form.tags}
-              onChange={(e) => setForm({ ...form, tags: e.target.value })}
-              placeholder="contract, business, agreement, damages"
-              className="text-xs"
-            />
           </div>
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" size="sm" onClick={onClose} disabled={saving}>
-            {t('Cancel', 'منسوخ')}
-          </Button>
-          <Button size="sm" onClick={save} disabled={saving}>
-            {saving ? t('Saving...', 'محفوظ ہو رہا ہے...') : t('Save Law', 'قانون محفوظ کریں')}
-          </Button>
+        {/* Pinned Footer */}
+        <DialogFooter className="px-6 py-3.5 border-t border-border/70 bg-muted/25 shrink-0 flex items-center justify-between sm:justify-between">
+          <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+            <span className="text-destructive font-bold">*</span>
+            <span>{t('Required legal fields', 'لازمی قانونی خانے')}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onClose}
+              disabled={saving}
+              className="h-8.5 text-xs font-medium"
+            >
+              {t('Cancel', 'منسوخ')}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={save}
+              disabled={saving}
+              className="h-8.5 text-xs font-semibold gap-1.5 shadow-sm min-w-[110px]"
+            >
+              {saving ? (
+                <>
+                  <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                  <span>{t('Saving...', 'محفوظ ہو رہا ہے...')}</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  <span>{law ? t('Update Law', 'قانون اپڈیٹ کریں') : t('Save & Publish', 'قانون محفوظ کریں')}</span>
+                </>
+              )}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -3820,82 +4740,102 @@ function CategoryCreateDialog({
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Tags className="h-5 w-5 text-primary" />
-            {t('Create New Category', 'نئی قسم شامل کریں')}
-          </DialogTitle>
-          <DialogDescription className="text-xs">
-            {t('Add a legal category or branch of law to organize statutes.', 'قوانین کی تقسیم کے لیے نیا شعبہ شامل کریں۔')}
-          </DialogDescription>
+      <DialogContent className="max-w-lg max-h-[90vh] flex flex-col p-0 overflow-hidden border-border/80 shadow-2xl rounded-2xl bg-card">
+        <DialogHeader className="px-6 py-4.5 border-b border-border/70 bg-muted/25 shrink-0">
+          <div className="flex items-center gap-3.5 pr-8">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary shadow-xs">
+              <Tags className="h-5 w-5" />
+            </div>
+            <div className="space-y-0.5">
+              <DialogTitle className="text-base font-bold text-foreground">
+                {t('Create New Category', 'نئی قانونی قسم شامل کریں')}
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
+                {t('Add a legal category or branch of law to organize statutes.', 'قوانین کی تقسیم کے لیے نیا شعبہ شامل کریں۔')}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="space-y-3 py-2">
-          <div className="space-y-1">
-            <Label className="text-xs">{t('Category Name (English) *', 'نام (انگریزی) *')}</Label>
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 scrollbar-thin">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">{t('Category Name (English) *', 'نام (انگریزی) *')}</Label>
             <Input
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               placeholder="e.g. Constitutional Law"
-              className="text-xs"
+              className="h-9 text-xs"
+              required
             />
           </div>
 
-          <div className="space-y-1">
-            <Label className={cn('text-xs', lang === 'ur' && 'font-urdu')}>{t('Category Name (Urdu)', 'نام (اردو) *')}</Label>
+          <div className="space-y-1.5">
+            <Label className={cn('text-xs font-semibold', lang === 'ur' && 'font-urdu')}>{t('Category Name (Urdu)', 'نام (اردو) *')}</Label>
             <Input
               value={form.nameUrdu}
               onChange={(e) => setForm({ ...form, nameUrdu: e.target.value })}
               placeholder={lang === 'ur' ? 'مثلاً آئینی قانون' : 'Urdu category name (optional) e.g. آئینی قانون'}
-              className={cn('text-xs', lang === 'ur' && 'font-urdu')}
+              dir="rtl"
+              className={cn('h-9 text-xs text-right font-urdu')}
             />
           </div>
 
-          <div className="space-y-1">
-            <Label className="text-xs">{t('Slug *', 'سلگ *')}</Label>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">{t('Slug *', 'سلگ *')}</Label>
             <Input
               value={form.slug}
               onChange={(e) => setForm({ ...form, slug: e.target.value })}
               placeholder="constitutional-law"
-              className="text-xs font-mono"
+              className="h-9 text-xs font-mono"
+              required
             />
           </div>
 
-          <div className="space-y-1">
-            <Label className="text-xs">{t('Theme Color Hex', 'رنگ کوڈ')}</Label>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">{t('Theme Color Hex', 'رنگ کوڈ')}</Label>
             <div className="flex items-center gap-2">
               <input
                 type="color"
                 value={form.color}
                 onChange={(e) => setForm({ ...form, color: e.target.value })}
-                className="h-8 w-12 rounded cursor-pointer border border-border"
+                className="h-9 w-12 rounded cursor-pointer border border-border p-1 bg-background"
               />
               <Input
                 value={form.color}
                 onChange={(e) => setForm({ ...form, color: e.target.value })}
-                className="text-xs font-mono flex-1"
+                className="h-9 text-xs font-mono flex-1"
               />
             </div>
           </div>
 
-          <div className="space-y-1">
-            <Label className="text-xs">{t('Description', 'تفصیل')}</Label>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">{t('Description', 'تفصیل')}</Label>
             <Textarea
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              rows={2}
-              className="text-xs"
+              rows={3}
+              placeholder="Brief description of this legal category..."
+              className="text-xs leading-relaxed"
             />
           </div>
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" size="sm" onClick={onClose} disabled={saving}>
+        <DialogFooter className="px-6 py-3.5 border-t border-border/70 bg-muted/25 shrink-0 flex items-center justify-end gap-2">
+          <Button variant="outline" size="sm" onClick={onClose} disabled={saving} className="h-8.5 text-xs">
             {t('Cancel', 'منسوخ')}
           </Button>
-          <Button size="sm" onClick={save} disabled={saving}>
-            {saving ? t('Creating...', 'شامل ہو رہا ہے...') : t('Create Category', 'قسم شامل کریں')}
+          <Button size="sm" onClick={save} disabled={saving} className="h-8.5 text-xs font-semibold gap-1.5 shadow-sm">
+            {saving ? (
+              <>
+                <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                <span>{t('Creating...', 'شامل ہو رہا ہے...')}</span>
+              </>
+            ) : (
+              <>
+                <Plus className="h-3.5 w-3.5" />
+                <span>{t('Create Category', 'قسم شامل کریں')}</span>
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -3965,84 +4905,94 @@ function LawyerCreateDialog({
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
-      <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto scrollbar-thin">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Briefcase className="h-5 w-5 text-teal-600" />
-            {t('Add Lawyer / Legal Counsel', 'وکیل شامل کریں')}
-          </DialogTitle>
-          <DialogDescription className="text-xs">
-            {t('Register an advocate into the public verified directory.', 'تصدیق شدہ وکیل کا اندراج کریں۔')}
-          </DialogDescription>
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden border-border/80 shadow-2xl rounded-2xl bg-card">
+        <DialogHeader className="px-6 py-4.5 border-b border-border/70 bg-muted/25 shrink-0">
+          <div className="flex items-center gap-3.5 pr-8">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-600 dark:text-teal-400 shadow-xs">
+              <Briefcase className="h-5 w-5" />
+            </div>
+            <div className="space-y-0.5">
+              <DialogTitle className="text-base font-bold text-foreground">
+                {t('Add Lawyer / Legal Counsel', 'نیا وکیل شامل کریں')}
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
+                {t('Register an advocate into the public verified directory.', 'تصدیق شدہ وکیل کا اندراج کریں۔')}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="space-y-3 py-2">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label className="text-xs">{t('Name (English) *', 'نام (انگریزی) *')}</Label>
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 scrollbar-thin">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">{t('Name (English) *', 'نام (انگریزی) *')}</Label>
               <Input
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 placeholder="Advocate Ali Khan"
-                className="text-xs"
+                className="h-9 text-xs"
+                required
               />
             </div>
-            <div className="space-y-1">
-              <Label className={cn('text-xs', lang === 'ur' && 'font-urdu')}>{t('Name (Urdu)', 'نام (اردو)')}</Label>
+            <div className="space-y-1.5">
+              <Label className={cn('text-xs font-semibold', lang === 'ur' && 'font-urdu')}>{t('Name (Urdu)', 'نام (اردو)')}</Label>
               <Input
                 value={form.nameUrdu}
                 onChange={(e) => setForm({ ...form, nameUrdu: e.target.value })}
                 placeholder={lang === 'ur' ? 'ایڈووکیٹ علی خان' : 'Urdu name (optional) e.g. علی خان'}
-                className={cn('text-xs', lang === 'ur' && 'font-urdu')}
+                dir="rtl"
+                className={cn('h-9 text-xs text-right font-urdu')}
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label className="text-xs">{t('Slug *', 'سلگ *')}</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">{t('Slug *', 'سلگ *')}</Label>
               <Input
                 value={form.slug}
                 onChange={(e) => setForm({ ...form, slug: e.target.value })}
                 placeholder="ali-khan-advocate"
-                className="text-xs font-mono"
+                className="h-9 text-xs font-mono"
+                required
               />
             </div>
-            <div className="space-y-1">
-              <Label className="text-xs">{t('City', 'شہر')}</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">{t('City', 'شہر')}</Label>
               <Input
                 value={form.city}
                 onChange={(e) => setForm({ ...form, city: e.target.value })}
-                className="text-xs"
+                placeholder="e.g. Lahore, Islamabad, Karachi"
+                className="h-9 text-xs"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label className="text-xs">{t('Email', 'ای میل')}</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">{t('Email', 'ای میل')}</Label>
               <Input
                 type="email"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 placeholder="lawyer@example.com"
-                className="text-xs"
+                className="h-9 text-xs"
               />
             </div>
-            <div className="space-y-1">
-              <Label className="text-xs">{t('Phone', 'فون')}</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">{t('Phone', 'فون')}</Label>
               <Input
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 placeholder="+92 300 1234567"
-                className="text-xs"
+                className="h-9 text-xs"
               />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs">{t('Specializations', 'خصوصی شعبہ جات')}</Label>
-            <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-2 border rounded-md bg-muted/20">
+            <Label className="text-xs font-semibold">{t('Specializations', 'خصوصی شعبہ جات')}</Label>
+            <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto p-2.5 border rounded-lg bg-muted/20 scrollbar-thin">
               {categories.map((c) => {
                 const selected = form.specialization.includes(c.slug)
                 return (
@@ -4051,47 +5001,57 @@ function LawyerCreateDialog({
                     type="button"
                     onClick={() => toggleSpecialization(c.slug)}
                     className={cn(
-                      'text-[10px] px-2 py-0.5 rounded-full border transition-all',
+                      'text-[11px] px-2.5 py-1 rounded-md border transition-all cursor-pointer select-none',
                       selected
-                        ? 'bg-teal-600 text-white border-teal-600 font-semibold'
+                        ? 'bg-teal-600 text-white border-teal-600 font-semibold shadow-xs'
                         : 'bg-background text-muted-foreground border-border hover:border-teal-500'
                     )}
                   >
-                    {c.name}
+                    {selected ? `✓ ${c.name}` : `+ ${c.name}`}
                   </button>
                 )
               })}
             </div>
           </div>
 
-          <div className="flex items-center gap-6 pt-2">
-            <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold">
+          <div className="flex items-center gap-6 pt-2 border-t border-border/50">
+            <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold select-none">
               <input
                 type="checkbox"
                 checked={form.verified}
                 onChange={(e) => setForm({ ...form, verified: e.target.checked })}
-                className="rounded text-primary focus:ring-primary h-4 w-4"
+                className="rounded text-primary focus:ring-primary h-4 w-4 cursor-pointer"
               />
               <span>{t('Mark as Verified', 'تصدیق شدہ نشان زد کریں')}</span>
             </label>
-            <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold">
+            <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold select-none">
               <input
                 type="checkbox"
                 checked={form.featured}
                 onChange={(e) => setForm({ ...form, featured: e.target.checked })}
-                className="rounded text-primary focus:ring-primary h-4 w-4"
+                className="rounded text-primary focus:ring-primary h-4 w-4 cursor-pointer"
               />
               <span>{t('Mark as Featured', 'نمایاں نشان زد کریں')}</span>
             </label>
           </div>
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" size="sm" onClick={onClose} disabled={saving}>
+        <DialogFooter className="px-6 py-3.5 border-t border-border/70 bg-muted/25 shrink-0 flex items-center justify-end gap-2">
+          <Button variant="outline" size="sm" onClick={onClose} disabled={saving} className="h-8.5 text-xs">
             {t('Cancel', 'منسوخ')}
           </Button>
-          <Button size="sm" onClick={save} disabled={saving}>
-            {saving ? t('Saving...', 'محفوظ ہو رہا ہے...') : t('Save Lawyer', 'وکیل محفوظ کریں')}
+          <Button size="sm" onClick={save} disabled={saving} className="h-8.5 text-xs font-semibold gap-1.5 shadow-sm">
+            {saving ? (
+              <>
+                <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                <span>{t('Saving...', 'محفوظ ہو رہا ہے...')}</span>
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                <span>{t('Save Lawyer', 'وکیل محفوظ کریں')}</span>
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -4149,56 +5109,65 @@ function TemplateCreateDialog({
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
-      <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto scrollbar-thin">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <FilePlus className="h-5 w-5 text-pink-600" />
-            {t('Create Legal Template', 'نیا ٹیمپلیٹ بنائیں')}
-          </DialogTitle>
-          <DialogDescription className="text-xs">
-            {t('Define contract draft text with placeholders like {{party_name}}.', 'ٹیمپلیٹ کا متن اور فیلڈز درج کریں۔')}
-          </DialogDescription>
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden border-border/80 shadow-2xl rounded-2xl bg-card">
+        <DialogHeader className="px-6 py-4.5 border-b border-border/70 bg-muted/25 shrink-0">
+          <div className="flex items-center gap-3.5 pr-8">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-pink-500/10 border border-pink-500/20 text-pink-600 dark:text-pink-400 shadow-xs">
+              <FilePlus className="h-5 w-5" />
+            </div>
+            <div className="space-y-0.5">
+              <DialogTitle className="text-base font-bold text-foreground">
+                {t('Create Legal Template', 'نیا قانونی ٹیمپلیٹ بنائیں')}
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
+                {t('Define contract draft text with placeholders like {{party_name}}.', 'ٹیمپلیٹ کا متن اور فیلڈز درج کریں۔')}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="space-y-3 py-2">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label className="text-xs">{t('Title (English) *', 'عنوان (انگریزی) *')}</Label>
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 scrollbar-thin">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">{t('Title (English) *', 'عنوان (انگریزی) *')}</Label>
               <Input
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
                 placeholder="e.g. Rent Agreement"
-                className="text-xs"
+                className="h-9 text-xs"
+                required
               />
             </div>
-            <div className="space-y-1">
-              <Label className={cn('text-xs', lang === 'ur' && 'font-urdu')}>{t('Title (Urdu)', 'عنوان (اردو)')}</Label>
+            <div className="space-y-1.5">
+              <Label className={cn('text-xs font-semibold', lang === 'ur' && 'font-urdu')}>{t('Title (Urdu)', 'عنوان (اردو)')}</Label>
               <Input
                 value={form.titleUrdu}
                 onChange={(e) => setForm({ ...form, titleUrdu: e.target.value })}
                 placeholder={lang === 'ur' ? 'مثلاً کرایہ نامہ' : 'Urdu title (optional) e.g. کرایہ نامہ'}
-                className={cn('text-xs', lang === 'ur' && 'font-urdu')}
+                dir="rtl"
+                className={cn('h-9 text-xs text-right font-urdu')}
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label className="text-xs">{t('Slug *', 'سلگ *')}</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">{t('Slug *', 'سلگ *')}</Label>
               <Input
                 value={form.slug}
                 onChange={(e) => setForm({ ...form, slug: e.target.value })}
                 placeholder="rent-agreement-format"
-                className="text-xs font-mono"
+                className="h-9 text-xs font-mono"
+                required
               />
             </div>
-            <div className="space-y-1">
-              <Label className="text-xs">{t('Category', 'شعبہ')}</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">{t('Category', 'شعبہ')}</Label>
               <Select
                 value={form.category}
                 onValueChange={(val) => setForm({ ...form, category: val })}
               >
-                <SelectTrigger className="text-xs">
+                <SelectTrigger className="h-9 text-xs">
                   <SelectValue placeholder={t('Select Category', 'شعبہ منتخب کریں')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -4212,33 +5181,43 @@ function TemplateCreateDialog({
             </div>
           </div>
 
-          <div className="space-y-1">
-            <Label className="text-xs">{t('Template Body (use {{field}})', 'ٹیمپلیٹ کا متن')}</Label>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">{t('Template Body (use {{field}})', 'ٹیمپلیٹ کا متن')}</Label>
             <Textarea
               value={form.templateText}
               onChange={(e) => setForm({ ...form, templateText: e.target.value })}
               rows={4}
-              className="text-xs font-mono"
+              className="text-xs font-mono leading-relaxed"
             />
           </div>
 
-          <div className="space-y-1">
-            <Label className="text-xs">{t('Fields Schema (JSON Array)', 'فیلڈز کی اسکیما')}</Label>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold">{t('Fields Schema (JSON Array)', 'فیلڈز کی اسکیما')}</Label>
             <Textarea
               value={form.fieldsJson}
               onChange={(e) => setForm({ ...form, fieldsJson: e.target.value })}
               rows={4}
-              className="text-xs font-mono"
+              className="text-xs font-mono leading-relaxed"
             />
           </div>
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" size="sm" onClick={onClose} disabled={saving}>
+        <DialogFooter className="px-6 py-3.5 border-t border-border/70 bg-muted/25 shrink-0 flex items-center justify-end gap-2">
+          <Button variant="outline" size="sm" onClick={onClose} disabled={saving} className="h-8.5 text-xs">
             {t('Cancel', 'منسوخ')}
           </Button>
-          <Button size="sm" onClick={save} disabled={saving}>
-            {saving ? t('Creating...', 'شامل ہو رہا ہے...') : t('Save Template', 'ٹیمپلیٹ محفوظ کریں')}
+          <Button size="sm" onClick={save} disabled={saving} className="h-8.5 text-xs font-semibold gap-1.5 shadow-sm">
+            {saving ? (
+              <>
+                <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                <span>{t('Creating...', 'شامل ہو رہا ہے...')}</span>
+              </>
+            ) : (
+              <>
+                <Plus className="h-3.5 w-3.5" />
+                <span>{t('Save Template', 'ٹیمپلیٹ محفوظ کریں')}</span>
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -4912,37 +5891,43 @@ function SubscriberCreateDialog({
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-md p-6">
-        <DialogHeader>
-          <DialogTitle className="text-base font-bold flex items-center gap-2">
-            <Mail className="h-4 w-4 text-purple-600" />
-            {t('Add Newsletter Subscriber', 'نیا سبسکرائبر شامل کریں')}
-          </DialogTitle>
-          <DialogDescription className="text-xs text-muted-foreground">
-            {t('Manually register an email address to receive periodic legal updates.', 'قانونی اطلاعات وصول کرنے کے لیے ای میل شامل کریں۔')}
-          </DialogDescription>
+      <DialogContent className="max-w-md p-0 overflow-hidden border-border/80 shadow-2xl rounded-2xl bg-card flex flex-col">
+        <DialogHeader className="px-6 py-4.5 border-b border-border/70 bg-muted/25 shrink-0">
+          <div className="flex items-center gap-3.5 pr-8">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 shadow-xs">
+              <Mail className="h-5 w-5" />
+            </div>
+            <div className="space-y-0.5">
+              <DialogTitle className="text-base font-bold text-foreground">
+                {t('Add Newsletter Subscriber', 'نیا سبسکرائبر شامل کریں')}
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
+                {t('Manually register an email address to receive periodic legal updates.', 'قانونی اطلاعات وصول کرنے کے لیے ای میل شامل کریں۔')}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 py-2">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-5 space-y-4 scrollbar-thin">
           <div className="space-y-1.5">
-            <Label className="text-xs">{t('Email Address', 'ای میل ایڈریس')} *</Label>
+            <Label className="text-xs font-semibold">{t('Email Address', 'ای میل ایڈریس')} *</Label>
             <Input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="lawyer@example.com"
-              className="text-xs"
+              className="h-9 text-xs"
               required
             />
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs">{t('Subscriber Name (Optional)', 'نام')}</Label>
+            <Label className="text-xs font-semibold">{t('Subscriber Name (Optional)', 'نام')}</Label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Advocate Tariq"
-              className="text-xs"
+              className="h-9 text-xs"
             />
           </div>
 
@@ -4954,17 +5939,27 @@ function SubscriberCreateDialog({
               onChange={(e) => setActive(e.target.checked)}
               className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
             />
-            <Label htmlFor="subActiveCheck" className="text-xs cursor-pointer">
+            <Label htmlFor="subActiveCheck" className="text-xs cursor-pointer font-medium">
               {t('Set subscriber status as Active', 'سبسکرائبر کی حیثیت فعال رکھیں')}
             </Label>
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0 pt-4">
-            <Button type="button" variant="outline" size="sm" onClick={onClose} disabled={saving}>
+          <DialogFooter className="px-0 pt-4 border-t border-border/70 flex items-center justify-end gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={onClose} disabled={saving} className="h-8.5 text-xs">
               {t('Cancel', 'منسوخ')}
             </Button>
-            <Button type="submit" size="sm" disabled={saving}>
-              {saving ? t('Adding...', 'شامل ہو رہا ہے...') : t('Add Subscriber', 'شامل کریں')}
+            <Button type="submit" size="sm" disabled={saving} className="h-8.5 text-xs font-semibold gap-1.5 shadow-sm">
+              {saving ? (
+                <>
+                  <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                  <span>{t('Adding...', 'شامل ہو رہا ہے...')}</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  <span>{t('Add Subscriber', 'شامل کریں')}</span>
+                </>
+              )}
             </Button>
           </DialogFooter>
         </form>

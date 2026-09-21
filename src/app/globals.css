@@ -284,82 +284,108 @@ kbd {
 
 /* ============================================================
    Custom Modern Ultra-Sleek Scrollbars (Global & Windows OS)
+   Applies to all browsers (Chrome, Edge, Firefox, Safari, Brave)
    ============================================================ */
 
-/* Firefox fallback only (Firefox does not support ::-webkit-scrollbar) */
-@supports not selector(::-webkit-scrollbar) {
-  *,
-  *::before,
-  *::after {
-    scrollbar-width: thin !important;
-    scrollbar-color: color-mix(in oklch, var(--primary) 35%, transparent) transparent !important;
-  }
+/* Standard CSS Scrollbars (Firefox & Chromium 121+) */
+html,
+body,
+*,
+*::before,
+*::after {
+  scrollbar-width: thin !important;
+  scrollbar-color: color-mix(in oklch, var(--primary) 45%, transparent) transparent !important;
 }
 
-/* Chrome, Brave, Edge, Safari (Webkit & Chromium) — Ultra-Slim 3px Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 3px !important;
-  height: 3px !important;
+/* WebKit / Chromium (Chrome, Edge, Brave, Opera, Safari) */
+::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
 }
 
-::-webkit-scrollbar-track {
+::-webkit-scrollbar-track,
+*::-webkit-scrollbar-track {
   background: transparent !important;
 }
 
 /* Completely remove arrow buttons in Chrome / Edge / Windows */
-::-webkit-scrollbar-button {
+::-webkit-scrollbar-button,
+*::-webkit-scrollbar-button {
   display: none !important;
   width: 0 !important;
   height: 0 !important;
 }
 
-::-webkit-scrollbar-corner {
+::-webkit-scrollbar-corner,
+*::-webkit-scrollbar-corner {
   background: transparent !important;
 }
 
-::-webkit-scrollbar-thumb {
-  background: color-mix(in oklch, var(--primary) 38%, transparent) !important;
+::-webkit-scrollbar-thumb,
+*::-webkit-scrollbar-thumb {
+  background-color: color-mix(in oklch, var(--primary) 40%, transparent) !important;
   border-radius: 9999px !important;
-  border: none !important;
-  transition: background 0.15s ease !important;
+  border: 1px solid transparent !important;
+  background-clip: content-box !important;
+  transition: background-color 0.2s ease !important;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: var(--primary) !important;
+::-webkit-scrollbar-thumb:hover,
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--primary) !important;
 }
 
 /* Custom Scrollbar for sidebar, dialogs and admin containers */
-.scrollbar-thin::-webkit-scrollbar {
-  width: 3px !important;
-  height: 3px !important;
+.scrollbar-thin,
+.custom-scrollbar {
+  scrollbar-width: thin !important;
+  scrollbar-color: color-mix(in oklch, var(--primary) 45%, transparent) transparent !important;
 }
 
-.scrollbar-thin::-webkit-scrollbar-track {
+.scrollbar-thin::-webkit-scrollbar,
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track,
+.custom-scrollbar::-webkit-scrollbar-track {
   background: transparent !important;
 }
 
-.scrollbar-thin::-webkit-scrollbar-button {
+.scrollbar-thin::-webkit-scrollbar-button,
+.custom-scrollbar::-webkit-scrollbar-button {
   display: none !important;
   width: 0 !important;
   height: 0 !important;
 }
 
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  background: color-mix(in oklch, var(--primary) 38%, transparent) !important;
+.scrollbar-thin::-webkit-scrollbar-thumb,
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: color-mix(in oklch, var(--primary) 40%, transparent) !important;
   border-radius: 9999px !important;
-  border: none !important;
+  border: 1px solid transparent !important;
+  background-clip: content-box !important;
 }
 
-.scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: var(--primary) !important;
+.scrollbar-thin::-webkit-scrollbar-thumb:hover,
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: var(--primary) !important;
 }
 
-.scrollbar-none {
+.scrollbar-none,
+*.scrollbar-none,
+.no-scrollbar,
+*.no-scrollbar {
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
 }
 
-.scrollbar-none::-webkit-scrollbar {
+.scrollbar-none::-webkit-scrollbar,
+*.scrollbar-none::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar,
+*.no-scrollbar::-webkit-scrollbar {
   display: none !important;
   width: 0 !important;
   height: 0 !important;
