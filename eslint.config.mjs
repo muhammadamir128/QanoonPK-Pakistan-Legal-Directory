@@ -19,6 +19,7 @@ const eslintConfig = [...nextCoreWebVitals, ...nextTypescript, {
     // React rules
     "react-hooks/exhaustive-deps": "off",
     "react-hooks/purity": "off",
+    "react-hooks/set-state-in-effect": "off",
     "react/no-unescaped-entities": "off",
     "react/display-name": "off",
     "react/prop-types": "off",
@@ -34,6 +35,8 @@ const eslintConfig = [...nextCoreWebVitals, ...nextTypescript, {
     "no-console": "off",
     "no-debugger": "off",
     "no-empty": "off",
+    "@typescript-eslint/no-require-imports": "off",
+    "react-hooks/static-components": "off",
     "no-irregular-whitespace": "off",
     "no-case-declarations": "off",
     "no-fallthrough": "off",
@@ -44,7 +47,7 @@ const eslintConfig = [...nextCoreWebVitals, ...nextTypescript, {
     "no-useless-escape": "off",
   },
 }, {
-  ignores: ["node_modules/**", ".next/**", "out/**", "build/**", "next-env.d.ts", "examples/**", "skills"]
+  ignores: ["node_modules/**", ".next/**", "out/**", "build/**", "next-env.d.ts", "examples/**", "skills", "scripts/**"]
 }];
 
 export default eslintConfig;

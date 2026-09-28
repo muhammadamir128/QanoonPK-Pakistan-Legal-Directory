@@ -286,6 +286,54 @@ export default function HomePage() {
         </section>
       )}
 
+      {/* Girls & Women Legal Protection Featured Guide Banner */}
+      <section className="container mx-auto max-w-7xl px-3 sm:px-4 py-3 sm:py-4">
+        <Link href="/guides/girls-protection" className="group block animate-fade-in-up">
+          <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 relative rounded-2xl border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-card to-background">
+            <CardContent className="p-4 sm:p-6 md:p-7 relative">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-start gap-3.5">
+                  <div className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-xl sm:rounded-2xl bg-emerald-600 text-white shrink-0 shadow-md group-hover:scale-105 transition-transform">
+                    <ShieldCheck className="h-6 w-6 sm:h-7 sm:w-7" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge className="bg-emerald-600/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 text-xs font-semibold">
+                        <Sparkles className="h-3 w-3 mr-1" />
+                        {t('Featured Legal Guide', 'خصوصی قانونی گائیڈ')}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        {t('16 Statutes Catalogued', '16 مکمل قوانین')}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs text-red-500 border-red-500/30">
+                        {t('Helplines 15 & 1099', 'ہیلپ لائنز 15 اور 1099')}
+                      </Badge>
+                    </div>
+                    <h3 className="text-lg sm:text-xl font-bold text-foreground group-hover:text-primary transition-colors">
+                      {t(
+                        'Pakistan Laws for the Protection of Girls & Women: Complete Guide',
+                        'پاکستان میں بچیوں اور خواتین کے قانونی تحفظ کے قوانین: مکمل گائیڈ'
+                      )}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 max-w-3xl leading-relaxed">
+                      {t(
+                        'Detailed breakdown of PPC 375/376, Anti-Rape Act 2021, Zainab Alert Act, CrPC procedures, Child Marriage restraint, why each law exists, and emergency legal steps.',
+                        'پی پی سی 375/376، اینٹی ریپ ایکٹ 2021، زینب الرٹ ایکٹ، کم عمری کی شادی کی روک تھام، ہر قانون کا مقصد، اور ہنگامی قانونی حقوق کی مکمل گائیڈ۔'
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-primary shrink-0 self-end md:self-center">
+                  <span>{t('Read Full Guide', 'مکمل گائیڈ پڑھیں')}</span>
+                  <ArrowRight className={cn('h-4 w-4 group-hover:translate-x-1 transition-transform', lang === 'ur' && 'rotate-180')} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+      </section>
+
       {/* Categories Grid */}
       <section ref={categoriesSectionRef} className="container mx-auto max-w-7xl px-4 py-16 scroll-mt-20">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">

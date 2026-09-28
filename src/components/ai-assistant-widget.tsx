@@ -33,10 +33,10 @@ type ChatMessage = {
 }
 
 const SUGGESTED_QUESTIONS = [
+  { en: 'What laws protect girls and women in Pakistan?', ur: 'پاکستان میں بچیوں اور خواتین کے قانونی تحفظ کے کیا قوانین ہیں؟' },
   { en: 'What is the punishment for theft under PPC?', ur: 'PPC کے تحت چوری کی سزا کیا ہے؟' },
   { en: 'How do I file for khula in Pakistan?', ur: 'پاکستان میں خلع کی درخواست کیسے دائر کریں؟' },
   { en: 'What does PECA say about cyber harassment?', ur: 'PECA آن لائن ہراسانی کے بارے میں کیا کہتا ہے؟' },
-  { en: 'What is the minimum wage law in Punjab?', ur: 'پنجاب میں کم از کم اجرت کا قانون کیا ہے؟' },
   { en: 'What are the basic rights under the 1973 Constitution?', ur: '1973 کے آئین کے تحت بنیادی حقوق کیا ہیں؟' },
 ]
 
