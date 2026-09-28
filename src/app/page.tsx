@@ -286,52 +286,91 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* Girls & Women Legal Protection Featured Guide Banner */}
+      {/* Featured Public Legal Guides (Girls Protection & Self-Defence) */}
       <section className="container mx-auto max-w-7xl px-3 sm:px-4 py-3 sm:py-4">
-        <Link href="/guides/girls-protection" className="group block animate-fade-in-up">
-          <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 relative rounded-2xl border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-card to-background">
-            <CardContent className="p-4 sm:p-6 md:p-7 relative">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Guide 1: Girls & Women Protection */}
+          <Link href="/guides/girls-protection" className="group block animate-fade-in-up">
+            <Card className="h-full overflow-hidden hover:shadow-xl transition-all duration-300 relative rounded-2xl border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-card to-background flex flex-col justify-between">
+              <CardContent className="p-5 md:p-6 relative space-y-4">
                 <div className="flex items-start gap-3.5">
-                  <div className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-xl sm:rounded-2xl bg-emerald-600 text-white shrink-0 shadow-md group-hover:scale-105 transition-transform">
-                    <ShieldCheck className="h-6 w-6 sm:h-7 sm:w-7" />
+                  <div className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-emerald-600 text-white shrink-0 shadow-md group-hover:scale-105 transition-transform">
+                    <ShieldCheck className="h-6 w-6" />
                   </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Badge className="bg-emerald-600/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 text-xs font-semibold">
-                        <Sparkles className="h-3 w-3 mr-1" />
-                        {t('Featured Legal Guide', 'خصوصی قانونی گائیڈ')}
+                  <div className="space-y-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <Badge className="bg-emerald-600/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 text-[10px] font-semibold">
+                        <Sparkles className="h-2.5 w-2.5 mr-1" />
+                        {t('16 Statutes', '16 قوانین')}
                       </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        {t('16 Statutes Catalogued', '16 مکمل قوانین')}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs text-red-500 border-red-500/30">
-                        {t('Helplines 15 & 1099', 'ہیلپ لائنز 15 اور 1099')}
+                      <Badge variant="outline" className="text-[10px] text-red-500 border-red-500/30">
+                        {t('Helpline 15 & 1099', 'ہیلپ لائن 15 اور 1099')}
                       </Badge>
                     </div>
-                    <h3 className="text-lg sm:text-xl font-bold text-foreground group-hover:text-primary transition-colors">
+                    <h3 className="text-base sm:text-lg font-bold text-foreground group-hover:text-primary transition-colors">
                       {t(
-                        'Pakistan Laws for the Protection of Girls & Women: Complete Guide',
-                        'پاکستان میں بچیوں اور خواتین کے قانونی تحفظ کے قوانین: مکمل گائیڈ'
+                        'Protection of Girls & Women: Complete Guide',
+                        'بچیوں اور خواتین کے قانونی تحفظ کی گائیڈ'
                       )}
                     </h3>
-                    <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 max-w-3xl leading-relaxed">
+                    <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                       {t(
-                        'Detailed breakdown of PPC 375/376, Anti-Rape Act 2021, Zainab Alert Act, CrPC procedures, Child Marriage restraint, why each law exists, and emergency legal steps.',
-                        'پی پی سی 375/376، اینٹی ریپ ایکٹ 2021، زینب الرٹ ایکٹ، کم عمری کی شادی کی روک تھام، ہر قانون کا مقصد، اور ہنگامی قانونی حقوق کی مکمل گائیڈ۔'
+                        'PPC 375/376, Anti-Rape Act 2021, Zainab Alert Act, CrPC procedures, child marriage ban, and why each law exists.',
+                        'پی پی سی 375/376، اینٹی ریپ ایکٹ 2021، زینب الرٹ ایکٹ، کم عمری کی شادی، اور ہنگامی قانونی حقوق کی مکمل گائیڈ۔'
                       )}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-primary shrink-0 self-end md:self-center">
-                  <span>{t('Read Full Guide', 'مکمل گائیڈ پڑھیں')}</span>
-                  <ArrowRight className={cn('h-4 w-4 group-hover:translate-x-1 transition-transform', lang === 'ur' && 'rotate-180')} />
+                <div className="flex items-center justify-end gap-1.5 text-xs font-semibold text-primary pt-1">
+                  <span>{t('Explore Guide', 'گائیڈ پڑھیں')}</span>
+                  <ArrowRight className={cn('h-3.5 w-3.5 group-hover:translate-x-1 transition-transform', lang === 'ur' && 'rotate-180')} />
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
+              </CardContent>
+            </Card>
+          </Link>
+
+          {/* Guide 2: Self-Defence Laws (PPC 96-106) */}
+          <Link href="/guides/self-defence" className="group block animate-fade-in-up">
+            <Card className="h-full overflow-hidden hover:shadow-xl transition-all duration-300 relative rounded-2xl border-blue-500/30 bg-gradient-to-br from-blue-500/10 via-card to-background flex flex-col justify-between">
+              <CardContent className="p-5 md:p-6 relative space-y-4">
+                <div className="flex items-start gap-3.5">
+                  <div className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-blue-600 text-white shrink-0 shadow-md group-hover:scale-105 transition-transform">
+                    <ShieldAlert className="h-6 w-6" />
+                  </div>
+                  <div className="space-y-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <Badge className="bg-blue-600/15 text-blue-700 dark:text-blue-300 border-blue-500/30 text-[10px] font-semibold">
+                        <Scale className="h-2.5 w-2.5 mr-1" />
+                        {t('PPC 96–106', 'پی پی سی 96 تا 106')}
+                      </Badge>
+                      <Badge variant="outline" className="text-[10px]">
+                        {t('5 Legal Frameworks', '5 بنیادی قوانین')}
+                      </Badge>
+                    </div>
+                    <h3 className="text-base sm:text-lg font-bold text-foreground group-hover:text-primary transition-colors">
+                      {t(
+                        'Self-Defence (Private Defence) Laws in Pakistan',
+                        'پاکستان میں سیلف ڈیفنس (حقِ دفاع) کے قوانین'
+                      )}
+                    </h3>
+                    <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                      {t(
+                        'When lethal force is justified (7 scenarios), defense of property, burden of proof under Qanun-e-Shahadat, and trial rules.',
+                        'جان لینے کی 7 جائز صورتیں، مال کا دفاع، قانونِ شہادت کے تحت ثبوت، اور حدود کی خلاف ورزی سے بچنے کے قواعد۔'
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-1.5 text-xs font-semibold text-primary pt-1">
+                  <span>{t('Explore Guide', 'گائیڈ پڑھیں')}</span>
+                  <ArrowRight className={cn('h-3.5 w-3.5 group-hover:translate-x-1 transition-transform', lang === 'ur' && 'rotate-180')} />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
       </section>
 
       {/* Categories Grid */}

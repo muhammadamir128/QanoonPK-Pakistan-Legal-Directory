@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     // === RAG: Retrieve relevant laws ===
     const keywords = extractKeywords(userMessage)
 
-    // 1. Search laws by title, summary, or category
+    // 1. Search laws by title, summary, category, or section contents
     const laws = await db.law.findMany({
       where: keywords.length > 0 ? {
         OR: [
@@ -50,10 +50,11 @@ export async function POST(req: NextRequest) {
             { summary: { contains: k } },
             { summaryUrdu: { contains: k } },
             { category: { name: { contains: k } } },
+            { sections: { some: { OR: [{ title: { contains: k } }, { content: { contains: k } }] } } },
           ]),
         ],
       } : undefined,
-      take: 15,
+      take: 20,
       include: { category: true, sections: true },
     })
 
@@ -229,7 +230,7 @@ function extractKeywords(query: string): string[] {
     'such', 'this', 'that', 'these', 'those', 'am', 'if', 'because', 'while',
     // Common noise words in user queries
     'total', 'totall', 'tell', 'show', 'give', 'list', 'please', 'help',
-    'want', 'need', 'explain', 'detail', 'details', 'find', 'know',
+    'want', 'need', 'explain', 'detail', 'details', 'find', 'know', 'say', 'says', 'said', 'state', 'states',
     // Legal generic words that match almost every database record
     'law', 'laws', 'act', 'acts', 'ordinance', 'ordinances', 'code', 'statute',
     'statutes', 'bill', 'pakistan', 'pakistani', 'legal', 'section', 'sections',
@@ -247,7 +248,13 @@ function extractKeywords(query: string): string[] {
     .split(/[\s,.;:!?'"()\-_/\\]+/)
     .filter((t) => t.length >= 2 && !stopWords.has(t))
 
-  const unique = Array.from(new Set(tokens))
+  // Synonym expansion for legal concepts
+  const expanded = [...tokens]
+  if (tokens.some((t) => t === 'defence' || t === 'defense' || t === 'difa' || t === 'دفاع')) {
+    expanded.push('defence', 'defense', 'private defence', 'دفاع')
+  }
+
+  const unique = Array.from(new Set(expanded))
 
   // If all words were filtered out (e.g. user typed "Pakistan laws"), keep words of length >= 3
   if (unique.length === 0 && query.trim().length > 0) {

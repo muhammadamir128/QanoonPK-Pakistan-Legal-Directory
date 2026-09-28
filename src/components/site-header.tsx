@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import {
   Search, Languages, Sun, Moon, Menu, Scale, BookText, Compass, LayoutDashboard, X,
   Bot, Landmark, BookOpen, ChevronDown, Briefcase, FilePlus, HelpCircle, GitCompare, Check,
-  LogIn, UserPlus, LogOut, Bookmark, User, Info, ShieldCheck,
+  LogIn, UserPlus, LogOut, Bookmark, User, Info, ShieldCheck, ShieldAlert,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -38,6 +38,7 @@ const navItems = [
 
 const toolsItems = [
   { href: '/guides/girls-protection', labelEn: 'Girls Protection Guide', labelUr: 'بچیوں کے تحفظ کے قوانین', icon: 'ShieldCheck', descEn: '16 laws, rights & emergency helplines', descUr: '16 قوانین، حقوق اور ہنگامی ہیلپ لائنز' },
+  { href: '/guides/self-defence', labelEn: 'Self-Defence Guide', labelUr: 'سیلف ڈیفنس (حقِ دفاع)', icon: 'ShieldAlert', descEn: 'PPC 96-106 & lethal force rules', descUr: 'پی پی سی 96 تا 106 اور شرائط' },
   { href: '/finder', labelEn: 'Which Law Applies?', labelUr: 'کون سا قانون؟', icon: 'Compass', descEn: 'Find applicable law', descUr: 'مسئلے کا متعلقہ قانون' },
   { href: '/courts', labelEn: 'Court Hierarchy', labelUr: 'عدالتی درجہ بندی', icon: 'Landmark', descEn: 'Court system & hierarchy', descUr: 'عدالتی نظام و درجہ بندی' },
   { href: '/glossary', labelEn: 'Legal Glossary', labelUr: 'قانونی فرہنگ', icon: 'BookOpen', descEn: 'Pakistani legal terms explained', descUr: 'اہم قانونی اصطلاحات کا مفہوم' },
@@ -497,6 +498,7 @@ export function SiteHeader() {
 
 function iconFor(href: string) {
   switch (href) {
+    case '/guides/self-defence': return ShieldAlert
     case '/guides/girls-protection': return ShieldCheck
     case '/laws': return BookText
     case '/categories': return LayoutDashboard
@@ -515,6 +517,7 @@ function iconFor(href: string) {
 
 function iconForTool(name: string) {
   switch (name) {
+    case 'ShieldAlert': return ShieldAlert
     case 'ShieldCheck': return ShieldCheck
     case 'Compass': return Compass
     case 'GitCompare': return GitCompare
