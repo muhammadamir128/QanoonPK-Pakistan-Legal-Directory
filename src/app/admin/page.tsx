@@ -1096,7 +1096,7 @@ export default function AdminPage() {
           labelEn: 'Analytics & Logs',
           labelUr: 'تجزیات و لاگز',
           icon: BarChart3,
-          badge: analytics ? `${analytics.zeroResultCount} ⚠️` : null,
+          badge: analytics ? String(analytics.zeroResultCount) : null,
         },
       ],
     },
@@ -3397,11 +3397,11 @@ export default function AdminPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">{t('All Ratings', 'تمام ریٹنگز')}</SelectItem>
-                        <SelectItem value="5">⭐⭐⭐⭐⭐ (5 Stars)</SelectItem>
-                        <SelectItem value="4">⭐⭐⭐⭐ (4 Stars)</SelectItem>
-                        <SelectItem value="3">⭐⭐⭐ (3 Stars)</SelectItem>
-                        <SelectItem value="2">⭐⭐ (2 Stars)</SelectItem>
-                        <SelectItem value="1">⭐ (1 Star)</SelectItem>
+                        <SelectItem value="5"><span className="inline-flex items-center gap-0.5">{Array.from({ length: 5 }, (_, index) => <Star key={index} className="h-3 w-3 fill-amber-400 text-amber-500" aria-hidden="true" />)} (5 Stars)</span></SelectItem>
+                        <SelectItem value="4"><span className="inline-flex items-center gap-0.5">{Array.from({ length: 4 }, (_, index) => <Star key={index} className="h-3 w-3 fill-amber-400 text-amber-500" aria-hidden="true" />)} (4 Stars)</span></SelectItem>
+                        <SelectItem value="3"><span className="inline-flex items-center gap-0.5">{Array.from({ length: 3 }, (_, index) => <Star key={index} className="h-3 w-3 fill-amber-400 text-amber-500" aria-hidden="true" />)} (3 Stars)</span></SelectItem>
+                        <SelectItem value="2"><span className="inline-flex items-center gap-0.5">{Array.from({ length: 2 }, (_, index) => <Star key={index} className="h-3 w-3 fill-amber-400 text-amber-500" aria-hidden="true" />)} (2 Stars)</span></SelectItem>
+                        <SelectItem value="1"><span className="inline-flex items-center gap-0.5"><Star className="h-3 w-3 fill-amber-400 text-amber-500" aria-hidden="true" /> (1 Star)</span></SelectItem>
                       </SelectContent>
                     </Select>
 

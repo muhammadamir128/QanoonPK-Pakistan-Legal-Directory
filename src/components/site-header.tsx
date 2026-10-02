@@ -4,9 +4,9 @@ import * as React from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
-  Search, Languages, Sun, Moon, Menu, Scale, BookText, Compass, LayoutDashboard, X,
+  Search, Languages, Sun, Moon, Menu, Scale, BookText, Compass, LayoutDashboard,
   Bot, Landmark, BookOpen, ChevronDown, Briefcase, FilePlus, HelpCircle, GitCompare, Check,
-  LogIn, UserPlus, LogOut, Bookmark, User, Info, ShieldCheck, ShieldAlert,
+  LogIn, UserPlus, LogOut, Bookmark, User, Info, ShieldCheck, ShieldAlert, GraduationCap,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -37,6 +37,7 @@ const navItems = [
 ]
 
 const toolsItems = [
+  { href: '/guides/student-protection', labelEn: 'Student Protection Guide', labelUr: 'طلبہ کے تحفظ کی رہنمائی', icon: 'GraduationCap', descEn: 'Student rights, HEC policies & complaints', descUr: 'طلبہ کے حقوق، HEC پالیسیاں اور شکایات' },
   { href: '/guides/girls-protection', labelEn: 'Girls Protection Guide', labelUr: 'بچیوں کے تحفظ کے قوانین', icon: 'ShieldCheck', descEn: '16 laws, rights & emergency helplines', descUr: '16 قوانین، حقوق اور ہنگامی ہیلپ لائنز' },
   { href: '/guides/self-defence', labelEn: 'Self-Defence Guide', labelUr: 'سیلف ڈیفنس (حقِ دفاع)', icon: 'ShieldAlert', descEn: 'PPC 96-106 & lethal force rules', descUr: 'پی پی سی 96 تا 106 اور شرائط' },
   { href: '/finder', labelEn: 'Which Law Applies?', labelUr: 'کون سا قانون؟', icon: 'Compass', descEn: 'Find applicable law', descUr: 'مسئلے کا متعلقہ قانون' },
@@ -136,25 +137,40 @@ export function SiteHeader() {
                       <ChevronDown className="h-3.5 w-3.5 opacity-70" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-60">
+                  <DropdownMenuContent align="center" className="w-[min(32rem,calc(100vw-2rem))] max-h-[min(70vh,32rem)] overflow-y-auto overscroll-contain [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin] p-2 shadow-lg">
                     <DropdownMenuLabel className="text-xs text-muted-foreground">
                       {t('Interactive Tools', 'انٹرایکٹو اوزار')}
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
+                    <div className="grid grid-cols-2 gap-1">
                     {toolsItems.map((item) => {
                       const Icon = iconForTool(item.icon)
                       return (
-                        <DropdownMenuItem asChild key={item.href}>
-                          <Link href={item.href} className="flex items-center gap-3 cursor-pointer">
-                            <Icon className="h-4 w-4 text-primary shrink-0" />
-                            <div className="flex flex-col min-w-0">
-                              <span className="text-sm font-medium">{t(item.labelEn, item.labelUr)}</span>
-                              <span className="text-[10px] text-muted-foreground truncate">{lang === 'ur' ? item.descUr : item.descEn}</span>
-                            </div>
+                          <DropdownMenuItem
+                            asChild
+                            key={item.href}
+                            className={cn(
+                              'h-auto min-h-14 items-start gap-3 whitespace-normal rounded-md px-2.5 py-2.5',
+                              isActive(item.href) && 'bg-accent text-accent-foreground'
+                            )}
+                          >
+                            <Link
+                              href={item.href}
+                              aria-current={isActive(item.href) ? 'page' : undefined}
+                              className="flex w-full cursor-pointer items-start gap-3"
+                            >
+                            <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                              <Icon className="h-4 w-4" />
+                            </span>
+                            <span className="flex min-w-0 flex-col gap-0.5">
+                              <span className="text-sm font-medium leading-tight">{t(item.labelEn, item.labelUr)}</span>
+                              <span className="text-[10px] leading-snug text-muted-foreground">{lang === 'ur' ? item.descUr : item.descEn}</span>
+                            </span>
                           </Link>
                         </DropdownMenuItem>
                       )
                     })}
+                    </div>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </nav>
@@ -328,7 +344,7 @@ export function SiteHeader() {
                     <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side={lang === 'ur' ? 'right' : 'left'} className="w-[280px] p-0">
+                <SheetContent side={lang === 'ur' ? 'right' : 'left'} className="w-[280px] overflow-hidden p-0">
                   <SheetTitle className="sr-only">Navigation menu</SheetTitle>
                   <div className="flex h-16 items-center justify-between border-b px-4">
                     <SheetClose asChild>
@@ -339,13 +355,8 @@ export function SiteHeader() {
                         <span className="font-bold">{t('QanoonPK', 'قانون پی کے')}</span>
                       </Link>
                     </SheetClose>
-                    <SheetClose asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </SheetClose>
                   </div>
-                  <div className="p-4 space-y-3">
+                  <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin] p-4 space-y-3">
                     {/* Mobile search trigger */}
                     <button
                       type="button"
@@ -517,6 +528,7 @@ function iconFor(href: string) {
 
 function iconForTool(name: string) {
   switch (name) {
+    case 'GraduationCap': return GraduationCap
     case 'ShieldAlert': return ShieldAlert
     case 'ShieldCheck': return ShieldCheck
     case 'Compass': return Compass

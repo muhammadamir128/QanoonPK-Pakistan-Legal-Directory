@@ -7,7 +7,7 @@ import {
   FileText, ArrowLeft, BookOpen, Scale, CheckCircle2, ShieldAlert,
   Phone, Sparkles, Building2, Gavel, HelpCircle, ExternalLink,
   CreditCard, Home, HeartHandshake, Laptop, Briefcase, Zap,
-  AlertCircle, ShieldCheck, Filter
+  AlertCircle, ShieldCheck, Filter, Siren, Baby
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -268,16 +268,16 @@ export default function FinderPage() {
         </div>
         <div className="flex items-center gap-2 flex-wrap font-medium">
           <a href="tel:15" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-card border border-border/80 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer">
-            <span>🚓</span> <span>{t('Police:', 'پولیس:')}</span> <strong className="font-mono text-primary font-bold">15</strong>
+            <Siren className="h-3.5 w-3.5 text-primary" aria-hidden="true" /> <span>{t('Police:', 'پولیس:')}</span> <strong className="font-mono text-primary font-bold">15</strong>
           </a>
           <a href="tel:1991" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-card border border-border/80 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer">
-            <span>💻</span> <span>{t('Cyber Crime FIA:', 'سائبر کرائم:')}</span> <strong className="font-mono text-primary font-bold">1991</strong>
+            <Laptop className="h-3.5 w-3.5 text-primary" aria-hidden="true" /> <span>{t('Cyber Crime FIA:', 'سائبر کرائم:')}</span> <strong className="font-mono text-primary font-bold">1991</strong>
           </a>
           <a href="tel:1043" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-card border border-border/80 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer">
-            <span>👩</span> <span>{t('Women Protection:', 'تحفظ خواتین:')}</span> <strong className="font-mono text-primary font-bold">1043</strong>
+            <HeartHandshake className="h-3.5 w-3.5 text-primary" aria-hidden="true" /> <span>{t('Women Protection:', 'تحفظ خواتین:')}</span> <strong className="font-mono text-primary font-bold">1043</strong>
           </a>
           <a href="tel:1121" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-card border border-border/80 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer">
-            <span>👶</span> <span>{t('Child Protection:', 'بچوں کا تحفظ:')}</span> <strong className="font-mono text-primary font-bold">1121</strong>
+            <Baby className="h-3.5 w-3.5 text-primary" aria-hidden="true" /> <span>{t('Child Protection:', 'بچوں کا تحفظ:')}</span> <strong className="font-mono text-primary font-bold">1121</strong>
           </a>
         </div>
       </div>

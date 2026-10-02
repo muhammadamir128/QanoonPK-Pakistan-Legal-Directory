@@ -4,7 +4,7 @@ import * as React from 'react'
 import Link from 'next/link'
 import {
   ChevronRight, Search, FileText, Download, ArrowRight,
-  FilePlus, ShieldCheck, Filter, X,
+  FilePlus, ShieldCheck, Filter, X, Flame, ScrollText, PenLine, Users,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -133,7 +133,7 @@ export default function TemplatesPage() {
       {/* Popular Templates Quick Selector */}
       <div className="mb-6 p-4 rounded-xl border bg-card/60 backdrop-blur-sm shadow-sm">
         <div className="flex items-center gap-2 mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          <span>🔥</span>
+          <Flame className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
           <span>{t('Frequently Used Pakistani Legal Drafts', 'اکثر استعمال ہونے والے پاکستانی قانونی ڈرافٹس')}</span>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -154,7 +154,7 @@ export default function TemplatesPage() {
               }}
               className="px-3 py-1 text-xs rounded-lg border bg-background hover:bg-primary/10 hover:border-primary/40 hover:text-primary transition-all flex items-center gap-1.5 shadow-xs"
             >
-              <span>📄</span>
+              <FileText className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
               <span>{lang === 'ur' ? item.ur : item.en}</span>
             </button>
           ))}
@@ -347,7 +347,7 @@ export default function TemplatesPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs mt-4">
           <div className="rounded-xl border bg-background/80 p-4 space-y-2">
             <p className="font-semibold text-sm text-primary flex items-center gap-1.5">
-              <span>📜</span>
+              <ScrollText className="h-4 w-4 shrink-0" aria-hidden="true" />
               <span>{t('1. Stamp Paper Requirement', '1. اسٹامپ پیپر کی ضرورت')}</span>
             </p>
             <p className="text-muted-foreground leading-relaxed">
@@ -360,7 +360,7 @@ export default function TemplatesPage() {
 
           <div className="rounded-xl border bg-background/80 p-4 space-y-2">
             <p className="font-semibold text-sm text-primary flex items-center gap-1.5">
-              <span>✒️</span>
+              <PenLine className="h-4 w-4 shrink-0" aria-hidden="true" />
               <span>{t('2. Attestation & Notarization', '2. تصدیق اور نوٹرائزیشن')}</span>
             </p>
             <p className="text-muted-foreground leading-relaxed">
@@ -373,7 +373,7 @@ export default function TemplatesPage() {
 
           <div className="rounded-xl border bg-background/80 p-4 space-y-2">
             <p className="font-semibold text-sm text-primary flex items-center gap-1.5">
-              <span>👥</span>
+              <Users className="h-4 w-4 shrink-0" aria-hidden="true" />
               <span>{t('3. Two CNIC Witnesses', '3. دو گواہان مع شناختی کارڈ')}</span>
             </p>
             <p className="text-muted-foreground leading-relaxed">

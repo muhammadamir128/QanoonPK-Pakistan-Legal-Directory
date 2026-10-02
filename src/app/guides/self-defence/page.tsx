@@ -244,21 +244,21 @@ export default function SelfDefenceGuidePage() {
       </div>
 
       {/* Hero Banner */}
-      <div className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-blue-600/10 via-card to-background p-6 md:p-10 shadow-sm">
-        <div className="max-w-3xl space-y-4">
+      <div className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-blue-600/10 via-card to-background p-5 md:p-8 shadow-sm">
+        <div className="max-w-3xl space-y-3">
           <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-3.5 py-1 text-xs font-semibold text-blue-600 dark:text-blue-400">
             <ShieldAlert className="h-3.5 w-3.5" />
             <span>{t('Pakistan Criminal Law & Self-Preservation Rights', 'پاکستانی فوجداری قانون و حقِ دفاعِ خود اختیاری')}</span>
           </div>
 
-          <h1 className="text-2xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-balance text-foreground">
+          <h1 className="text-xl font-extrabold tracking-tight text-balance text-foreground md:text-3xl lg:text-4xl">
             {t(
               'Private Defence (Self-Defence) Laws in Pakistan: Complete Guide',
               'پاکستان میں حقِ دفاعِ خود اختیاری (سیلف ڈیفنس) کے قوانین: مکمل گائیڈ'
             )}
           </h1>
 
-          <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+          <p className="text-sm md:text-[15px] text-muted-foreground leading-relaxed">
             {t(
               'Under Pakistan Penal Code (PPC) Sections 96 to 106 and the Constitution of Pakistan (Articles 4, 9, 14), every citizen has the inalienable legal right to use proportional force to defend their life, the life of others, and their property. Understand the exact legal boundaries, when lethal force is justified, evidentiary rules under CrPC and Qanun-e-Shahadat, and what courts require.',
               'پاکستان پینل کوڈ کی دفعات 96 تا 106 اور آئینِ پاکستان کے تحت ہر شہری کو اپنی جان، دوسروں کی جان اور اپنے مال کے دفاع کے لیے متناسب طاقت کے استعمال کا مکمل قانونی حق حاصل ہے۔ جانیے دفاع کی شرائط، کب جان لینا جائز ہے، شواہد کی اہمیت اور عدالتی طریقہ کار۔'
@@ -284,7 +284,7 @@ export default function SelfDefenceGuidePage() {
 
       {/* Constitutional Foundation Card */}
       <Card className="border border-border/80 bg-card shadow-xs">
-        <CardHeader className="pb-3 border-b border-border/60">
+        <CardHeader className="p-4 pb-3 border-b border-border/60 md:p-5 md:pb-3">
           <div className="flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-primary" />
             <CardTitle className="text-base md:text-lg">
@@ -298,8 +298,8 @@ export default function SelfDefenceGuidePage() {
             )}
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs md:text-sm text-muted-foreground leading-relaxed">
-          <div className="rounded-xl border border-border/80 bg-background/50 p-4 space-y-1.5">
+        <CardContent className="grid grid-cols-1 gap-3 p-3 text-xs leading-relaxed text-muted-foreground md:grid-cols-3 md:gap-3 md:p-4 md:text-sm">
+          <div className="rounded-xl border border-border/80 bg-background/50 p-3 space-y-1.5">
             <span className="font-bold text-foreground text-xs block">
               {t('Article 9: Security of Person', 'آرٹیکل 9: جان کا تحفظ')}
             </span>
@@ -311,7 +311,7 @@ export default function SelfDefenceGuidePage() {
             </p>
           </div>
 
-          <div className="rounded-xl border border-border/80 bg-background/50 p-4 space-y-1.5">
+          <div className="rounded-xl border border-border/80 bg-background/50 p-3 space-y-1.5">
             <span className="font-bold text-foreground text-xs block">
               {t('Article 4: Right to Lawful Treatment', 'آرٹیکل 4: قانون کے مطابق سلوک کا حق')}
             </span>
@@ -323,7 +323,7 @@ export default function SelfDefenceGuidePage() {
             </p>
           </div>
 
-          <div className="rounded-xl border border-border/80 bg-background/50 p-4 space-y-1.5">
+          <div className="rounded-xl border border-border/80 bg-background/50 p-3 space-y-1.5">
             <span className="font-bold text-foreground text-xs block">
               {t('Article 14: Dignity of Man & Home', 'آرٹیکل 14: انسانی عزت اور گھر کا تقدس')}
             </span>

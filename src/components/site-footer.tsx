@@ -186,18 +186,6 @@ export function SiteFooter() {
                 </Link>
               </li>
               <li>
-                <Link href="/guides/girls-protection" className="text-primary font-medium hover:underline transition-colors flex items-center gap-2 group">
-                  <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" />
-                  <span>{t('Girls Protection Guide (16 Laws)', 'بچیوں کے تحفظ کے قوانین (16 قوانین)')}</span>
-                </Link>
-              </li>
-              <li>
-                <Link href="/guides/self-defence" className="text-primary font-medium hover:underline transition-colors flex items-center gap-2 group">
-                  <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" />
-                  <span>{t('Self-Defence Guide (PPC 96–106)', 'سیلف ڈیفنس گائیڈ (دفعات 96 تا 106)')}</span>
-                </Link>
-              </li>
-              <li>
                 <Link href="/faq" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group">
                   <HelpCircle className="h-3.5 w-3.5 text-muted-foreground/70 group-hover:text-primary transition-colors" />
                   <span>{t('FAQ & Guide', 'عام سوالات و گائیڈ')}</span>

@@ -516,7 +516,7 @@ export default function LawyerDetailPage() {
                         <p className="text-sm font-medium group-hover:text-primary transition-colors truncate">
                           {lang === 'ur' && r.nameUrdu ? r.nameUrdu : r.name}
                         </p>
-                        <p className="text-xs text-muted-foreground">{r.city} • ⭐ {r.rating.toFixed(1)}</p>
+                        <p className="flex items-center gap-1 text-xs text-muted-foreground">{r.city} • <StarIcon className="h-3 w-3 fill-amber-400 text-amber-500" aria-hidden="true" /> {r.rating.toFixed(1)}</p>
                       </div>
                       <ArrowRight className={cn('h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors', lang === 'ur' && 'rotate-180')} />
                     </div>

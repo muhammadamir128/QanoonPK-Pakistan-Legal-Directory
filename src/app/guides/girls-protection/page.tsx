@@ -669,21 +669,21 @@ export default function GirlsProtectionGuidePage() {
       </div>
 
       {/* Hero Banner */}
-      <div className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-emerald-500/10 via-card to-background p-6 md:p-10 shadow-sm">
-        <div className="max-w-3xl space-y-4">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3.5 py-1 text-xs font-semibold text-primary">
+      <div className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-emerald-500/10 via-card to-background p-5 md:p-8 shadow-sm">
+        <div className="max-w-3xl space-y-3">
+          <div className="inline-flex max-w-full items-center gap-2 whitespace-nowrap rounded-full border border-primary/30 bg-primary/10 px-3.5 py-1 text-[11px] font-semibold text-primary md:text-xs">
             <ShieldCheck className="h-3.5 w-3.5 text-primary" />
             <span>{t('Pakistan Legal Rights & Protection Portal', 'پاکستان لیگل رائٹس و تحفظ پورٹل')}</span>
           </div>
 
-          <h1 className="text-2xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-balance text-foreground">
+          <h1 className="text-xl font-extrabold tracking-tight text-balance text-foreground md:text-3xl lg:text-4xl">
             {t(
               'Pakistan Laws for the Protection of Girls & Women: Complete Guide',
               'پاکستان میں بچیوں اور خواتین کے قانونی تحفظ کے قوانین: مکمل گائیڈ'
             )}
           </h1>
 
-          <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+          <p className="text-sm md:text-[15px] text-muted-foreground leading-relaxed">
             {t(
               'A comprehensive legal reference detailing all 16 statutes enacted in Pakistan to shield girls and women from violence, statutory rape, child sexual exploitation, underage marriage, and harassment. Learn why each law exists, key statutory sections, trial protections, and emergency hotlines.',
               'پاکستان میں بچیوں اور خواتین کو زیادتی، جنسی بدسلوکی، کم عمری کی شادی اور تشدد سے بچانے کے لیے بنائے گئے تمام 16 قوانین کی تفصیلی گائیڈ۔ جانیے ہر قانون کیوں بنا، اہم دفعات، عدالتی طریقہ کار اور فوری ہنگامی ہیلپ لائنز۔'
@@ -709,7 +709,7 @@ export default function GirlsProtectionGuidePage() {
 
       {/* Emergency Helplines Box */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <PhoneCall className="h-5 w-5 text-red-500 animate-pulse" />
             <h2 className="text-lg md:text-xl font-bold text-foreground">
@@ -724,20 +724,20 @@ export default function GirlsProtectionGuidePage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {emergencyHelplines.map((hl) => (
             <Card key={hl.number} className={cn('border shadow-xs hover:border-primary/40 transition-colors', hl.color)}>
-              <CardContent className="p-4 space-y-2">
+              <CardContent className="p-3 space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-2xl font-black tracking-tight">{hl.number}</span>
+                  <span className="text-xl font-black tracking-tight">{hl.number}</span>
                   <a
                     href={`tel:${hl.number}`}
-                    className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-background border border-current hover:scale-105 transition-transform"
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-current bg-background hover:scale-105 transition-transform"
                     aria-label={`Call ${hl.number}`}
                   >
-                    <PhoneCall className="h-3.5 w-3.5" />
+                    <PhoneCall className="h-3 w-3" />
                   </a>
                 </div>
                 <div>
-                  <h3 className="text-xs font-bold">{t(hl.title, hl.titleUrdu)}</h3>
-                  <p className="text-[11px] opacity-80 leading-snug mt-0.5">{t(hl.desc, hl.descUrdu)}</p>
+                  <h3 className="text-[11px] font-bold">{t(hl.title, hl.titleUrdu)}</h3>
+                  <p className="mt-0.5 text-[10px] leading-snug opacity-80">{t(hl.desc, hl.descUrdu)}</p>
                 </div>
               </CardContent>
             </Card>
@@ -859,12 +859,12 @@ export default function GirlsProtectionGuidePage() {
             <Card key={law.slug} className="border border-border/80 shadow-xs hover:border-primary/40 transition-colors">
               <CardHeader className="pb-3 border-b border-border/60 bg-muted/20">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
+                  <div className="min-w-0 space-y-1">
+                    <div className="flex min-w-0 items-start gap-2">
                       <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary text-[11px] font-bold">
                         {law.number}
                       </span>
-                      <h3 className="text-base md:text-lg font-bold text-foreground">
+                      <h3 className="min-w-0 break-words text-base font-bold text-foreground md:text-lg">
                         {lang === 'ur' && law.titleUrdu ? law.titleUrdu : law.title}
                       </h3>
                     </div>
@@ -875,7 +875,7 @@ export default function GirlsProtectionGuidePage() {
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
                     <Badge variant="outline" className="text-[10px] font-medium">
                       {law.year}
                     </Badge>
@@ -884,7 +884,7 @@ export default function GirlsProtectionGuidePage() {
                     </Badge>
                     <Link
                       href={`/laws/${law.slug}`}
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline ml-2"
+                      className="inline-flex basis-full shrink-0 items-center gap-1 text-xs font-semibold text-primary hover:underline sm:ml-2 sm:basis-auto"
                     >
                       <span>{t('View Statute', 'مکمل متن')}</span>
                       <ArrowRight className={cn('h-3.5 w-3.5', lang === 'ur' && 'rotate-180')} />

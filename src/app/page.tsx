@@ -12,7 +12,7 @@ import {
   Shield as ShieldIcon, ShieldAlert, Handshake, Newspaper,
   Flame, Eye, Map,
   CalendarDays,
-  Building, Wheat,
+  Building, Wheat, Trophy, Medal,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -531,18 +531,18 @@ export default function HomePage() {
                       <div className="flex items-center justify-between gap-3 relative z-10">
                         {i === 0 ? (
                           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 text-xs font-extrabold shadow-2xs">
-                            <span>🏆</span>
+                            <Trophy className="h-4 w-4 text-amber-600" aria-hidden="true" />
                             <span>#01</span>
                             <span className="text-[10px] font-medium opacity-80">{t('Top Ranked', 'سب سے مقبول')}</span>
                           </span>
                         ) : i === 1 ? (
                           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-400/30 text-xs font-extrabold shadow-2xs">
-                            <span>🥈</span>
+                            <Medal className="h-4 w-4 text-slate-500" aria-hidden="true" />
                             <span>#02</span>
                           </span>
                         ) : i === 2 ? (
                           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/15 text-orange-700 dark:text-orange-400 border border-orange-500/30 text-xs font-extrabold shadow-2xs">
-                            <span>🥉</span>
+                            <Medal className="h-4 w-4 text-orange-600" aria-hidden="true" />
                             <span>#03</span>
                           </span>
                         ) : (

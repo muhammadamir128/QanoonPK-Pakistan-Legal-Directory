@@ -5,7 +5,7 @@ import Link from 'next/link'
 import {
   ChevronRight, Search, HelpCircle, ChevronDown, ArrowRight,
   Lightbulb, BookOpen, ExternalLink, FileText, ThumbsUp, ThumbsDown,
-  ShieldAlert, Send, Sparkles, Phone, CheckCircle2
+  ShieldAlert, Send, Sparkles, Phone, CheckCircle2, Siren, Laptop, HeartHandshake, Baby
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -143,16 +143,16 @@ export default function FAQPage() {
         </div>
         <div className="flex items-center gap-3 flex-wrap font-medium">
           <Badge variant="outline" className="bg-background/80 py-1 text-xs">
-            🚓 Police: <strong className="ml-1 text-primary">15</strong>
+            <Siren className="mr-1 h-3.5 w-3.5 text-primary" aria-hidden="true" /> Police: <strong className="ml-1 text-primary">15</strong>
           </Badge>
           <Badge variant="outline" className="bg-background/80 py-1 text-xs">
-            💻 FIA Cyber Crime: <strong className="ml-1 text-primary">1991</strong>
+            <Laptop className="mr-1 h-3.5 w-3.5 text-primary" aria-hidden="true" /> FIA Cyber Crime: <strong className="ml-1 text-primary">1991</strong>
           </Badge>
           <Badge variant="outline" className="bg-background/80 py-1 text-xs">
-            👩 Women Abuse Helpline: <strong className="ml-1 text-primary">1043</strong>
+            <HeartHandshake className="mr-1 h-3.5 w-3.5 text-primary" aria-hidden="true" /> Women Abuse Helpline: <strong className="ml-1 text-primary">1043</strong>
           </Badge>
           <Badge variant="outline" className="bg-background/80 py-1 text-xs">
-            👶 Child Protection: <strong className="ml-1 text-primary">1121</strong>
+            <Baby className="mr-1 h-3.5 w-3.5 text-primary" aria-hidden="true" /> Child Protection: <strong className="ml-1 text-primary">1121</strong>
           </Badge>
         </div>
       </div>
