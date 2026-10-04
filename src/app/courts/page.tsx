@@ -372,33 +372,34 @@ export default function CourtsPage() {
       </div>
 
       {/* Interactive Appeal Pathway Simulator (NEW FEATURE) */}
-      <section className="mb-12">
-        <div className="flex items-center justify-between gap-2 mb-4">
+      {/* Interactive Appeal Pathway Simulator (Compact Height) */}
+      <section className="mb-6">
+        <div className="flex items-center justify-between gap-2 mb-2.5">
           <div>
-            <h2 className="text-lg md:text-xl font-bold flex items-center gap-2">
-              <Layers className="h-5 w-5 text-primary" />
+            <h2 className="text-base sm:text-lg font-bold flex items-center gap-1.5">
+              <Layers className="h-4 w-4 text-primary" />
               {t('Interactive Appeal Pathway Simulator', 'انٹرایکٹو اپیل روٹ سمیلیٹر')}
             </h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="text-[11px] text-muted-foreground">
               {t('Select a case category to see its starting court, appellate forum, and final appeal route.', 'کیس کی قسم منتخب کریں اور دیکھیں کہ کیس کہاں شروع ہوگا اور اپیل کس عدالت میں جائے گی۔')}
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 mb-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1.5 mb-2.5">
           {APPEAL_PATHWAYS.map((p) => (
             <button
               key={p.id}
               onClick={() => setActivePathway(p.id)}
               className={cn(
-                'flex flex-col p-3 rounded-xl border text-left transition-all cursor-pointer text-xs',
+                'flex flex-col p-2 rounded-lg border text-left transition-all cursor-pointer text-xs',
                 activePathway === p.id
                   ? 'bg-primary/10 border-primary text-primary font-semibold shadow-xs ring-1 ring-primary/30'
                   : 'bg-card border-border/70 hover:bg-accent hover:border-border text-foreground/80'
               )}
             >
-              <span className="font-semibold text-xs leading-snug">{lang === 'ur' ? p.titleUrdu : p.title}</span>
-              <span className="text-[10px] text-muted-foreground mt-1">{p.badge}</span>
+              <span className="font-semibold text-xs leading-tight truncate w-full">{lang === 'ur' ? p.titleUrdu : p.title}</span>
+              <span className="text-[9px] text-muted-foreground mt-0.5">{p.badge}</span>
             </button>
           ))}
         </div>
@@ -407,31 +408,31 @@ export default function CourtsPage() {
         {(() => {
           const path = APPEAL_PATHWAYS.find((p) => p.id === activePathway) || APPEAL_PATHWAYS[0]
           return (
-            <Card className="border-primary/30 bg-gradient-to-b from-card to-primary/5 shadow-sm">
-              <CardContent className="p-4 sm:p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Badge style={{ backgroundColor: `${path.color}18`, color: path.color }} className="border-none text-xs">
+            <Card className="border-primary/30 bg-gradient-to-b from-card to-primary/5 shadow-xs">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex items-center gap-2 mb-2.5">
+                  <Badge style={{ backgroundColor: `${path.color}18`, color: path.color }} className="border-none text-[10px] px-1.5 py-0">
                     {path.badge}
                   </Badge>
-                  <h3 className="font-bold text-sm sm:text-base">
+                  <h3 className="font-bold text-xs sm:text-sm text-foreground">
                     {lang === 'ur' ? path.titleUrdu : path.title} — {t('Judicial Appeal Pathway', 'عدالتی اپیل کا مکمل راستہ')}
                   </h3>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 relative">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 relative">
                   {path.steps.map((step, idx) => (
-                    <div key={idx} className="relative p-4 rounded-xl bg-card border border-border/60 shadow-xs flex flex-col justify-between">
+                    <div key={idx} className="relative p-2.5 sm:p-3 rounded-lg bg-card border border-border/60 shadow-2xs flex flex-col justify-between">
                       <div>
-                        <div className="flex items-center justify-between gap-2 mb-2">
-                          <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+                        <div className="flex items-center justify-between gap-1 mb-1">
+                          <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">
                             {idx === 0 ? t('Step 1: Trial Court', 'پہلا مرحلہ: ٹرائل کورٹ') : idx === 1 ? t('Step 2: Appellate Court', 'دوسرا مرحلہ: اپیل کورٹ') : t('Step 3: Apex Court', 'تیسرا مرحلہ: اعلیٰ ترین عدالت')}
                           </span>
-                          <span className="flex h-5 w-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold items-center justify-center">
+                          <span className="flex h-4 w-4 rounded-full bg-primary/10 text-primary text-[9px] font-bold items-center justify-center shrink-0">
                             {idx + 1}
                           </span>
                         </div>
-                        <h4 className="font-bold text-xs sm:text-sm text-foreground mb-1.5">{step.court}</h4>
-                        <p className="text-xs text-muted-foreground leading-relaxed">{step.desc}</p>
+                        <h4 className="font-bold text-xs text-foreground mb-1 leading-snug">{step.court}</h4>
+                        <p className="text-[11px] text-muted-foreground leading-snug">{step.desc}</p>
                       </div>
                     </div>
                   ))}
@@ -613,51 +614,51 @@ function CourtLevelCard({
   const Icon = ICONS[level.icon] ?? Landmark
   return (
     <Card
-      className="overflow-hidden hover:shadow-md transition-shadow border-border/60"
+      className="overflow-hidden hover:shadow-xs transition-shadow border-border/60 shadow-2xs"
     >
-      <div className="h-1.5 w-full" style={{ backgroundColor: level.color }} />
-      <CardHeader className="pb-3">
-        <div className="flex items-start gap-3 sm:gap-4">
+      <div className="h-1 w-full" style={{ backgroundColor: level.color }} />
+      <CardHeader className="p-3 sm:p-4 pb-2">
+        <div className="flex items-center gap-3">
           <div
-            className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-xl text-white shrink-0 shadow-sm"
+            className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg text-white shrink-0 shadow-2xs"
             style={{ backgroundColor: level.color }}
           >
-            <Icon className="h-6 w-6 sm:h-7 sm:w-7" />
+            <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-baseline gap-2 flex-wrap mb-1">
-              <span className="text-[10px] font-mono text-muted-foreground uppercase font-semibold">Tier {index + 1}</span>
-              <Badge variant="secondary" className="text-[10px]" style={{ color: level.color }}>
+            <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+              <span className="text-[9px] font-mono text-muted-foreground uppercase font-semibold">Tier {index + 1}</span>
+              <Badge variant="secondary" className="text-[9px] px-1.5 py-0" style={{ color: level.color }}>
                 {lang === 'ur' ? level.jurisdictionUrdu : level.jurisdiction}
               </Badge>
             </div>
-            <CardTitle className="text-base sm:text-lg md:text-xl leading-tight font-bold text-foreground">
+            <CardTitle className="text-sm sm:text-base leading-tight font-bold text-foreground">
               {lang === 'ur' ? level.nameUrdu : level.name}
             </CardTitle>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3.5">
-        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+      <CardContent className="px-3 sm:px-4 pb-3 sm:pb-3.5 pt-0 space-y-2">
+        <p className="text-xs text-muted-foreground leading-snug">
           {lang === 'ur' ? level.descriptionUrdu : level.description}
         </p>
-        <div className="grid md:grid-cols-2 gap-3 pt-3 border-t border-border/40">
+        <div className="grid md:grid-cols-2 gap-2 pt-2 border-t border-border/40">
           <div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wide flex items-center gap-1 mb-1 font-semibold">
+            <p className="text-[9px] text-muted-foreground uppercase tracking-wide flex items-center gap-1 mb-0.5 font-semibold">
               <MapPin className="h-3 w-3 text-primary" />
               {t('Principal Benches & Seats', 'نشستیں و رجسٹریاں')}
             </p>
-            <p className="text-xs leading-relaxed text-foreground/90">{lang === 'ur' ? level.seatsUrdu : level.seats}</p>
+            <p className="text-[11px] leading-snug text-foreground/90">{lang === 'ur' ? level.seatsUrdu : level.seats}</p>
           </div>
           <div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wide flex items-center gap-1 mb-1 font-semibold">
+            <p className="text-[9px] text-muted-foreground uppercase tracking-wide flex items-center gap-1 mb-0.5 font-semibold">
               <FileText className="h-3 w-3 text-primary" />
               {t('Jurisdiction & Examples', 'دائرہ اختیار و اہم کیسز')}
             </p>
-            <ul className="space-y-1">
+            <ul className="space-y-0.5">
               {level.examples.map((ex, i) => (
-                <li key={i} className="text-xs leading-relaxed flex items-start gap-1.5 text-foreground/90">
-                  <span className="inline-flex h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                <li key={i} className="text-[11px] leading-snug flex items-start gap-1.5 text-foreground/90">
+                  <span className="inline-flex h-1 w-1 rounded-full bg-primary mt-1.5 shrink-0" />
                   {lang === 'ur' ? level.examplesUrdu[i] : ex}
                 </li>
               ))}
