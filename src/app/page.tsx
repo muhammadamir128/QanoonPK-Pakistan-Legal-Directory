@@ -406,7 +406,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5" data-gsap="stagger">
           {loading
             ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
             : paginatedCategories.map((cat, i) => (
@@ -502,7 +502,7 @@ export default function HomePage() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" data-gsap="stagger">
             {stats.trending.map((law, i) => {
               const rankColor =
                 i === 0
@@ -610,7 +610,7 @@ export default function HomePage() {
               {t('View all', 'تمام دیکھیں')} <ChevronRight className={cn('h-4 w-4', lang === 'ur' && 'rotate-180')} />
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" data-gsap="stagger">
             {stats.featuredLawyers.map((lawyer, i) => (
               <Link key={lawyer.slug} href={`/lawyers/${lawyer.slug}`} className="group block animate-fade-in-up" style={{ animationDelay: `${i * 60}ms` }}>
                 <Card className="hover:shadow-md hover:border-primary/30 transition-all h-full">

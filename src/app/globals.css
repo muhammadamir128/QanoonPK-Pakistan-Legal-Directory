@@ -391,4 +391,59 @@ body,
   height: 0 !important;
 }
 
+/* Smooth Scroll & GSAP ScrollTrigger Performance Optimizations */
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Hardware accelerated transform for silky smooth scrolling animations */
+[data-gsap],
+.gsap-fade-up,
+.gsap-stagger > * {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+/* Card hover micro-interactions */
+.card-hover-lift {
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.card-hover-lift:hover {
+  transform: translateY(-4px);
+}
+
+/* Ultra-slim stylish scrollbar for dropdown menus and popovers */
+.dropdown-scrollbar {
+  scrollbar-width: thin !important;
+  scrollbar-color: color-mix(in oklch, var(--primary) 40%, transparent) transparent !important;
+}
+
+.dropdown-scrollbar::-webkit-scrollbar {
+  width: 4px !important;
+  height: 4px !important;
+}
+
+.dropdown-scrollbar::-webkit-scrollbar-track {
+  background: transparent !important;
+  margin: 6px 0 !important;
+}
+
+.dropdown-scrollbar::-webkit-scrollbar-thumb {
+  background-color: color-mix(in oklch, var(--primary) 35%, transparent) !important;
+  border-radius: 9999px !important;
+  border: none !important;
+}
+
+.dropdown-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: var(--primary) !important;
+}
+
+
 

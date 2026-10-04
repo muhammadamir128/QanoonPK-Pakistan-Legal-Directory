@@ -10,6 +10,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { AiAssistantWidget } from "@/components/ai-assistant-widget";
 import { ScrollToTop } from "@/components/scroll-to-top";
+import { ScrollAnimationProvider } from "@/components/scroll-animation-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -113,13 +114,15 @@ export default function RootLayout({
         >
           <LanguageProvider>
             <AuthProvider>
-              <SiteHeader />
-              <main className="flex-1 flex flex-col">{children}</main>
-              <SiteFooter />
-              <AiAssistantWidget />
-              <ScrollToTop />
-              <Toaster />
-              <SonnerToaster position="top-center" richColors />
+              <ScrollAnimationProvider>
+                <SiteHeader />
+                <main className="flex-1 flex flex-col">{children}</main>
+                <SiteFooter />
+                <AiAssistantWidget />
+                <ScrollToTop />
+                <Toaster />
+                <SonnerToaster position="top-center" richColors />
+              </ScrollAnimationProvider>
             </AuthProvider>
           </LanguageProvider>
         </ThemeProvider>

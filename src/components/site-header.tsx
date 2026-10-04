@@ -145,7 +145,7 @@ export function SiteHeader() {
                       <ChevronDown className="h-3.5 w-3.5 opacity-70" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="center" className="w-[min(32rem,calc(100vw-2rem))] max-h-[min(70vh,32rem)] overflow-y-auto overscroll-contain [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin] p-2 shadow-lg">
+                  <DropdownMenuContent align="center" className="w-[min(32rem,calc(100vw-2rem))] max-h-[min(70vh,30rem)] overflow-y-auto overscroll-contain dropdown-scrollbar p-2.5 shadow-xl border-border/80 rounded-xl">
                     <DropdownMenuLabel className="text-xs text-muted-foreground">
                       {t('Interactive Tools', 'انٹرایکٹو اوزار')}
                     </DropdownMenuLabel>
