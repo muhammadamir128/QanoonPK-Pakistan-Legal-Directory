@@ -2,10 +2,11 @@
 
 import * as React from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, X, Loader2, BookText, ArrowRight, Sparkles, Scale, FileText } from 'lucide-react'
+import { Search, X, Loader2, BookText, ArrowRight, Sparkles, Scale, FileText, Mic, MicOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useLanguage } from '@/components/language-provider'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 
 interface SearchModalProps {
   open: boolean
@@ -41,8 +42,61 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
   const [query, setQuery] = React.useState('')
   const [results, setResults] = React.useState<SearchResultItem[]>([])
   const [loading, setLoading] = React.useState(false)
+  const [isListening, setIsListening] = React.useState(false)
+  const recognitionRef = React.useRef<any>(null)
   const inputRef = React.useRef<HTMLInputElement>(null)
   const isUrdu = lang === 'ur'
+
+  const toggleVoiceSearch = () => {
+    if (typeof window === 'undefined') return
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SpeechRecognition) {
+      toast.error(t('Voice search is not supported by your browser', 'آپ کا براؤزر آواز سے تلاش کی سہولت نہیں دیتا'))
+      return
+    }
+
+    if (isListening) {
+      recognitionRef.current?.stop()
+      setIsListening(false)
+      return
+    }
+
+    try {
+      const recognition = new SpeechRecognition()
+      recognitionRef.current = recognition
+      recognition.lang = lang === 'ur' ? 'ur-PK' : 'en-US'
+      recognition.continuous = false
+      recognition.interimResults = false
+
+      recognition.onstart = () => {
+        setIsListening(true)
+        toast.info(t('Listening... Speak now', 'سن رہے ہیں... اب بولیں'))
+      }
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0]?.[0]?.transcript
+        if (transcript) {
+          setQuery(transcript)
+          setIsListening(false)
+          executeSearch(transcript)
+        }
+      }
+
+      recognition.onerror = (e: any) => {
+        console.error('Speech recognition error:', e)
+        setIsListening(false)
+      }
+
+      recognition.onend = () => {
+        setIsListening(false)
+      }
+
+      recognition.start()
+    } catch (err) {
+      console.error(err)
+      setIsListening(false)
+    }
+  }
 
   // Focus input on open & lock background scroll
   React.useEffect(() => {
@@ -172,6 +226,23 @@ export function SearchModal({ open, onOpenChange }: SearchModalProps) {
               <X className="h-4 w-4" />
             </button>
           )}
+
+          {/* Voice Search Mic Button */}
+          <button
+            type="button"
+            onClick={toggleVoiceSearch}
+            className={cn(
+              'p-2 rounded-lg transition-all shrink-0',
+              isListening
+                ? 'bg-red-500 text-white animate-pulse shadow-md shadow-red-500/30'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/80',
+              isUrdu ? 'mr-1' : 'ml-1'
+            )}
+            title={t(isListening ? 'Listening...' : 'Voice Search (Urdu / English)', isListening ? 'سن رہے ہیں...' : 'آواز سے تلاش کریں')}
+            aria-label="Voice Search"
+          >
+            {isListening ? <MicOff className="h-4 w-4 animate-bounce" /> : <Mic className="h-4 w-4" />}
+          </button>
 
           <Button
             type="submit"

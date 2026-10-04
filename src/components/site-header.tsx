@@ -7,6 +7,7 @@ import {
   Search, Languages, Sun, Moon, Menu, Scale, BookText, Compass, LayoutDashboard,
   Bot, Landmark, BookOpen, ChevronDown, Briefcase, FilePlus, HelpCircle, GitCompare, Check,
   LogIn, UserPlus, LogOut, Bookmark, User, Info, ShieldCheck, ShieldAlert, GraduationCap,
+  Calculator, HeartHandshake, BookmarkCheck, FileText, BellRing, PhoneCall,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -29,6 +30,7 @@ import { cn } from '@/lib/utils'
 const navItems = [
   { href: '/laws', labelEn: 'Laws', labelUr: 'قوانین' },
   { href: '/categories', labelEn: 'Categories', labelUr: 'اقسام' },
+  { href: '/calculators', labelEn: 'Calculators', labelUr: 'کیلکولیٹرز' },
   { href: '/courts', labelEn: 'Courts', labelUr: 'عدالتیں' },
   { href: '/lawyers', labelEn: 'Lawyers', labelUr: 'وکلاء' },
   { href: '/templates', labelEn: 'Templates', labelUr: 'ٹیمپلیٹس' },
@@ -37,6 +39,12 @@ const navItems = [
 ]
 
 const toolsItems = [
+  { href: '/calculators', labelEn: 'Legal Calculators', labelUr: 'قانونی کیلکولیٹرز', icon: 'Calculator', descEn: 'Property Stamp Duty, Inheritance & Court Fee', descUr: 'سٹامپ ڈیوٹی، وراثت و کورٹ فیس' },
+  { href: '/legal-aid', labelEn: 'Legal Aid & Helplines', labelUr: 'قانونی امداد و ہیلپ لائنز', icon: 'HeartHandshake', descEn: '24/7 Emergency helplines & free legal aid', descUr: '24 گھنٹے ہنگامی ہیلپ لائنز اور مفت وکیل' },
+  { href: '/bookmarks', labelEn: 'Saved Laws', labelUr: 'محفوظ قوانین', icon: 'BookmarkCheck', descEn: 'Your bookmarked statutes and sections', descUr: 'آپ کے محفوظ کردہ قوانین' },
+  { href: '/blog', labelEn: 'Legal Guides & Blog', labelUr: 'قانونی رہنمائی و بلاگ', icon: 'FileText', descEn: 'FIR, Cheque Bounce, Khula, Cyber Crime', descUr: 'ایف آئی آر، چیک باؤنس، خلع اور سائبر کرائم' },
+  { href: '/case-tracker', labelEn: 'Case Tracker & Causelists', labelUr: 'کیس ٹریکر و کاز لسٹ', icon: 'Landmark', descEn: 'Supreme Court & High Courts status', descUr: 'سپریم کورٹ اور ہائی کورٹس کے پورٹلز' },
+  { href: '/updates', labelEn: 'Gazette & Legal Updates', labelUr: 'گزٹ الرٹس و نئی ترامیم', icon: 'BellRing', descEn: 'Recently enacted Acts & Amendments', descUr: 'تازہ ترین منظور شدہ قوانین اور ترامیم' },
   { href: '/guides/student-protection', labelEn: 'Student Protection Guide', labelUr: 'طلبہ کے تحفظ کی رہنمائی', icon: 'GraduationCap', descEn: 'Student rights, HEC policies & complaints', descUr: 'طلبہ کے حقوق، HEC پالیسیاں اور شکایات' },
   { href: '/guides/girls-protection', labelEn: 'Girls Protection Guide', labelUr: 'بچیوں کے تحفظ کے قوانین', icon: 'ShieldCheck', descEn: '16 laws, rights & emergency helplines', descUr: '16 قوانین، حقوق اور ہنگامی ہیلپ لائنز' },
   { href: '/guides/self-defence', labelEn: 'Self-Defence Guide', labelUr: 'سیلف ڈیفنس (حقِ دفاع)', icon: 'ShieldAlert', descEn: 'PPC 96-106 & lethal force rules', descUr: 'پی پی سی 96 تا 106 اور شرائط' },
@@ -285,9 +293,15 @@ export function SiteHeader() {
                       )}
                     </div>
                     <DropdownMenuItem asChild>
-                      <Link href="/laws" className="cursor-pointer text-xs py-2 gap-2 rounded-md">
-                        <Bookmark className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span>{t('Browse Laws', 'قوانین ملاحظہ کریں')}</span>
+                      <Link href="/bookmarks" className="cursor-pointer text-xs py-2 gap-2 rounded-md">
+                        <BookmarkCheck className="h-3.5 w-3.5 text-primary" />
+                        <span>{t('Saved Laws', 'محفوظ قوانین')}</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/calculators" className="cursor-pointer text-xs py-2 gap-2 rounded-md">
+                        <Calculator className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span>{t('Legal Calculators', 'قانونی کیلکولیٹرز')}</span>
                       </Link>
                     </DropdownMenuItem>
                     {(session.user as any)?.role === 'admin' && (
@@ -509,6 +523,12 @@ export function SiteHeader() {
 
 function iconFor(href: string) {
   switch (href) {
+    case '/calculators': return Calculator
+    case '/legal-aid': return HeartHandshake
+    case '/bookmarks': return BookmarkCheck
+    case '/blog': return FileText
+    case '/case-tracker': return Landmark
+    case '/updates': return BellRing
     case '/guides/self-defence': return ShieldAlert
     case '/guides/girls-protection': return ShieldCheck
     case '/laws': return BookText
@@ -528,6 +548,11 @@ function iconFor(href: string) {
 
 function iconForTool(name: string) {
   switch (name) {
+    case 'Calculator': return Calculator
+    case 'HeartHandshake': return HeartHandshake
+    case 'BookmarkCheck': return BookmarkCheck
+    case 'FileText': return FileText
+    case 'BellRing': return BellRing
     case 'GraduationCap': return GraduationCap
     case 'ShieldAlert': return ShieldAlert
     case 'ShieldCheck': return ShieldCheck

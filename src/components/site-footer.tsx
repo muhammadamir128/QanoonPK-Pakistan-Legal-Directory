@@ -6,7 +6,8 @@ import {
   Scale, Mail, Github, BookText, Compass,
   Briefcase, FileText, GitCompare, Bot, Landmark,
   HelpCircle, ExternalLink, MapPin, Sparkles,
-  Layers, ArrowUpRight, CheckCircle
+  Layers, ArrowUpRight, CheckCircle, Calculator,
+  HeartHandshake, BookmarkCheck, BellRing, BookOpen
 } from 'lucide-react'
 import { useLanguage } from '@/components/language-provider'
 import { NewsletterSignup } from '@/components/newsletter-signup'
@@ -135,9 +136,9 @@ export function SiteFooter() {
                 </Link>
               </li>
               <li>
-                <Link href="/finder" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group">
-                  <Compass className="h-3.5 w-3.5 text-muted-foreground/70 group-hover:text-primary transition-colors" />
-                  <span>{t('Which Law Applies?', 'کون سا قانون؟')}</span>
+                <Link href="/calculators" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group">
+                  <Calculator className="h-3.5 w-3.5 text-muted-foreground/70 group-hover:text-primary transition-colors" />
+                  <span>{t('Legal Calculators', 'قانونی کیلکولیٹرز')}</span>
                 </Link>
               </li>
               <li>
@@ -158,6 +159,12 @@ export function SiteFooter() {
                   <span>{t('Compare Laws', 'قوانین کا موازنہ')}</span>
                 </Link>
               </li>
+              <li>
+                <Link href="/bookmarks" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group">
+                  <BookmarkCheck className="h-3.5 w-3.5 text-muted-foreground/70 group-hover:text-primary transition-colors" />
+                  <span>{t('Saved Laws', 'محفوظ قوانین')}</span>
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -167,6 +174,30 @@ export function SiteFooter() {
               {t('Tools & Resources', 'اوزار اور وسائل')}
             </h3>
             <ul className="space-y-2.5 text-sm">
+              <li>
+                <Link href="/legal-aid" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group">
+                  <HeartHandshake className="h-3.5 w-3.5 text-muted-foreground/70 group-hover:text-primary transition-colors" />
+                  <span>{t('Legal Aid & Helplines', 'قانونی امداد و ہیلپ لائنز')}</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/blog" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group">
+                  <BookOpen className="h-3.5 w-3.5 text-muted-foreground/70 group-hover:text-primary transition-colors" />
+                  <span>{t('Legal Guides & Blog', 'قانونی مضامین و گائیڈز')}</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/case-tracker" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group">
+                  <Landmark className="h-3.5 w-3.5 text-muted-foreground/70 group-hover:text-primary transition-colors" />
+                  <span>{t('Court Case Tracker', 'کیس ٹریکر و کاز لسٹ')}</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/updates" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group">
+                  <BellRing className="h-3.5 w-3.5 text-muted-foreground/70 group-hover:text-primary transition-colors" />
+                  <span>{t('Gazette & Updates', 'گزٹ و نئی ترامیم')}</span>
+                </Link>
+              </li>
               <li>
                 <Link href="/finder" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group">
                   <Compass className="h-3.5 w-3.5 text-muted-foreground/70 group-hover:text-primary transition-colors" />

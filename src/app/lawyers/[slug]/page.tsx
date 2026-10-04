@@ -406,6 +406,19 @@ export default function LawyerDetailPage() {
                   <Send className="h-4 w-4 mr-2" />
                   {t('Send Message', 'پیغام بھیجیں')}
                 </Button>
+                {lawyer?.phone && (
+                  <div className="pt-1">
+                    <a
+                      href={`https://wa.me/${lawyer.phone.replace(/[^0-9]/g, '').startsWith('0') ? '92' + lawyer.phone.replace(/[^0-9]/g, '').substring(1) : lawyer.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Assalam-o-Alaikum ${lawyer.name}, I found your verified profile on QanoonPK (Pakistan Legal Directory) and would like to request legal assistance.`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full inline-flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition-colors"
+                    >
+                      <MessageSquare className="h-3.5 w-3.5" />
+                      <span>{t('Instant WhatsApp Consultation', 'واٹس ایپ پر فوری مشاورت')}</span>
+                    </a>
+                  </div>
+                )}
                 <p className="text-[10px] text-muted-foreground text-center">
                   {t('This form is for inquiries only, not legal advice.', 'یہ فارم صرف استفسار کے لیے ہے، قانونی مشورہ نہیں۔')}
                 </p>
