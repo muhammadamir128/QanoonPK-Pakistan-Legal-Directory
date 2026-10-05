@@ -9,8 +9,19 @@ if (!fs.existsSync(schemaPath)) {
 
 let schema = fs.readFileSync(schemaPath, 'utf8')
 
-// Check DATABASE_URL from environment
-const dbUrl = process.env.DATABASE_URL || ''
+// Check DATABASE_URL from environment or .env file
+let dbUrl = process.env.DATABASE_URL || ''
+if (!dbUrl) {
+  const envPath = path.join(__dirname, '..', '.env')
+  if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, 'utf8')
+    const match = envContent.match(/DATABASE_URL=["']?([^"'\r\n]+)["']?/)
+    if (match) {
+      dbUrl = match[1]
+      process.env.DATABASE_URL = dbUrl
+    }
+  }
+}
 const isPostgres = dbUrl.startsWith('postgres://') || dbUrl.startsWith('postgresql://')
 
 const targetProvider = isPostgres ? 'postgresql' : 'sqlite'

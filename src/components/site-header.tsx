@@ -30,7 +30,6 @@ import { cn } from '@/lib/utils'
 const navItems = [
   { href: '/laws', labelEn: 'Laws', labelUr: 'قوانین' },
   { href: '/categories', labelEn: 'Categories', labelUr: 'اقسام' },
-  { href: '/calculators', labelEn: 'Calculators', labelUr: 'کیلکولیٹرز' },
   { href: '/courts', labelEn: 'Courts', labelUr: 'عدالتیں' },
   { href: '/lawyers', labelEn: 'Lawyers', labelUr: 'وکلاء' },
   { href: '/templates', labelEn: 'Templates', labelUr: 'ٹیمپلیٹس' },

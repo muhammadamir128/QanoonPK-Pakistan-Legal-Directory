@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 import { categories, laws, lawTags } from '../src/lib/seed-data'
 import { lawyers, docTemplates } from '../src/lib/lawyers-templates-data'
+import { blogPostsData, legalUpdatesData, legalAidOrgsData, courtPortalsData } from '../src/lib/new-features-data'
 
 const db = new PrismaClient()
 
@@ -60,10 +61,7 @@ async function main() {
 
     let lawId: string
     if (existing) {
-      await db.law.update({ where: { id: existing.id }, data })
-      lawId = existing.id
-      await db.section.deleteMany({ where: { lawId } })
-      await db.amendment.deleteMany({ where: { lawId } })
+      continue
     } else {
       const created = await db.law.create({ data })
       lawId = created.id
@@ -180,12 +178,55 @@ async function main() {
     }
   }
 
+  // 5. Insert Blog Posts
+  console.log(`Inserting ${blogPostsData.length} blog posts...`)
+  for (const post of blogPostsData) {
+    await db.blogPost.upsert({
+      where: { slug: post.slug },
+      update: post,
+      create: post,
+    })
+  }
+
+  // 6. Insert Legal Updates
+  console.log(`Inserting ${legalUpdatesData.length} legal updates...`)
+  for (const update of legalUpdatesData) {
+    await db.legalUpdate.upsert({
+      where: { slug: update.slug },
+      update: update,
+      create: update,
+    })
+  }
+
+  // 7. Insert Legal Aid Organizations
+  console.log(`Inserting ${legalAidOrgsData.length} legal aid organizations...`)
+  await db.legalAidOrg.deleteMany({})
+  for (const org of legalAidOrgsData) {
+    await db.legalAidOrg.create({
+      data: org,
+    })
+  }
+
+  // 8. Insert Court Portals
+  console.log(`Inserting ${courtPortalsData.length} court portals...`)
+  for (const cp of courtPortalsData) {
+    await db.courtPortal.upsert({
+      where: { slug: cp.slug },
+      update: cp,
+      create: cp,
+    })
+  }
+
   console.log('✅ Seed completed successfully!')
   console.log({
     categories: categories.length,
     laws: laws.length,
     lawyers: lawyers.length,
     templates: docTemplates.length,
+    blogPosts: blogPostsData.length,
+    legalUpdates: legalUpdatesData.length,
+    legalAidOrgs: legalAidOrgsData.length,
+    courtPortals: courtPortalsData.length,
   })
 }
 

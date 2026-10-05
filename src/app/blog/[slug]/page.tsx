@@ -12,18 +12,58 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useLanguage } from '@/components/language-provider'
-import { BLOG_POSTS } from '@/lib/blog-data'
 import { toast } from 'sonner'
+
+interface BlogPostDetail {
+  slug: string
+  title: string
+  titleUrdu: string
+  category: string
+  categoryUrdu: string
+  readTime: string
+  author: string
+  authorUrdu?: string
+  date: string
+  summary: string
+  summaryUrdu: string
+  content?: string
+  contentUrdu?: string
+  tags?: string[] | string
+}
 
 export default function BlogPostDetailPage() {
   const { t, lang } = useLanguage()
   const params = useParams<{ slug: string }>()
   const isUrdu = lang === 'ur'
 
-  const post = React.useMemo(() => {
-    return BLOG_POSTS.find((p) => p.slug === params.slug)
+  const [post, setPost] = React.useState<BlogPostDetail | null>(null)
+  const [loading, setLoading] = React.useState(true)
+
+  React.useEffect(() => {
+    if (!params.slug) return
+    setLoading(true)
+    fetch(`/api/blog/${params.slug}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.item) {
+          setPost(data.item)
+        }
+      })
+      .catch((err) => console.error(err))
+      .finally(() => setLoading(false))
   }, [params.slug])
+
+  if (loading) {
+    return (
+      <div className="container mx-auto max-w-4xl py-12 px-4 space-y-6">
+        <Skeleton className="h-6 w-1/4" />
+        <Skeleton className="h-10 w-3/4" />
+        <Skeleton className="h-40 w-full" />
+      </div>
+    )
+  }
 
   if (!post) {
     return (

@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -221,3 +221,93 @@ model NewsletterSubscriber {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model BlogPost {
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  title        String
+  titleUrdu    String
+  category     String
+  categoryUrdu String
+  readTime     String
+  author       String
+  authorUrdu   String?
+  date         String
+  summary      String
+  summaryUrdu  String
+  content      String?
+  contentUrdu  String?
+  tags         String?  // JSON array
+  published    Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([category])
+  @@index([slug])
+}
+
+model LegalUpdate {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  titleEn       String
+  titleUrdu     String
+  year          Int
+  dateEn        String
+  dateUrdu      String
+  jurisdiction  String
+  gazetteRef    String?
+  status        String   @default("Enacted")
+  summaryEn     String
+  summaryUrdu   String
+  keyChangesEn  String   // JSON array of strings
+  keyChangesUr  String   // JSON array of strings
+  lawSlug       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([jurisdiction])
+  @@index([year])
+  @@index([slug])
+}
+
+model LegalAidOrg {
+  id            String   @id @default(cuid())
+  nameEn        String
+  nameUr        String
+  type          String   @default("ngo") // "ngo" or "government"
+  provinces     String   // JSON array of strings
+  descEn        String
+  descUr        String
+  specialtiesEn String   // JSON array of strings
+  specialtiesUr String   // JSON array of strings
+  phone         String
+  email         String?
+  website       String?
+  addressEn     String
+  addressUr     String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([type])
+}
+
+model CourtPortal {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  nameEn        String
+  nameUr        String
+  jurisdiction  String
+  caseStatusUrl String
+  causeListUrl  String
+  featuresEn    String   // JSON array of strings
+  featuresUr    String   // JSON array of strings
+  smsAlerts     String?
+  guideEn       String
+  guideUr       String
+  orderIndex    Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([orderIndex])
+}
+

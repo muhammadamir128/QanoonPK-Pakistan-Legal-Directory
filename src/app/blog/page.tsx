@@ -10,33 +10,61 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useLanguage } from '@/components/language-provider'
-import { BLOG_POSTS, BlogPost } from '@/lib/blog-data'
+
+interface BlogPostItem {
+  id: string
+  slug: string
+  title: string
+  titleUrdu: string
+  category: string
+  categoryUrdu: string
+  readTime: string
+  author: string
+  authorUrdu?: string
+  date: string
+  summary: string
+  summaryUrdu: string
+  tags?: string[] | string
+}
 
 export default function BlogListingPage() {
   const { t, lang } = useLanguage()
   const isUrdu = lang === 'ur'
   const [searchQuery, setSearchQuery] = React.useState('')
   const [selectedCategory, setSelectedCategory] = React.useState('all')
+  const [posts, setPosts] = React.useState<BlogPostItem[]>([])
+  const [loading, setLoading] = React.useState(true)
+
+  React.useEffect(() => {
+    setLoading(true)
+    const params = new URLSearchParams()
+    if (selectedCategory !== 'all') {
+      params.set('category', selectedCategory)
+    }
+    if (searchQuery.trim()) {
+      params.set('q', searchQuery.trim())
+    }
+    fetch(`/api/blog?${params.toString()}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setPosts(data.items || [])
+      })
+      .catch((err) => console.error('Failed to load blog posts:', err))
+      .finally(() => setLoading(false))
+  }, [selectedCategory, searchQuery])
 
   const categories = React.useMemo(() => {
-    const set = new Set<string>()
-    BLOG_POSTS.forEach((p) => set.add(p.category))
+    const defaultCategories = ['Criminal Law', 'Banking & Criminal Law', 'Family Law', 'Cyber & IT Law', 'Property Law']
+    const set = new Set<string>(defaultCategories)
+    posts.forEach((p) => {
+      if (p.category) set.add(p.category)
+    })
     return Array.from(set)
-  }, [])
+  }, [posts])
 
-  const filteredPosts = BLOG_POSTS.filter((post) => {
-    if (selectedCategory !== 'all' && post.category !== selectedCategory) return false
-    if (!searchQuery.trim()) return true
-    const q = searchQuery.toLowerCase()
-    return (
-      post.title.toLowerCase().includes(q) ||
-      post.titleUrdu.includes(q) ||
-      post.summary.toLowerCase().includes(q) ||
-      post.summaryUrdu.includes(q) ||
-      post.tags.some((tag) => tag.toLowerCase().includes(q))
-    )
-  })
+  const filteredPosts = posts
 
   return (
     <div className="min-h-screen bg-muted/20 py-8 px-4 sm:px-6 lg:px-8">
@@ -111,35 +139,51 @@ export default function BlogListingPage() {
         </div>
 
         {/* Articles Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredPosts.map((post) => (
-            <Card key={post.slug} className="border-border/70 hover:border-primary/40 hover:shadow-md transition-all flex flex-col justify-between group bg-card">
-              <CardHeader className="p-5 pb-3 space-y-2">
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="p-4 border rounded-xl bg-card space-y-3">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-5 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-8 w-full" />
+              </div>
+            ))}
+          </div>
+        ) : filteredPosts.length === 0 ? (
+          <div className="text-center py-12 border rounded-xl bg-card/50">
+            <p className="text-sm text-muted-foreground">{t('No articles found matching your criteria.', 'آپ کے مطلوبہ معیار کے مطابق کوئی مضمون نہیں ملا۔')}</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredPosts.map((post) => (
+            <Card key={post.slug} className="border-border/70 hover:border-primary/40 hover:shadow-sm transition-all flex flex-col justify-between group bg-card">
+              <CardHeader className="p-3.5 sm:p-4 pb-1.5 space-y-1.5">
                 <div className="flex items-center justify-between gap-2">
-                  <Badge variant="secondary" className="text-[10px] font-medium bg-primary/10 text-primary border-primary/20">
+                  <Badge variant="secondary" className="text-[9px] px-1.5 py-0 font-medium bg-primary/10 text-primary border-primary/20">
                     {isUrdu ? post.categoryUrdu : post.category}
                   </Badge>
-                  <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                  <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                     <Clock className="h-3 w-3" />
                     {post.readTime}
                   </span>
                 </div>
 
                 <Link href={`/blog/${post.slug}`}>
-                  <CardTitle className="text-base font-bold text-foreground group-hover:text-primary transition-colors leading-snug line-clamp-2">
+                  <CardTitle className="text-sm sm:text-[15px] font-bold text-foreground group-hover:text-primary transition-colors leading-tight line-clamp-2">
                     {isUrdu ? post.titleUrdu : post.title}
                   </CardTitle>
                 </Link>
               </CardHeader>
 
-              <CardContent className="p-5 pt-0 space-y-4 flex flex-col justify-between flex-1">
-                <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
+              <CardContent className="p-3.5 sm:p-4 pt-0 space-y-2.5 flex flex-col justify-between flex-1">
+                <p className="text-[11px] text-muted-foreground leading-snug line-clamp-2">
                   {isUrdu ? post.summaryUrdu : post.summary}
                 </p>
 
-                <div className="space-y-3 pt-2 border-t border-border/50">
-                  <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                    <span className="flex items-center gap-1 truncate max-w-[180px]">
+                <div className="space-y-2 pt-1.5 border-t border-border/50">
+                  <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                    <span className="flex items-center gap-1 truncate max-w-[150px]">
                       <User className="h-3 w-3" />
                       {post.author}
                     </span>
@@ -150,7 +194,7 @@ export default function BlogListingPage() {
                   </div>
 
                   <Link href={`/blog/${post.slug}`} className="block">
-                    <Button variant="outline" size="sm" className="w-full text-xs gap-1 group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all">
+                    <Button variant="outline" size="sm" className="w-full h-7 text-[11px] py-0 gap-1 group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all">
                       <span>{t('Read Complete Guide', 'مکمل گائیڈ پڑھیں')}</span>
                       <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
                     </Button>
@@ -160,6 +204,7 @@ export default function BlogListingPage() {
             </Card>
           ))}
         </div>
+        )}
 
       </div>
     </div>

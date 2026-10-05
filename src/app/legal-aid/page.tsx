@@ -233,6 +233,20 @@ export default function LegalAidPage() {
   const [copiedId, setCopiedId] = React.useState<string | null>(null)
   const [filterCategory, setFilterCategory] = React.useState<string>('all')
   const [searchQuery, setSearchQuery] = React.useState<string>('')
+  const [organizations, setOrganizations] = React.useState<LegalAidOrg[]>(ORGANIZATIONS)
+  const [orgsLoading, setOrgsLoading] = React.useState(true)
+
+  React.useEffect(() => {
+    fetch('/api/legal-aid')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.items && data.items.length > 0) {
+          setOrganizations(data.items)
+        }
+      })
+      .catch((err) => console.error('Failed to load legal aid orgs:', err))
+      .finally(() => setOrgsLoading(false))
+  }, [])
 
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text)
@@ -410,18 +424,18 @@ export default function LegalAidPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {ORGANIZATIONS.map((org, idx) => (
-              <Card key={idx} className="border-border/70 hover:border-primary/40 hover:shadow-sm transition-all flex flex-col justify-between">
-                <CardHeader className="p-5 pb-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {organizations.map((org, idx) => (
+              <Card key={idx} className="border-border/70 hover:border-primary/40 hover:shadow-xs transition-all flex flex-col justify-between">
+                <CardHeader className="p-3.5 sm:p-4 pb-1.5">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <CardTitle className="text-base font-bold text-foreground">
+                      <CardTitle className="text-sm sm:text-base font-bold text-foreground">
                         {lang === 'ur' ? org.nameUr : org.nameEn}
                       </CardTitle>
-                      <div className="flex gap-1.5 flex-wrap pt-1.5">
+                      <div className="flex gap-1 flex-wrap pt-1">
                         {org.provinces.map((p) => (
-                          <Badge key={p} variant="secondary" className="text-[10px] px-1.5 py-0 font-medium">
+                          <Badge key={p} variant="secondary" className="text-[9px] px-1.5 py-0 font-medium">
                             {p}
                           </Badge>
                         ))}
@@ -435,25 +449,25 @@ export default function LegalAidPage() {
                         className="text-muted-foreground hover:text-primary p-1 rounded-md transition-colors"
                         title={t('Visit official website', 'ویب سائٹ ملاحظہ کریں')}
                       >
-                        <ExternalLink className="h-4 w-4" />
+                        <ExternalLink className="h-3.5 w-3.5" />
                       </a>
                     )}
                   </div>
                 </CardHeader>
 
-                <CardContent className="p-5 pt-2 space-y-3">
-                  <p className="text-xs text-muted-foreground leading-relaxed">
+                <CardContent className="p-3.5 sm:p-4 pt-1 space-y-2">
+                  <p className="text-[11px] text-muted-foreground leading-snug line-clamp-2">
                     {lang === 'ur' ? org.descUr : org.descEn}
                   </p>
 
                   {/* Specialties */}
                   <div className="space-y-1">
-                    <span className="text-[11px] font-semibold text-foreground block">
+                    <span className="text-[10px] font-semibold text-foreground block">
                       {t('Key Areas of Assistance:', 'امدادی شعبہ جات:')}
                     </span>
                     <div className="flex gap-1 flex-wrap">
                       {(lang === 'ur' ? org.specialtiesUr : org.specialtiesEn).map((sp, sIdx) => (
-                        <span key={sIdx} className="text-[10px] px-2 py-0.5 rounded bg-muted text-foreground/80 font-medium">
+                        <span key={sIdx} className="text-[9px] px-1.5 py-0.5 rounded bg-muted text-foreground/80 font-medium">
                           {sp}
                         </span>
                       ))}
@@ -461,22 +475,22 @@ export default function LegalAidPage() {
                   </div>
 
                   {/* Contact Box */}
-                  <div className="pt-2 border-t border-border/50 space-y-1.5 text-xs text-muted-foreground">
+                  <div className="pt-1.5 border-t border-border/50 space-y-1 text-[11px] text-muted-foreground">
                     <div className="flex items-center gap-2">
-                      <Phone className="h-3.5 w-3.5 text-primary shrink-0" />
+                      <Phone className="h-3 w-3 text-primary shrink-0" />
                       <a href={`tel:${org.phone}`} className="font-mono hover:text-primary font-medium">
                         {org.phone}
                       </a>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Mail className="h-3.5 w-3.5 text-primary shrink-0" />
+                      <Mail className="h-3 w-3 text-primary shrink-0" />
                       <a href={`mailto:${org.email}`} className="hover:text-primary truncate">
                         {org.email}
                       </a>
                     </div>
                     <div className="flex items-start gap-2">
-                      <MapPin className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
-                      <span>{lang === 'ur' ? org.addressUr : org.addressEn}</span>
+                      <MapPin className="h-3 w-3 text-primary shrink-0 mt-0.5" />
+                      <span className="truncate">{lang === 'ur' ? org.addressUr : org.addressEn}</span>
                     </div>
                   </div>
                 </CardContent>

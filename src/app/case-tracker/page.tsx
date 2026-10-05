@@ -114,12 +114,28 @@ const CASE_ABBREVIATIONS = [
   { abbr: 'C.A.', full: 'Civil Appeal', urdu: 'سول اپیل (سپریم کورٹ)', desc: 'Full civil appeal pending adjudication before the Supreme Court of Pakistan.' },
 ]
 
+import { Skeleton } from '@/components/ui/skeleton'
+
 export default function CaseTrackerPage() {
   const { t, lang } = useLanguage()
   const isUrdu = lang === 'ur'
   const [searchFilter, setSearchFilter] = React.useState('')
+  const [portals, setPortals] = React.useState<CourtPortal[]>(COURT_PORTALS)
+  const [loading, setLoading] = React.useState(true)
 
-  const filteredPortals = COURT_PORTALS.filter((p) => {
+  React.useEffect(() => {
+    fetch('/api/case-tracker')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.items && data.items.length > 0) {
+          setPortals(data.items)
+        }
+      })
+      .catch((err) => console.error('Failed to load court portals:', err))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const filteredPortals = portals.filter((p) => {
     if (!searchFilter.trim()) return true
     const q = searchFilter.toLowerCase()
     return (

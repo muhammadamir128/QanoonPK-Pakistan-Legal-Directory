@@ -155,17 +155,35 @@ const UPDATES: LegislativeUpdate[] = [
   },
 ]
 
+import { Skeleton } from '@/components/ui/skeleton'
+
 export default function UpdatesPage() {
   const { t, lang } = useLanguage()
   const isUrdu = lang === 'ur'
   const [selectedJurisdiction, setSelectedJurisdiction] = React.useState<string>('all')
   const [selectedYear, setSelectedYear] = React.useState<string>('all')
+  const [updates, setUpdates] = React.useState<UpdateItem[]>([])
+  const [loading, setLoading] = React.useState(true)
 
-  const filteredUpdates = UPDATES.filter((up) => {
-    if (selectedJurisdiction !== 'all' && up.jurisdiction !== selectedJurisdiction) return false
-    if (selectedYear !== 'all' && up.year.toString() !== selectedYear) return false
-    return true
-  })
+  React.useEffect(() => {
+    setLoading(true)
+    const params = new URLSearchParams()
+    if (selectedJurisdiction !== 'all') {
+      params.set('jurisdiction', selectedJurisdiction)
+    }
+    if (selectedYear !== 'all') {
+      params.set('year', selectedYear)
+    }
+    fetch(`/api/updates?${params.toString()}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setUpdates(data.items || [])
+      })
+      .catch((err) => console.error('Failed to load legal updates:', err))
+      .finally(() => setLoading(false))
+  }, [selectedJurisdiction, selectedYear])
+
+  const filteredUpdates = updates
 
   return (
     <div className="min-h-screen bg-muted/20 py-8 px-4 sm:px-6 lg:px-8">
@@ -236,20 +254,35 @@ export default function UpdatesPage() {
 
         {/* Updates Timeline / Cards */}
         <div className="space-y-6">
-          {filteredUpdates.map((item) => (
+          {loading ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="p-5 border rounded-xl bg-card space-y-3">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-6 w-3/4" />
+                  <Skeleton className="h-16 w-full" />
+                </div>
+              ))}
+            </div>
+          ) : filteredUpdates.length === 0 ? (
+            <div className="text-center py-12 border rounded-xl bg-card/50">
+              <p className="text-sm text-muted-foreground">{t('No gazette updates found for selected filters.', 'منتخب فلٹرز کے مطابق کوئی گزٹ اپڈیٹ نہیں ملی۔')}</p>
+            </div>
+          ) : (
+            filteredUpdates.map((item) => (
             <Card key={item.id} className="border-border/70 hover:border-primary/40 hover:shadow-xs transition-all bg-card overflow-hidden">
-              <div className="border-l-4 border-primary p-5 sm:p-6 space-y-4">
+              <div className="border-l-4 border-primary p-3.5 sm:p-4 space-y-2.5">
                 
                 {/* Top Meta */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Badge variant="secondary" className="text-[10px] font-semibold bg-primary/10 text-primary border-primary/20">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <Badge variant="secondary" className="text-[9px] px-1.5 py-0 font-semibold bg-primary/10 text-primary border-primary/20">
                       {item.jurisdiction}
                     </Badge>
-                    <Badge variant="outline" className="text-[10px] font-bold text-emerald-600 border-emerald-300">
+                    <Badge variant="outline" className="text-[9px] px-1.5 py-0 font-bold text-emerald-600 border-emerald-300">
                       {item.status}
                     </Badge>
-                    <span className="text-xs text-muted-foreground flex items-center gap-1 font-mono">
+                    <span className="text-[11px] text-muted-foreground flex items-center gap-1 font-mono">
                       <Calendar className="h-3 w-3" />
                       {isUrdu ? item.dateUr : item.dateEn}
                     </span>
@@ -262,31 +295,31 @@ export default function UpdatesPage() {
 
                 {/* Title */}
                 <div>
-                  <h2 className="text-lg sm:text-xl font-bold text-foreground">
+                  <h2 className="text-base sm:text-lg font-bold text-foreground leading-snug">
                     {isUrdu ? item.titleUr : item.titleEn}
                   </h2>
                   {isUrdu ? (
-                    <p className="text-xs text-muted-foreground pt-0.5">{item.titleEn}</p>
+                    <p className="text-[11px] text-muted-foreground pt-0.5">{item.titleEn}</p>
                   ) : (
-                    <p className="text-xs text-muted-foreground font-urdu pt-0.5" dir="rtl">{item.titleUr}</p>
+                    <p className="text-[11px] text-muted-foreground font-urdu pt-0.5" dir="rtl">{item.titleUr}</p>
                   )}
                 </div>
 
                 {/* Summary */}
-                <p className="text-xs sm:text-sm text-foreground/90 leading-relaxed">
+                <p className="text-xs text-foreground/85 leading-snug">
                   {isUrdu ? item.summaryUr : item.summaryEn}
                 </p>
 
                 {/* Key Changes Bullet Points */}
-                <div className="p-4 rounded-xl bg-muted/40 border border-border/60 space-y-2">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block">
+                <div className="p-2.5 sm:p-3 rounded-lg bg-muted/40 border border-border/60 space-y-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
                     {t('Key Legal Changes & Impact:', 'اہم قانونی تبدیلیاں اور اثرات:')}
                   </span>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px]">
                     {(isUrdu ? item.keyChangesUr : item.keyChangesEn).map((change, cIdx) => (
-                      <div key={cIdx} className="flex items-start gap-2">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
-                        <span className="leading-snug text-muted-foreground">{change}</span>
+                      <div key={cIdx} className="flex items-start gap-1.5">
+                        <CheckCircle2 className="h-3 w-3 text-primary shrink-0 mt-0.5" />
+                        <span className="leading-tight text-muted-foreground">{change}</span>
                       </div>
                     ))}
                   </div>
@@ -294,7 +327,7 @@ export default function UpdatesPage() {
 
                 {/* Action Link to Law in Directory */}
                 {item.lawSlug && (
-                  <div className="pt-2 flex items-center justify-between">
+                  <div className="pt-1 flex items-center justify-between">
                     <Link href={`/laws/${item.lawSlug}`} className="inline-flex items-center gap-1.5 text-xs text-primary font-semibold hover:underline">
                       <Scale className="h-3.5 w-3.5" />
                       <span>{t('View Updated Law in Directory', 'ڈائریکٹری میں مکمل قانون دیکھیں')}</span>
@@ -305,7 +338,8 @@ export default function UpdatesPage() {
 
               </div>
             </Card>
-          ))}
+          ))
+          )}
         </div>
 
       </div>
